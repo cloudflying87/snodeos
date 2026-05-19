@@ -76,6 +76,12 @@ if [ ! -f ".env" ]; then
   echo "   Edit .env with real values before continuing."
   exit 1
 fi
+# Export .env into the shell so DB credentials are available to host-side
+# commands (pg_dump, the schema-empty check). docker-compose already reads
+# .env on its own for the containers.
+set -a
+. ./.env
+set +a
 echo "✅ .env found"
 echo ""
 
