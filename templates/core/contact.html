@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Contact Us — Brainerd Snodeos{% endblock %}
+
+{% block content %}
+
+<section class="page-hero bg-dark text-white py-5">
+  <div class="container text-center">
+    <h1 class="display-4 fw-bold font-oswald">Contact Us</h1>
+    <p class="lead text-muted">Reach out with questions or use the form below to get in touch.</p>
+  </div>
+</section>
+
+<section class="py-6">
+  <div class="container">
+    <div class="row g-5">
+      <div class="col-lg-7">
+        <div class="card border-0 shadow-sm p-4 p-lg-5">
+          <h3 class="fw-bold font-oswald mb-4">Send Us a Message</h3>
+          {% crispy form %}
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="card border-0 bg-dark text-white p-4 mb-4 rounded-3">
+          <h5 class="fw-bold mb-4"><i class="bi bi-info-circle me-2 text-primary"></i>Club Info</h5>
+          <ul class="list-unstyled mb-0">
+            <li class="mb-3 d-flex gap-3">
+              <i class="bi bi-geo-alt-fill text-primary mt-1 flex-shrink-0"></i>
+              <div>
+                <strong>Location</strong><br>
+                <span class="text-muted">Brainerd Lakes Area, Minnesota</span>
+              </div>
+            </li>
+            <li class="mb-3 d-flex gap-3">
+              <i class="bi bi-calendar-event text-primary mt-1 flex-shrink-0"></i>
+              <div>
+                <strong>Monthly Meeting</strong><br>
+                <span class="text-muted">Every Third Monday at 7:00 PM</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="card border-0 bg-primary text-white p-4 rounded-3">
+          <h5 class="fw-bold mb-3"><i class="bi bi-person-plus me-2"></i>Become a Member</h5>
+          <p class="mb-3">Want to join the club? Fill out our online membership application and an officer will review your request.</p>
+          <a href="{% url 'accounts:register' %}" class="btn btn-light fw-bold">Apply for Membership</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

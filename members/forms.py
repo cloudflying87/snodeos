@@ -1,0 +1,61 @@
+from django import forms
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Row, Column, Submit, Fieldset
+from accounts.models import Member
+
+
+class MemberEditForm(forms.ModelForm):
+    class Meta:
+        model = Member
+        fields = [
+            'first_name', 'last_name', 'email', 'phone',
+            'address', 'city', 'state', 'zip_code',
+            'snowmobile_brand', 'membership_status', 'membership_year',
+            'is_officer', 'officer_title', 'photo', 'notes',
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            Fieldset('Personal Info',
+                Row(
+                    Column('first_name', css_class='col-md-6'),
+                    Column('last_name', css_class='col-md-6'),
+                ),
+                Row(
+                    Column('email', css_class='col-md-6'),
+                    Column('phone', css_class='col-md-6'),
+                ),
+                'photo',
+            ),
+            Fieldset('Address',
+                'address',
+                Row(
+                    Column('city', css_class='col-md-5'),
+                    Column('state', css_class='col-md-3'),
+                    Column('zip_code', css_class='col-md-4'),
+                ),
+            ),
+            Fieldset('Membership',
+                Row(
+                    Column('snowmobile_brand', css_class='col-md-4'),
+                    Column('membership_status', css_class='col-md-4'),
+                    Column('membership_year', css_class='col-md-4'),
+                ),
+                Row(
+                    Column('is_officer', css_class='col-md-4'),
+                    Column('officer_title', css_class='col-md-8'),
+                ),
+                'notes',
+            ),
+            Submit('submit', 'Save Changes', css_class='btn btn-primary mt-3'),
+        )
+
+
+class MemberFilterForm(forms.Form):
+    search = forms.CharField(required=False, widget=forms.TextInput(attrs={'placeholder': 'Search name or email...'}))
+    status = forms.ChoiceField(
+        required=False,
+        choices=[('', 'All Statuses')] + Member.MEMBERSHIP_STATUS,
+    )

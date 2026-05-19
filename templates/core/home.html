@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home — Brainerd Snodeos Snowmobile Club{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="hero-section d-flex align-items-center">
+  <div class="container text-center text-white">
+    <div class="hero-content">
+      <div class="mb-3">
+        <i class="bi bi-snow display-1 text-primary"></i>
+      </div>
+      <h1 class="display-3 fw-bold font-oswald text-uppercase">Brainerd Snodeos</h1>
+      <p class="lead fs-4 mb-1">Snowmobile Club</p>
+      <p class="text-light mb-4">Serving the Brainerd Lakes Area Since 1975</p>
+      <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg px-5">
+          <i class="bi bi-person-plus me-2"></i>Join the Club
+        </a>
+        <a href="{% url 'core:about' %}" class="btn btn-outline-light btn-lg px-5">Learn More</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Bar -->
+<section class="stats-section bg-primary py-5">
+  <div class="container">
+    <div class="row g-4 text-center text-white">
+      <div class="col-6 col-md-3">
+        <div class="stat-item">
+          <div class="stat-number display-4 fw-bold font-oswald">
+            {{ stats.members_count|default:"125" }}
+          </div>
+          <div class="stat-label text-uppercase fw-semibold">Members Strong</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-item">
+          <div class="stat-number display-4 fw-bold font-oswald">
+            {{ stats.miles_maintained|default:"107" }}
+          </div>
+          <div class="stat-label text-uppercase fw-semibold">Miles Maintained</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-item">
+          <div class="stat-number display-4 fw-bold font-oswald">
+            ${{ stats.annual_budget|default:"0" }}
+          </div>
+          <div class="stat-label text-uppercase fw-semibold">Annual Trail Budget</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-item">
+          <div class="stat-number display-4 fw-bold font-oswald">
+            {{ stats.supporting_landowners|default:"50" }}+
+          </div>
+          <div class="stat-label text-uppercase fw-semibold">Supporting Landowners</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- About Teaser -->
+<section class="py-6 bg-light">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <span class="badge bg-primary text-uppercase mb-3 px-3 py-2">About the Club</span>
+        <h2 class="display-5 fw-bold font-oswald">Minnesota's Premier Snowmobile Club</h2>
+        <p class="lead text-muted">
+          Established in 1975, the Brainerd Snodeos was formed in response to community safety concerns about snowmobile usage in city limits. Today, we maintain over 107 miles of pristine trails throughout the Brainerd Lakes area.
+        </p>
+        <p class="text-muted">
+          Our 125+ volunteer members keep the trails groomed and safe throughout the season using two state-of-the-art Tucker Sno-Cats. We work closely with landowners, local businesses, and the community to promote responsible riding.
+        </p>
+        <div class="d-flex gap-3 mt-4 flex-wrap">
+          <a href="{% url 'core:about' %}" class="btn btn-primary">Read Our Story</a>
+          <a href="{% url 'core:trail_work' %}" class="btn btn-outline-secondary">Trail Work Updates</a>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="row g-3">
+          <div class="col-6">
+            <div class="card border-0 bg-dark text-white h-100 p-4 text-center rounded-3">
+              <i class="bi bi-tools display-4 text-primary mb-3"></i>
+              <h5 class="fw-bold">Volunteer Maintained</h5>
+              <p class="small text-muted mb-0">100% volunteer-operated trail system</p>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="card border-0 bg-dark text-white h-100 p-4 text-center rounded-3">
+              <i class="bi bi-map display-4 text-primary mb-3"></i>
+              <h5 class="fw-bold">107+ Miles</h5>
+              <p class="small text-muted mb-0">Of groomed, maintained trails</p>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="card border-0 bg-dark text-white h-100 p-4 text-center rounded-3">
+              <i class="bi bi-calendar-check display-4 text-primary mb-3"></i>
+              <h5 class="fw-bold">Since 1975</h5>
+              <p class="small text-muted mb-0">50 years of community service</p>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="card border-0 bg-dark text-white h-100 p-4 text-center rounded-3">
+              <i class="bi bi-truck display-4 text-primary mb-3"></i>
+              <h5 class="fw-bold">Tucker Sno-Cats</h5>
+              <p class="small text-muted mb-0">Two state-of-the-art groomers</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Officers -->
+{% if officers %}
+<section class="py-6">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="badge bg-primary text-uppercase mb-3 px-3 py-2">Leadership</span>
+      <h2 class="display-5 fw-bold font-oswald">Club Officers</h2>
+      <p class="text-muted lead">Meet the volunteers who keep things running.</p>
+    </div>
+    <div class="row g-4 justify-content-center">
+      {% for officer in officers %}
+      <div class="col-sm-6 col-md-3">
+        <div class="card border-0 shadow-sm text-center h-100 officer-card">
+          <div class="card-body p-4">
+            {% if officer.photo %}
+              <img src="{{ officer.photo.url }}" alt="{{ officer.name }}" class="officer-photo rounded-circle mb-3">
+            {% else %}
+              <div class="officer-avatar rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3">
+                <i class="bi bi-person-fill fs-1 text-white"></i>
+              </div>
+            {% endif %}
+            <h5 class="fw-bold mb-1">{{ officer.name }}</h5>
+            <p class="text-primary fw-semibold mb-1 small text-uppercase">{{ officer.title }}</p>
+            {% if officer.snowmobile_brand %}
+              <p class="text-muted small mb-0"><i class="bi bi-snow me-1"></i>{{ officer.snowmobile_brand }}</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Sponsors -->
+{% if sponsors %}
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="text-center mb-4">
+      <span class="badge bg-primary text-uppercase mb-3 px-3 py-2">Partners</span>
+      <h2 class="display-5 fw-bold font-oswald">Our Sponsors</h2>
+      <p class="text-muted">Thank you to our local business partners.</p>
+    </div>
+    <div class="row g-3 justify-content-center align-items-center">
+      {% for sponsor in sponsors %}
+      <div class="col-6 col-md-3 col-lg-2 text-center">
+        {% if sponsor.website %}
+          <a href="{{ sponsor.website }}" target="_blank" class="sponsor-link d-block p-3">
+        {% else %}
+          <div class="p-3">
+        {% endif %}
+          {% if sponsor.logo %}
+            <img src="{{ sponsor.logo.url }}" alt="{{ sponsor.name }}" class="img-fluid sponsor-logo">
+          {% else %}
+            <div class="sponsor-placeholder p-3 rounded border">
+              <span class="fw-semibold text-dark">{{ sponsor.name }}</span>
+            </div>
+          {% endif %}
+        {% if sponsor.website %}</a>{% else %}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- CTA -->
+<section class="py-6 bg-dark text-white text-center">
+  <div class="container">
+    <i class="bi bi-snow display-3 text-primary mb-3"></i>
+    <h2 class="display-5 fw-bold font-oswald mb-3">Ready to Ride?</h2>
+    <p class="lead text-muted mb-4">Join the Brainerd Snodeos and help us keep the trails open for everyone.</p>
+    <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg px-5 me-3">Join Now</a>
+    <a href="{% url 'core:contact' %}" class="btn btn-outline-light btn-lg px-5">Contact Us</a>
+  </div>
+</section>
+
+{% endblock %}

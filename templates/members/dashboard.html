@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}My Dashboard — Brainerd Snodeos{% endblock %}
+
+{% block content %}
+
+<section class="page-hero bg-dark text-white py-5">
+  <div class="container">
+    <div class="d-flex align-items-center gap-4">
+      {% if member.photo %}
+        <img src="{{ member.photo.url }}" alt="{{ member.get_full_name }}" class="rounded-circle" style="width:80px;height:80px;object-fit:cover;">
+      {% else %}
+        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width:80px;height:80px;">
+          <i class="bi bi-person-fill fs-1 text-white"></i>
+        </div>
+      {% endif %}
+      <div>
+        <h1 class="display-5 fw-bold font-oswald mb-1">Welcome, {{ member.first_name }}!</h1>
+        <p class="text-muted mb-0">
+          {% if member.is_officer %}
+            <span class="badge bg-warning text-dark me-2">{{ member.officer_title }}</span>
+          {% endif %}
+          <span class="badge {% if member.membership_status == 'active' %}bg-success{% elif member.membership_status == 'pending' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+            {{ member.get_membership_status_display }}
+          </span>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row g-4">
+
+      <!-- Profile Card -->
+      <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-dark text-white fw-bold py-3">
+            <i class="bi bi-person-fill me-2 text-primary"></i>My Profile
+          </div>
+          <div class="card-body p-4">
+            <table class="table table-borderless table-sm mb-0">
+              <tr>
+                <td class="text-muted">Name</td>
+                <td class="fw-semibold">{{ member.get_full_name }}</td>
+              </tr>
+              <tr>
+                <td class="text-muted">Email</td>
+                <td>{{ member.email }}</td>
+              </tr>
+              {% if member.phone %}
+              <tr>
+                <td class="text-muted">Phone</td>
+                <td>{{ member.phone }}</td>
+              </tr>
+              {% endif %}
+              {% if member.city %}
+              <tr>
+                <td class="text-muted">City</td>
+                <td>{{ member.city }}, {{ member.state }}</td>
+              </tr>
+              {% endif %}
+              {% if member.snowmobile_brand %}
+              <tr>
+                <td class="text-muted">Sled</td>
+                <td>{{ member.get_snowmobile_brand_display }}</td>
+              </tr>
+              {% endif %}
+              {% if member.membership_year %}
+              <tr>
+                <td class="text-muted">Member Since</td>
+                <td>{{ member.membership_year }}</td>
+              </tr>
+              {% endif %}
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Links / Officer Panel -->
+      <div class="col-lg-8">
+        {% if member.is_officer or member.is_staff %}
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-warning text-dark fw-bold py-3">
+            <i class="bi bi-shield-fill me-2"></i>Officer Panel
+          </div>
+          <div class="card-body p-4">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <a href="{% url 'members:pending' %}" class="card text-center border-0 bg-light p-3 text-decoration-none text-dark h-100 d-block rounded-3 officer-quick-link">
+                  <i class="bi bi-person-check display-5 text-warning d-block mb-2"></i>
+                  <strong>Pending Applications</strong>
+                </a>
+              </div>
+              <div class="col-md-4">
+                <a href="{% url 'members:member_list' %}" class="card text-center border-0 bg-light p-3 text-decoration-none text-dark h-100 d-block rounded-3 officer-quick-link">
+                  <i class="bi bi-people-fill display-5 text-primary d-block mb-2"></i>
+                  <strong>All Members</strong>
+                </a>
+              </div>
+              <div class="col-md-4">
+                <a href="/admin/" class="card text-center border-0 bg-light p-3 text-decoration-none text-dark h-100 d-block rounded-3 officer-quick-link">
+                  <i class="bi bi-gear-fill display-5 text-secondary d-block mb-2"></i>
+                  <strong>Site Admin</strong>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-dark text-white fw-bold py-3">
+            <i class="bi bi-link-45deg me-2 text-primary"></i>Club Links
+          </div>
+          <div class="card-body p-4">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <a href="{% url 'core:trail_work' %}" class="d-flex align-items-center gap-3 p-3 rounded-3 bg-light text-decoration-none text-dark member-link">
+                  <i class="bi bi-tools text-primary fs-4"></i>
+                  <div><strong>Trail Work Updates</strong><br><small class="text-muted">View latest maintenance</small></div>
+                </a>
+              </div>
+              <div class="col-md-6">
+                <a href="{% url 'core:about' %}" class="d-flex align-items-center gap-3 p-3 rounded-3 bg-light text-decoration-none text-dark member-link">
+                  <i class="bi bi-info-circle text-primary fs-4"></i>
+                  <div><strong>About the Club</strong><br><small class="text-muted">History & officers</small></div>
+                </a>
+              </div>
+              <div class="col-md-6">
+                <a href="{% url 'core:contact' %}" class="d-flex align-items-center gap-3 p-3 rounded-3 bg-light text-decoration-none text-dark member-link">
+                  <i class="bi bi-envelope text-primary fs-4"></i>
+                  <div><strong>Contact Officers</strong><br><small class="text-muted">Send a message</small></div>
+                </a>
+              </div>
+              <div class="col-md-6">
+                <a href="{% url 'accounts:logout' %}" class="d-flex align-items-center gap-3 p-3 rounded-3 bg-light text-decoration-none text-dark member-link">
+                  <i class="bi bi-box-arrow-right text-danger fs-4"></i>
+                  <div><strong>Log Out</strong><br><small class="text-muted">End your session</small></div>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

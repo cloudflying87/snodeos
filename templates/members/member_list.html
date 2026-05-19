@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Members — Brainerd Snodeos{% endblock %}
+
+{% block content %}
+
+<section class="page-hero bg-dark text-white py-4">
+  <div class="container d-flex justify-content-between align-items-center">
+    <div>
+      <h1 class="display-5 fw-bold font-oswald mb-1">Members</h1>
+      <p class="text-muted mb-0">{{ members.count }} total</p>
+    </div>
+    <a href="{% url 'members:pending' %}" class="btn btn-warning">
+      <i class="bi bi-person-check me-2"></i>Pending Applications
+    </a>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+
+    <!-- Filter Bar -->
+    <form method="get" class="row g-2 mb-4 align-items-end">
+      <div class="col-md-5">
+        <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Search name or email...">
+      </div>
+      <div class="col-md-3">
+        <select name="status" class="form-select">
+          <option value="">All Statuses</option>
+          <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+          <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+          <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
+          <option value="expired" {% if status == 'expired' %}selected{% endif %}>Expired</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Filter</button>
+      </div>
+      <div class="col-md-2">
+        <a href="{% url 'members:member_list' %}" class="btn btn-outline-secondary w-100">Clear</a>
+      </div>
+    </form>
+
+    <!-- Table -->
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Sled</th>
+              <th>Status</th>
+              <th>Applied</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for member in members %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  {% if member.photo %}
+                    <img src="{{ member.photo.url }}" class="rounded-circle" style="width:36px;height:36px;object-fit:cover;">
+                  {% else %}
+                    <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width:36px;height:36px;">
+                      <i class="bi bi-person-fill text-white small"></i>
+                    </div>
+                  {% endif %}
+                  <div>
+                    <strong>{{ member.get_full_name }}</strong>
+                    {% if member.is_officer %}<br><small class="text-warning">{{ member.officer_title }}</small>{% endif %}
+                  </div>
+                </div>
+              </td>
+              <td class="text-muted">{{ member.email }}</td>
+              <td>{{ member.get_snowmobile_brand_display|default:"—" }}</td>
+              <td>
+                <span class="badge {% if member.membership_status == 'active' %}bg-success{% elif member.membership_status == 'pending' %}bg-warning text-dark{% elif member.membership_status == 'inactive' %}bg-secondary{% else %}bg-danger{% endif %}">
+                  {{ member.get_membership_status_display }}
+                </span>
+              </td>
+              <td class="text-muted small">{{ member.date_applied|date:"M j, Y" }}</td>
+              <td class="text-end">
+                <a href="{% url 'members:member_detail' member.pk %}" class="btn btn-sm btn-outline-primary me-1">View</a>
+                <a href="{% url 'members:member_edit' member.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="text-center py-5 text-muted">No members found.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

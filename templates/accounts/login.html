@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Member Login — Brainerd Snodeos{% endblock %}
+
+{% block content %}
+
+<section class="py-6">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-5">
+        <div class="card border-0 shadow-sm p-4 p-lg-5">
+          <div class="text-center mb-4">
+            <i class="bi bi-snow display-3 text-primary"></i>
+            <h3 class="fw-bold font-oswald mt-2">Member Login</h3>
+            <p class="text-muted small">Brainerd Snodeos members only</p>
+          </div>
+          {% crispy form %}
+          <div class="text-center mt-3">
+            <p class="text-muted small mb-0">Not a member yet? <a href="{% url 'accounts:register' %}">Apply to join.</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ member.get_full_name }} — Brainerd Snodeos{% endblock %}
+
+{% block content %}
+
+<section class="page-hero bg-dark text-white py-4">
+  <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div class="d-flex align-items-center gap-4">
+      {% if member.photo %}
+        <img src="{{ member.photo.url }}" class="rounded-circle" style="width:70px;height:70px;object-fit:cover;">
+      {% else %}
+        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width:70px;height:70px;">
+          <i class="bi bi-person-fill fs-2 text-white"></i>
+        </div>
+      {% endif %}
+      <div>
+        <h2 class="fw-bold font-oswald mb-1">{{ member.get_full_name }}</h2>
+        <span class="badge {% if member.membership_status == 'active' %}bg-success{% elif member.membership_status == 'pending' %}bg-warning text-dark{% else %}bg-secondary{% endif %} me-2">
+          {{ member.get_membership_status_display }}
+        </span>
+        {% if member.is_officer %}<span class="badge bg-warning text-dark">{{ member.officer_title }}</span>{% endif %}
+      </div>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{% url 'members:member_edit' member.pk %}" class="btn btn-outline-light">
+        <i class="bi bi-pencil me-1"></i>Edit
+      </a>
+      {% if member.membership_status == 'pending' %}
+        <a href="{% url 'members:approve_member' member.pk %}" class="btn btn-success">
+          <i class="bi bi-check-lg me-1"></i>Approve
+        </a>
+      {% endif %}
+      {% if member.membership_status == 'active' %}
+        <a href="{% url 'members:deactivate_member' member.pk %}" class="btn btn-outline-warning">
+          <i class="bi bi-pause-circle me-1"></i>Deactivate
+        </a>
+      {% endif %}
+      <a href="{% url 'members:member_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-dark text-white fw-bold py-3">
+            <i class="bi bi-person me-2 text-primary"></i>Personal Info
+          </div>
+          <div class="card-body p-4">
+            <table class="table table-borderless table-sm mb-0">
+              <tr><td class="text-muted w-40">Email</td><td>{{ member.email }}</td></tr>
+              <tr><td class="text-muted">Phone</td><td>{{ member.phone|default:"—" }}</td></tr>
+              <tr><td class="text-muted">Address</td><td>{{ member.address|default:"—" }}</td></tr>
+              <tr><td class="text-muted">City/State</td><td>{{ member.city }}{% if member.city %}, {% endif %}{{ member.state }} {{ member.zip_code }}</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-dark text-white fw-bold py-3">
+            <i class="bi bi-snow me-2 text-primary"></i>Membership Info
+          </div>
+          <div class="card-body p-4">
+            <table class="table table-borderless table-sm mb-0">
+              <tr><td class="text-muted w-40">Snowmobile</td><td>{{ member.get_snowmobile_brand_display|default:"—" }}</td></tr>
+              <tr><td class="text-muted">Status</td><td>{{ member.get_membership_status_display }}</td></tr>
+              <tr><td class="text-muted">Member Year</td><td>{{ member.membership_year|default:"—" }}</td></tr>
+              <tr><td class="text-muted">Applied</td><td>{{ member.date_applied|date:"M j, Y" }}</td></tr>
+              <tr><td class="text-muted">Approved</td><td>{{ member.date_approved|date:"M j, Y"|default:"—" }}</td></tr>
+              <tr><td class="text-muted">Officer</td><td>{% if member.is_officer %}Yes — {{ member.officer_title }}{% else %}No{% endif %}</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {% if member.notes %}
+      <div class="col-12">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-dark text-white fw-bold py-3">
+            <i class="bi bi-sticky me-2 text-primary"></i>Notes
+          </div>
+          <div class="card-body p-4">
+            <p class="mb-0">{{ member.notes }}</p>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

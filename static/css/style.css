@@ -1,0 +1,134 @@
+:root {
+  --primary: #0d6efd;
+  --dark: #1a1a2e;
+}
+
+body {
+  font-family: 'Open Sans', sans-serif;
+  color: #212529;
+}
+
+.font-oswald {
+  font-family: 'Oswald', sans-serif;
+}
+
+/* ── Hero ── */
+.hero-section {
+  background: linear-gradient(135deg, #0d1117 0%, #1a2740 50%, #0d1117 100%);
+  min-height: 85vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230d6efd' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.5;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Page Hero ── */
+.page-hero {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+/* ── Spacing ── */
+.py-6 {
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+
+/* ── Stats ── */
+.stat-item {
+  padding: 1rem;
+}
+
+.stat-number {
+  line-height: 1.1;
+}
+
+/* ── Officers ── */
+.officer-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.officer-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+}
+
+.officer-photo {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+}
+
+.officer-avatar {
+  width: 90px;
+  height: 90px;
+  background: linear-gradient(135deg, #0d6efd, #0a58ca);
+}
+
+/* ── Sponsors ── */
+.sponsor-link {
+  opacity: 0.85;
+  transition: opacity 0.2s;
+}
+
+.sponsor-link:hover {
+  opacity: 1;
+}
+
+.sponsor-logo {
+  max-height: 60px;
+  width: auto;
+}
+
+/* ── Footer ── */
+.footer-link {
+  transition: color 0.2s;
+}
+
+.footer-link:hover {
+  color: #0d6efd !important;
+}
+
+/* ── Dashboard links ── */
+.member-link, .officer-quick-link {
+  transition: background 0.15s, transform 0.15s;
+}
+
+.member-link:hover, .officer-quick-link:hover {
+  background: #e9ecef !important;
+  transform: translateY(-2px);
+}
+
+/* ── Club name in navbar ── */
+.club-name {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: 0.5px;
+}
+
+/* ── Table tweaks ── */
+.w-40 {
+  width: 40%;
+}
+
+/* ── Navbar active ── */
+.navbar-nav .nav-link.active,
+.navbar-nav .nav-link:hover {
+  color: #0d6efd !important;
+}
+
+/* ── Cards ── */
+.card {
+  border-radius: 0.75rem;
+}

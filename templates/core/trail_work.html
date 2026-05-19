@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Trail Work — Brainerd Snodeos{% endblock %}
+
+{% block content %}
+
+<section class="page-hero bg-dark text-white py-5">
+  <div class="container text-center">
+    <h1 class="display-4 fw-bold font-oswald">Trail Work</h1>
+    <p class="lead text-muted">Updates from our volunteer trail maintenance crew.</p>
+  </div>
+</section>
+
+<section class="py-6">
+  <div class="container">
+    {% if logs %}
+      <div class="row g-4">
+        {% for log in logs %}
+        <div class="col-lg-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <span class="badge bg-primary px-3 py-2">{{ log.date|date:"M j, Y" }}</span>
+                <div class="text-end text-muted small">
+                  {% if log.volunteers %}<span><i class="bi bi-people me-1"></i>{{ log.volunteers }} volunteers</span>{% endif %}
+                  {% if log.hours %}<span class="ms-2"><i class="bi bi-clock me-1"></i>{{ log.hours }} hrs</span>{% endif %}
+                </div>
+              </div>
+              <h5 class="fw-bold mb-2">{{ log.title }}</h5>
+              <p class="text-muted mb-0">{{ log.description }}</p>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center py-5">
+        <i class="bi bi-tools display-1 text-muted mb-4"></i>
+        <h3 class="fw-bold">No trail work logs yet</h3>
+        <p class="text-muted">Check back soon for updates from our volunteer crew.</p>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}

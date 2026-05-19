@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Join the Club — Brainerd Snodeos{% endblock %}
+
+{% block content %}
+
+<section class="page-hero bg-dark text-white py-5">
+  <div class="container text-center">
+    <h1 class="display-4 fw-bold font-oswald">Join the Club</h1>
+    <p class="lead text-muted">Fill out the form below to apply for membership. An officer will review your application.</p>
+  </div>
+</section>
+
+<section class="py-6">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm p-4 p-lg-5">
+          <div class="text-center mb-4">
+            <i class="bi bi-person-plus display-4 text-primary"></i>
+            <h3 class="fw-bold font-oswald mt-2">Membership Application</h3>
+            <p class="text-muted">Already a member? <a href="{% url 'accounts:login' %}">Log in here.</a></p>
+          </div>
+          {% crispy form %}
+        </div>
+
+        <div class="card border-0 bg-primary text-white p-4 mt-4 rounded-3 text-center">
+          <i class="bi bi-info-circle fs-3 mb-2"></i>
+          <p class="mb-0">After submitting, a club officer will review your application. You'll be able to log in once your membership is approved.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
