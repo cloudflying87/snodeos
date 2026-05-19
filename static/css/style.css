@@ -86,7 +86,9 @@ body {
     linear-gradient(180deg, rgba(0,0,0,0.75) 0%, rgba(0,44,78,0.88) 100%),
     url('../images/navbar-bg.jpg') center center / cover no-repeat;
   padding-top: 40px;
-  padding-bottom: 60px; /* extra room so bottom wave doesn't cut into stats */
+  padding-bottom: 80px;
+  position: relative;
+  z-index: 0; /* creates stacking context so waves stay contained inside it */
 }
 
 /* Hero wave containers */
@@ -95,12 +97,15 @@ body {
 .wave-hero-top svg, .wave-hero-bottom svg {
   display: block;
   width: calc(100% + 1.3px);
-  height: 25px;
+  height: 80px;
   position: relative;
   left: 50%;
 }
 .wave-hero-top svg  { transform: translateX(-50%); }
 .wave-hero-bottom svg { transform: translateX(-50%) scaleY(-1); }
+
+/* Stats section must paint above the hero stacking context */
+.stats-section { position: relative; z-index: 1; }
 
 /* ── Page Hero (inner pages: about, trail work, contact) ──────── */
 /* Change --sn-blue to change ALL inner page heroes at once */
