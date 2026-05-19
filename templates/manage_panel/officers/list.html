@@ -8,9 +8,14 @@
     <h1 class="panel-page-title">Officers</h1>
     <p class="panel-breadcrumb mb-0"><a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> / Officers</p>
   </div>
-  <a href="{% url 'manage_panel:officer_add' %}" class="btn btn-primary">
-    <i class="bi bi-plus me-1"></i>Add Officer
-  </a>
+  <div class="d-flex gap-2">
+    <a href="{% url 'manage_panel:officer_title_list' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-tag me-1"></i>Manage Titles
+    </a>
+    <a href="{% url 'manage_panel:officer_add' %}" class="btn btn-primary">
+      <i class="bi bi-plus me-1"></i>Add Officer
+    </a>
+  </div>
 </div>
 
 <div class="panel-card">

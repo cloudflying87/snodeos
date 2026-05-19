@@ -235,11 +235,76 @@ def announcement_add(request):
         if form.is_valid():
             ann = form.save()
             _zapier_post(ann)
-            messages.success(request, 'Announcement posted.')
+
+            send_email = 'send_email' in request.POST
+            send_text  = 'send_text'  in request.POST
+            email_sent = text_sent = 0
+
+            if send_email:
+                from django.core.mail import send_mail as _send_mail
+                active_emails = Member.objects.filter(membership_status='active').values_list('email', flat=True)
+                for email in active_emails:
+                    try:
+                        _send_mail(
+                            subject=f'Brainerd Snodeos: {ann.title}',
+                            message=ann.body,
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            recipient_list=[email],
+                            fail_silently=True,
+                        )
+                        email_sent += 1
+                    except Exception:
+                        pass
+
+            if send_text:
+                brevo_key  = getattr(settings, 'BREVO_API_KEY', '')
+                twilio_sid = getattr(settings, 'TWILIO_ACCOUNT_SID', '')
+                sms_body   = f'Brainerd Snodeos: {ann.title}\n{ann.body[:120]}'
+                recipients = Member.objects.filter(membership_status='active', accepts_texts=True).exclude(phone='')
+
+                if brevo_key:
+                    import urllib.request, json as _json
+                    for m in recipients:
+                        phone = m.phone.strip().replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
+                        if not phone.startswith('+'): phone = '+1' + phone
+                        payload = _json.dumps({'type': 'transactional', 'unicodeEnabled': True,
+                                               'sender': 'Snodeos', 'recipient': phone, 'content': sms_body}).encode()
+                        req = urllib.request.Request(
+                            'https://api.brevo.com/v3/transactionalSMS/sms', data=payload,
+                            headers={'api-key': brevo_key, 'Content-Type': 'application/json'})
+                        try:
+                            urllib.request.urlopen(req, timeout=10)
+                            text_sent += 1
+                        except Exception:
+                            pass
+                elif twilio_sid:
+                    from twilio.rest import Client
+                    client = Client(twilio_sid, getattr(settings, 'TWILIO_AUTH_TOKEN', ''))
+                    from_num = getattr(settings, 'TWILIO_FROM_NUMBER', '')
+                    for m in recipients:
+                        try:
+                            client.messages.create(body=sms_body, from_=from_num, to=m.phone)
+                            text_sent += 1
+                        except Exception:
+                            pass
+
+            parts = ['Announcement posted.']
+            if email_sent:  parts.append(f'Emailed {email_sent} members.')
+            if text_sent:   parts.append(f'Texted {text_sent} members.')
+            messages.success(request, ' '.join(parts))
             return redirect('manage_panel:announcement_list')
     else:
         form = AnnouncementForm()
-    return render(request, 'manage_panel/announcements/form.html', {'form': form, 'action': 'New'})
+
+    brevo_key  = getattr(settings, 'BREVO_API_KEY', '')
+    twilio_sid = getattr(settings, 'TWILIO_ACCOUNT_SID', '')
+    return render(request, 'manage_panel/announcements/form.html', {
+        'form': form,
+        'action': 'New',
+        'sms_configured': bool(brevo_key or twilio_sid),
+        'opted_in_count': Member.objects.filter(membership_status='active', accepts_texts=True).exclude(phone='').count(),
+        'active_count': Member.objects.filter(membership_status='active').count(),
+    })
 
 
 @officer_required
