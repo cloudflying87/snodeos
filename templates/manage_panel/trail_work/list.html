@@ -16,50 +16,87 @@
 
 <div class="panel-card">
   {% if logs %}
-    <table class="panel-table">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Title</th>
-          <th>Volunteers</th>
-          <th>Hours</th>
-          <th class="text-end">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for log in logs %}
-        <tr>
-          <td>
-            <span class="badge bg-primary-subtle text-primary fw-semibold">{{ log.date|date:"M j, Y" }}</span>
-          </td>
-          <td>
-            <div class="fw-semibold">{{ log.title }}</div>
-            <div class="text-muted small mt-1">{{ log.description|truncatechars:70 }}</div>
-          </td>
-          <td>
-            <span class="d-flex align-items-center gap-1 text-muted small">
-              <i class="bi bi-people"></i> {{ log.volunteers }}
-            </span>
-          </td>
-          <td>
-            <span class="d-flex align-items-center gap-1 text-muted small">
-              <i class="bi bi-clock"></i> {{ log.hours }} hrs
-            </span>
-          </td>
-          <td class="text-end">
-            <a href="{% url 'manage_panel:trail_work_edit' log.pk %}" class="btn btn-sm btn-outline-primary me-1">
-              <i class="bi bi-pencil"></i>
-            </a>
-            <button class="btn btn-sm btn-outline-danger"
-                    data-delete-url="{% url 'manage_panel:trail_work_delete' log.pk %}"
-                    data-delete-label="{{ log.title }}">
-              <i class="bi bi-trash"></i>
-            </button>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+
+    <!-- Desktop table -->
+    <div class="d-none d-md-block">
+      <table class="panel-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Title</th>
+            <th>Volunteers</th>
+            <th>Hours</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+          <tr>
+            <td>
+              <span class="badge bg-primary-subtle text-primary fw-semibold">{{ log.date|date:"M j, Y" }}</span>
+            </td>
+            <td>
+              <div class="fw-semibold">{{ log.title }}</div>
+              <div class="text-muted small mt-1">{{ log.description|truncatechars:70 }}</div>
+            </td>
+            <td>
+              <span class="d-flex align-items-center gap-1 text-muted small">
+                <i class="bi bi-people"></i> {{ log.volunteers }}
+              </span>
+            </td>
+            <td>
+              <span class="d-flex align-items-center gap-1 text-muted small">
+                <i class="bi bi-clock"></i> {{ log.hours }} hrs
+              </span>
+            </td>
+            <td class="text-end">
+              <a href="{% url 'manage_panel:trail_work_edit' log.pk %}" class="btn btn-sm btn-outline-primary me-1">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <button class="btn btn-sm btn-outline-danger"
+                      data-delete-url="{% url 'manage_panel:trail_work_delete' log.pk %}"
+                      data-delete-label="{{ log.title }}">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile list -->
+    <div class="d-md-none mob-list">
+      {% for log in logs %}
+      <div class="mob-swipe-wrapper">
+        <div class="mob-swipe-delete">
+          <button class="btn btn-danger h-100 w-100 rounded-0 border-0"
+                  data-delete-url="{% url 'manage_panel:trail_work_delete' log.pk %}"
+                  data-delete-label="{{ log.title }}">
+            <i class="bi bi-trash fs-5"></i>
+          </button>
+        </div>
+        <a href="{% url 'manage_panel:trail_work_edit' log.pk %}" class="mob-swipe-row">
+          <div class="mob-info">
+            <div class="mob-title">
+              <span class="badge bg-primary me-1" style="font-size:0.7rem;vertical-align:middle;">{{ log.date|date:"M j, Y" }}</span>{{ log.title }}
+            </div>
+            {% if log.description %}
+            <div class="mob-sub">{{ log.description|truncatechars:90 }}</div>
+            {% endif %}
+            {% if log.volunteers or log.hours %}
+            <div class="mob-sub mt-1">
+              {% if log.volunteers %}<span class="me-2"><i class="bi bi-people"></i> {{ log.volunteers }}</span>{% endif %}
+              {% if log.hours %}<span><i class="bi bi-clock"></i> {{ log.hours }} hrs</span>{% endif %}
+            </div>
+            {% endif %}
+          </div>
+          <i class="bi bi-chevron-right text-muted" style="flex-shrink:0;font-size:0.8rem;"></i>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+
   {% else %}
     <div class="panel-card-body text-center py-5">
       <i class="bi bi-tools display-4 text-muted mb-3 d-block"></i>
@@ -68,5 +105,7 @@
     </div>
   {% endif %}
 </div>
+
+{% endblock %}
 
 {% endblock %}

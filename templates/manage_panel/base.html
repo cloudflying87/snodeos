@@ -122,6 +122,9 @@
         <a href="{% url 'manage_panel:communications' %}" class="panel-nav-link {% block active_comms %}{% endblock %}">
           <i class="bi bi-broadcast"></i> Communications
         </a>
+        <a href="{% url 'manage_panel:email_template_list' %}" class="panel-nav-link {% block active_email_templates %}{% endblock %}">
+          <i class="bi bi-envelope-paper"></i> Email Templates
+        </a>
       </div>
       {% endif %}
       <div class="panel-nav-section">
@@ -190,6 +193,69 @@
       new bootstrap.Modal(document.getElementById('deleteModal')).show();
     });
   });
+
+  // Swipe-to-delete for any .mob-swipe-wrapper rows
+  (function () {
+    const SWIPE_WIDTH = 75;
+    let openRow = null;
+
+    document.querySelectorAll('.mob-swipe-wrapper').forEach(wrapper => {
+      const row = wrapper.querySelector('.mob-swipe-row');
+      if (!row) return;
+      let startX = 0, startY = 0, dx = 0, dragging = false;
+
+      row.addEventListener('touchstart', e => {
+        const t = e.touches[0];
+        startX = t.clientX; startY = t.clientY;
+        dx = 0; dragging = false;
+        row.style.transition = 'none';
+      }, { passive: true });
+
+      row.addEventListener('touchmove', e => {
+        const t = e.touches[0];
+        const deltaX = t.clientX - startX;
+        const deltaY = t.clientY - startY;
+        if (!dragging && Math.abs(deltaX) < Math.abs(deltaY)) return;
+        dragging = true;
+        e.preventDefault();
+        if (openRow && openRow !== row) {
+          openRow.style.transition = 'transform 0.2s ease';
+          openRow.style.transform = 'translateX(0)';
+          openRow = null;
+        }
+        dx = Math.min(0, Math.max(-SWIPE_WIDTH, deltaX));
+        row.style.transform = `translateX(${dx}px)`;
+      }, { passive: false });
+
+      row.addEventListener('touchend', () => {
+        row.style.transition = 'transform 0.2s ease';
+        if (dx < -(SWIPE_WIDTH / 2)) {
+          row.style.transform = `translateX(-${SWIPE_WIDTH}px)`;
+          openRow = row;
+        } else {
+          row.style.transform = 'translateX(0)';
+          openRow = null;
+        }
+      });
+
+      row.addEventListener('click', e => {
+        if (openRow === row) {
+          e.preventDefault();
+          row.style.transition = 'transform 0.2s ease';
+          row.style.transform = 'translateX(0)';
+          openRow = null;
+        }
+      });
+    });
+
+    document.addEventListener('touchstart', e => {
+      if (openRow && !openRow.closest('.mob-swipe-wrapper').contains(e.target)) {
+        openRow.style.transition = 'transform 0.2s ease';
+        openRow.style.transform = 'translateX(0)';
+        openRow = null;
+      }
+    }, { passive: true });
+  })();
 </script>
 {% block extra_js %}{% endblock %}
 </body>
