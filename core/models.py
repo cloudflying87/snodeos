@@ -118,6 +118,28 @@ class Announcement(models.Model):
         return self.visibility in ('members', 'both')
 
 
+class AnnouncementImage(models.Model):
+    announcement = models.ForeignKey(Announcement, on_delete=models.CASCADE, related_name='images')
+    image        = models.ImageField(upload_to='announcements/')
+    caption      = models.CharField(max_length=200, blank=True)
+    uploaded_at  = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['uploaded_at']
+
+    def __str__(self):
+        return f'Image for {self.announcement}'
+
+    @property
+    def absolute_url(self):
+        """Absolute URL for use in outgoing emails (requires SITE_URL in settings)."""
+        if not self.image:
+            return ''
+        from django.conf import settings as _settings
+        site_url = getattr(_settings, 'SITE_URL', '').rstrip('/')
+        return f"{site_url}{self.image.url}"
+
+
 class TrailCondition(models.Model):
     STATUS_CHOICES = [
         ('open',    'Open'),
@@ -160,6 +182,27 @@ class TrailCondition(models.Model):
             'caution': 'bg-warning text-dark',
             'groomed': 'bg-info text-dark',
         }.get(self.status, 'bg-secondary')
+
+
+class TrailConditionImage(models.Model):
+    condition   = models.ForeignKey(TrailCondition, on_delete=models.CASCADE, related_name='images')
+    image       = models.ImageField(upload_to='trail_conditions/')
+    caption     = models.CharField(max_length=200, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['uploaded_at']
+
+    def __str__(self):
+        return f'Image for {self.condition}'
+
+    @property
+    def absolute_url(self):
+        if not self.image:
+            return ''
+        from django.conf import settings as _settings
+        site_url = getattr(_settings, 'SITE_URL', '').rstrip('/')
+        return f"{site_url}{self.image.url}"
 
 
 class EmailTemplate(models.Model):
@@ -222,6 +265,13 @@ class SiteSettings(models.Model):
     email_accent_color = models.CharField(max_length=7, blank=True, default='#1363A2', help_text='Hex color for buttons and accents')
     email_footer_text  = models.TextField(blank=True, default="You're receiving this because you're a member of the Brainerd Snodeos Snowmobile Club.")
 
+    # Site / SEO
+    site_description = models.CharField(max_length=300, blank=True,
+        default="Brainerd Lakes Area snowmobile club — trail conditions, club events, membership, and trail work.",
+        help_text='Shown in link previews when someone shares the site on Facebook, iMessage, etc.')
+    social_image     = models.ImageField(upload_to='social/', blank=True, null=True,
+        help_text='Square or 1200×630 image used when the site is shared on Facebook, Twitter, iMessage, Slack, etc.')
+
     # Communications — SMS
     brevo_api_key      = models.CharField(max_length=200, blank=True)
     twilio_account_sid = models.CharField(max_length=50, blank=True)
@@ -269,17 +319,6 @@ class SiteSettings(models.Model):
     @property
     def sms_configured(self):
         return bool(self.brevo_api_key or self.twilio_account_sid)
-
-    class Meta:
-        verbose_name = 'Site Settings'
-
-    @classmethod
-    def get(cls):
-        obj, _ = cls.objects.get_or_create(pk=1)
-        return obj
-
-    def __str__(self):
-        return 'Site Settings'
 
 
 class ContactMessage(models.Model):

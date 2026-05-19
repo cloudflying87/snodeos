@@ -155,15 +155,23 @@
     <div class="row g-4">
       {% for a in announcements %}
       <div class="col-md-6 col-lg-4">
-        <div class="card border-0 shadow-sm h-100 {% if a.is_pinned %}border-start border-4 border-primary{% endif %}">
-          <div class="card-body p-4">
-            {% if a.is_pinned %}<span class="badge bg-primary mb-2"><i class="bi bi-pin-angle me-1"></i>Pinned</span>{% endif %}
-            {% if a.visibility == 'members' %}<span class="badge bg-secondary mb-2">Members Only</span>{% endif %}
-            <h5 class="fw-bold mb-2">{{ a.title }}</h5>
-            <p class="text-muted mb-3">{{ a.body|truncatewords:40 }}</p>
-            <small class="text-muted">{{ a.created_at|date:"M j, Y" }}</small>
+        <a href="{% url 'core:announcement_detail' a.pk %}" class="text-decoration-none text-reset h-100 d-block">
+          <div class="card border-0 shadow-sm h-100 {% if a.is_pinned %}border-start border-4 border-primary{% endif %}">
+            {% with a.images.first as img %}
+            {% if img %}
+              <img src="{{ img.image.url }}" class="card-img-top" alt="{{ img.caption|default:a.title }}"
+                   style="height:160px;object-fit:cover;">
+            {% endif %}
+            {% endwith %}
+            <div class="card-body p-4">
+              {% if a.is_pinned %}<span class="badge bg-primary mb-2"><i class="bi bi-pin-angle me-1" aria-hidden="true"></i>Pinned</span>{% endif %}
+              {% if a.visibility == 'members' %}<span class="badge bg-secondary mb-2">Members Only</span>{% endif %}
+              <h5 class="fw-bold mb-2">{{ a.title }}</h5>
+              <p class="text-muted mb-3">{{ a.body|truncatewords:40 }}</p>
+              <small class="text-muted">{{ a.created_at|date:"M j, Y" }}</small>
+            </div>
           </div>
-        </div>
+        </a>
       </div>
       {% endfor %}
     </div>
@@ -178,15 +186,23 @@
     <div class="row g-4">
       {% for tc in trail_conditions %}
       <div class="col-md-6 col-lg-4">
-        <div class="card border-0 shadow-sm h-100 {% if tc.is_pinned %}border-start border-4 border-primary{% endif %}">
-          <div class="card-body p-4">
-            {% if tc.is_pinned %}<span class="badge bg-primary mb-2"><i class="bi bi-pin-angle me-1"></i>Pinned</span>{% endif %}
-            <span class="badge {{ tc.status_badge_class }} mb-2">{{ tc.get_status_display }}</span>
-            <h5 class="fw-bold mb-2">{{ tc.title }}</h5>
-            {% if tc.body %}<p class="text-muted mb-3">{{ tc.body|truncatewords:40 }}</p>{% endif %}
-            <small class="text-muted">{{ tc.created_at|date:"M j, Y" }}</small>
+        <a href="{% url 'core:trail_condition_detail' tc.pk %}" class="text-decoration-none text-reset h-100 d-block">
+          <div class="card border-0 shadow-sm h-100 {% if tc.is_pinned %}border-start border-4 border-primary{% endif %}">
+            {% with tc.images.first as img %}
+            {% if img %}
+              <img src="{{ img.image.url }}" class="card-img-top" alt="{{ img.caption|default:tc.title }}"
+                   style="height:160px;object-fit:cover;">
+            {% endif %}
+            {% endwith %}
+            <div class="card-body p-4">
+              {% if tc.is_pinned %}<span class="badge bg-primary mb-2"><i class="bi bi-pin-angle me-1" aria-hidden="true"></i>Pinned</span>{% endif %}
+              <span class="badge {{ tc.status_badge_class }} mb-2">{{ tc.get_status_display }}</span>
+              <h5 class="fw-bold mb-2">{{ tc.title }}</h5>
+              {% if tc.body %}<p class="text-muted mb-3">{{ tc.body|truncatewords:40 }}</p>{% endif %}
+              <small class="text-muted">{{ tc.created_at|date:"M j, Y" }}</small>
+            </div>
           </div>
-        </div>
+        </a>
       </div>
       {% endfor %}
     </div>

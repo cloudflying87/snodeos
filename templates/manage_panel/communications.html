@@ -12,12 +12,18 @@
 
 <!-- Status bar -->
 <div class="row g-3 mb-4">
-  <div class="col-md-4">
+  <div class="col-sm-6 col-lg-4">
     <div class="card border-0 shadow-sm h-100">
       <div class="card-body d-flex align-items-center gap-3 p-3">
-        <div class="fs-3">{% if cfg.email_configured %}✅{% else %}⚠️{% endif %}</div>
+        {% if cfg.email_configured %}
+          <i class="bi bi-check-circle-fill text-success fs-3" aria-hidden="true"></i>
+        {% else %}
+          <i class="bi bi-exclamation-circle-fill text-warning fs-3" aria-hidden="true"></i>
+        {% endif %}
         <div>
-          <div class="fw-bold small">Email</div>
+          <div class="fw-bold small">Email
+            <span class="visually-hidden">{% if cfg.email_configured %}configured{% else %}not configured{% endif %}</span>
+          </div>
           <div class="text-muted" style="font-size:0.78rem;">
             {% if cfg.brevo_smtp_key %}Brevo SMTP configured
             {% elif cfg.resend_api_key %}Resend API configured
@@ -27,12 +33,18 @@
       </div>
     </div>
   </div>
-  <div class="col-md-4">
+  <div class="col-sm-6 col-lg-4">
     <div class="card border-0 shadow-sm h-100">
       <div class="card-body d-flex align-items-center gap-3 p-3">
-        <div class="fs-3">{% if cfg.sms_configured %}✅{% else %}⬜{% endif %}</div>
+        {% if cfg.sms_configured %}
+          <i class="bi bi-check-circle-fill text-success fs-3" aria-hidden="true"></i>
+        {% else %}
+          <i class="bi bi-dash-circle text-muted fs-3" aria-hidden="true"></i>
+        {% endif %}
         <div>
-          <div class="fw-bold small">SMS / Text</div>
+          <div class="fw-bold small">SMS / Text
+            <span class="visually-hidden">{% if cfg.sms_configured %}configured{% else %}not configured{% endif %}</span>
+          </div>
           <div class="text-muted" style="font-size:0.78rem;">
             {% if cfg.brevo_api_key %}Brevo SMS configured
             {% elif cfg.twilio_account_sid %}Twilio configured
@@ -42,13 +54,17 @@
       </div>
     </div>
   </div>
-  <div class="col-md-4">
+  <div class="col-12 col-lg-4">
     <div class="card border-0 shadow-sm h-100">
       <div class="card-body d-flex align-items-center gap-3 p-3">
-        <div class="fs-3">{% if cfg.notification_email %}✅{% else %}⚠️{% endif %}</div>
-        <div>
+        {% if cfg.notification_email %}
+          <i class="bi bi-check-circle-fill text-success fs-3" aria-hidden="true"></i>
+        {% else %}
+          <i class="bi bi-exclamation-circle-fill text-warning fs-3" aria-hidden="true"></i>
+        {% endif %}
+        <div class="min-w-0">
           <div class="fw-bold small">Officer Alerts</div>
-          <div class="text-muted" style="font-size:0.78rem;">
+          <div class="text-muted text-truncate" style="font-size:0.78rem;">
             {% if cfg.notification_email %}{{ cfg.notification_email }}
             {% else %}Not set — set below{% endif %}
           </div>
@@ -396,6 +412,62 @@
                 <div style="font-size:0.63rem;color:#9ab0c8;" id="prev-footer">{{ cfg.email_footer_text|default:"You're receiving this as a member of the Brainerd Snodeos." }}</div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Social / Link Preview -->
+<div class="card border-0 shadow-sm mt-4">
+  <div class="card-header bg-white border-bottom py-3">
+    <h5 class="fw-bold mb-0"><i class="bi bi-share me-2 text-primary" aria-hidden="true"></i>Social / Link Preview</h5>
+    <p class="text-muted small mb-0 mt-1">Controls the image and text that show up when someone shares the site on Facebook, iMessage, Slack, Twitter, etc.</p>
+  </div>
+  <div class="card-body p-4">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="save_social">
+
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="mb-3">
+            <label for="site_description" class="form-label fw-semibold small">Site Description</label>
+            <textarea id="site_description" name="site_description" class="form-control" rows="3" maxlength="300">{{ cfg.site_description }}</textarea>
+            <div class="form-text">1–2 sentences shown under the link in previews. Max 300 characters.</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="social_image" class="form-label fw-semibold small">Preview Image</label>
+            <input id="social_image" type="file" name="social_image" class="form-control" accept="image/*">
+            <div class="form-text">
+              Recommended size: <strong>1200 × 630</strong> (1.91:1). Used by Facebook/LinkedIn.
+              Square images also work for iMessage and Twitter. Leave blank to use the default Snodeos card.
+            </div>
+            {% if cfg.social_image %}
+            <div class="form-check mt-2">
+              <input id="clear_social_image" class="form-check-input" type="checkbox" name="clear_social_image" value="1">
+              <label class="form-check-label small text-danger" for="clear_social_image">Remove current image (revert to default)</label>
+            </div>
+            {% endif %}
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-save me-1" aria-hidden="true"></i>Save Social Settings
+          </button>
+        </div>
+
+        <div class="col-lg-5">
+          <p class="text-muted small fw-semibold mb-2">Currently shared as:</p>
+          <div class="border rounded p-2" style="background:#f6f9fe;">
+            {% if cfg.social_image %}
+              <img src="{{ cfg.social_image.url }}" alt="Current social preview image" class="img-fluid rounded">
+            {% else %}
+              {% load static %}
+              <img src="{% static 'images/social-card.png' %}" alt="Default Snodeos social card" class="img-fluid rounded">
+              <p class="text-muted small mt-2 mb-0 fst-italic">Default Snodeos card (no custom image uploaded).</p>
+            {% endif %}
           </div>
         </div>
       </div>

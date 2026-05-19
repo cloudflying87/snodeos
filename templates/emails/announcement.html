@@ -8,6 +8,14 @@
 
 <p>{{ announcement.body|linebreaksbr }}</p>
 
+{% if image_urls %}
+<div style="margin:24px 0;">
+  {% for url in image_urls %}
+  <img src="{{ url }}" alt="" style="display:block;max-width:100%;height:auto;border-radius:6px;margin-bottom:12px;">
+  {% endfor %}
+</div>
+{% endif %}
+
 {% if ann_url %}
 <hr class="divider">
 <div class="btn-wrap">

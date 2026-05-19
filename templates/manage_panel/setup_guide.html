@@ -3,214 +3,417 @@
 {% block active_setup_guide %}active{% endblock %}
 
 {% block content %}
-<div class="d-flex align-items-center justify-content-between mb-4">
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
   <div>
-    <h1 class="h3 fw-bold mb-1">Site Setup Guide</h1>
-    <p class="text-muted mb-0">Everything you need to get the site fully operational.</p>
+    <h1 class="h3 fw-bold mb-1">Setup &amp; Daily Tools</h1>
+    <p class="text-muted mb-0">Your day-to-day controls up top, full reference below.</p>
   </div>
 </div>
 
-<!-- Quick checklist -->
-<div class="card border-0 shadow-sm mb-4">
-  <div class="card-header bg-white border-bottom py-3">
-    <h5 class="fw-bold mb-0"><i class="bi bi-check2-square me-2 text-success"></i>Go-Live Checklist</h5>
+{# ───────────────────────────── COMMUNICATIONS HUB ───────────────────────────── #}
+<div class="card border-0 shadow-sm mb-4" style="border-top: 4px solid var(--bs-primary) !important;">
+  <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <h5 class="fw-bold mb-0"><i class="bi bi-broadcast me-2 text-primary" aria-hidden="true"></i>Communications Hub</h5>
+    <a href="{% url 'manage_panel:communications' %}" class="btn btn-sm btn-outline-primary">
+      <i class="bi bi-gear me-1" aria-hidden="true"></i>Full Settings
+    </a>
   </div>
-  <div class="card-body">
-    <div class="row g-2">
-      {% for item in checklist %}
-      <div class="col-md-6">
-        {% if item.url %}
-        <a href="{{ item.url }}" class="d-flex align-items-start gap-2 p-2 rounded text-decoration-none" style="background:#f8f9fa;" onmouseover="this.style.background='#e9ecef'" onmouseout="this.style.background='#f8f9fa'">
-          <i class="bi bi-square text-muted mt-1 flex-shrink-0"></i>
-          <span class="small text-body">{{ item.text }}</span>
-          <i class="bi bi-arrow-right ms-auto text-muted mt-1 flex-shrink-0"></i>
-        </a>
-        {% else %}
-        <div class="d-flex align-items-start gap-2 p-2 rounded" style="background:#f8f9fa;">
-          <i class="bi bi-square text-muted mt-1 flex-shrink-0"></i>
-          <span class="small text-muted">{{ item.text }}</span>
+  <div class="card-body p-4">
+
+    {# Status pills — text + icon, not color-only #}
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-lg-3">
+        <div class="border rounded p-3 h-100 d-flex align-items-start gap-2">
+          {% if cfg.email_configured %}
+            <i class="bi bi-check-circle-fill text-success fs-4" aria-hidden="true"></i>
+            <div>
+              <div class="fw-bold small">Email <span class="visually-hidden">configured</span></div>
+              <div class="text-success small">Ready to send</div>
+              <div class="text-muted" style="font-size:0.75rem;">
+                {% if cfg.brevo_smtp_key %}Brevo SMTP{% elif cfg.resend_api_key %}Resend{% endif %}
+              </div>
+            </div>
+          {% else %}
+            <i class="bi bi-exclamation-circle-fill text-warning fs-4" aria-hidden="true"></i>
+            <div>
+              <div class="fw-bold small">Email <span class="visually-hidden">not configured</span></div>
+              <div class="text-warning small fw-semibold">Not configured</div>
+              <a href="{% url 'manage_panel:communications' %}" class="small">Set up &rarr;</a>
+            </div>
+          {% endif %}
         </div>
-        {% endif %}
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="border rounded p-3 h-100 d-flex align-items-start gap-2">
+          {% if cfg.sms_configured %}
+            <i class="bi bi-check-circle-fill text-success fs-4" aria-hidden="true"></i>
+            <div>
+              <div class="fw-bold small">SMS / Text <span class="visually-hidden">configured</span></div>
+              <div class="text-success small">Ready to send</div>
+              <div class="text-muted" style="font-size:0.75rem;">
+                {% if cfg.brevo_api_key %}Brevo{% elif cfg.twilio_account_sid %}Twilio{% endif %}
+              </div>
+            </div>
+          {% else %}
+            <i class="bi bi-dash-circle text-muted fs-4" aria-hidden="true"></i>
+            <div>
+              <div class="fw-bold small">SMS / Text</div>
+              <div class="text-muted small">Optional — not set up</div>
+              <a href="{% url 'manage_panel:sms_settings' %}" class="small">Configure &rarr;</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="border rounded p-3 h-100 d-flex align-items-start gap-2">
+          {% if cfg.notification_email %}
+            <i class="bi bi-check-circle-fill text-success fs-4" aria-hidden="true"></i>
+            <div>
+              <div class="fw-bold small">Officer Alerts</div>
+              <div class="text-muted small text-truncate" style="max-width:160px;" title="{{ cfg.notification_email }}">{{ cfg.notification_email }}</div>
+            </div>
+          {% else %}
+            <i class="bi bi-exclamation-circle-fill text-warning fs-4" aria-hidden="true"></i>
+            <div>
+              <div class="fw-bold small">Officer Alerts</div>
+              <div class="text-warning small fw-semibold">No address set</div>
+              <a href="{% url 'manage_panel:communications' %}" class="small">Set &rarr;</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="border rounded p-3 h-100 d-flex align-items-start gap-2">
+          {% if email_templates %}
+            <i class="bi bi-check-circle-fill text-success fs-4" aria-hidden="true"></i>
+            <div>
+              <div class="fw-bold small">Email Templates</div>
+              <div class="text-muted small">{{ email_templates|length }} saved</div>
+              <a href="{% url 'manage_panel:email_template_list' %}" class="small">Manage &rarr;</a>
+            </div>
+          {% else %}
+            <i class="bi bi-dash-circle text-muted fs-4" aria-hidden="true"></i>
+            <div>
+              <div class="fw-bold small">Email Templates</div>
+              <div class="text-muted small">None yet</div>
+              <a href="{% url 'manage_panel:email_template_add' %}" class="small">Create one &rarr;</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {# Send test email — prominent #}
+    <div class="border rounded p-3 mb-4" style="background:#f6f9fe;">
+      <h6 class="fw-bold mb-2"><i class="bi bi-send-check me-2 text-primary" aria-hidden="true"></i>Send a Test Email</h6>
+      <p class="text-muted small mb-3">Confirm the email pipeline is working. The test goes out using whatever provider is configured above.</p>
+      <form method="post" class="row g-2 align-items-end">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="test_email">
+        <div class="col-12 col-md-7">
+          <label for="test_recipient" class="form-label small fw-semibold mb-1">Send to</label>
+          <input id="test_recipient" type="email" name="test_recipient" class="form-control"
+                 value="{{ default_test_recipient }}" placeholder="you@example.com">
+        </div>
+        <div class="col-12 col-md-5">
+          <button type="submit" class="btn btn-primary w-100" {% if not cfg.email_configured %}disabled aria-disabled="true"{% endif %}>
+            <i class="bi bi-send me-1" aria-hidden="true"></i>Send Test Email
+          </button>
+          {% if not cfg.email_configured %}
+          <div class="text-warning small mt-1"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>Configure email first</div>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+
+    {# Quick actions — the things you actually do every week #}
+    <h6 class="fw-bold text-uppercase text-muted small mb-3">Quick Actions</h6>
+    <div class="row g-2 mb-4">
+      <div class="col-sm-6 col-lg-3">
+        <a href="{% url 'manage_panel:announcement_add' %}" class="btn btn-outline-primary w-100 d-flex flex-column align-items-center py-3">
+          <i class="bi bi-megaphone fs-3 mb-1" aria-hidden="true"></i>
+          <span class="small fw-semibold">Post Announcement</span>
+        </a>
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <a href="{% url 'manage_panel:trail_condition_add' %}" class="btn btn-outline-primary w-100 d-flex flex-column align-items-center py-3">
+          <i class="bi bi-signpost-split fs-3 mb-1" aria-hidden="true"></i>
+          <span class="small fw-semibold">Post Trail Condition</span>
+        </a>
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <a href="{% url 'manage_panel:email_blast' %}" class="btn btn-outline-primary w-100 d-flex flex-column align-items-center py-3">
+          <i class="bi bi-envelope-paper fs-3 mb-1" aria-hidden="true"></i>
+          <span class="small fw-semibold">Email Blast</span>
+        </a>
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <a href="{% url 'manage_panel:text_members' %}" class="btn btn-outline-primary w-100 d-flex flex-column align-items-center py-3 {% if not cfg.sms_configured %}opacity-50{% endif %}">
+          <i class="bi bi-chat-dots fs-3 mb-1" aria-hidden="true"></i>
+          <span class="small fw-semibold">Text Members</span>
+        </a>
+      </div>
+    </div>
+
+    {# Email templates list — inline so users see what they have #}
+    <h6 class="fw-bold text-uppercase text-muted small mb-3 d-flex align-items-center justify-content-between">
+      <span>Email Templates</span>
+      <a href="{% url 'manage_panel:email_template_add' %}" class="btn btn-sm btn-outline-primary fw-normal text-capitalize">
+        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New
+      </a>
+    </h6>
+    {% if email_templates %}
+    <div class="row g-2">
+      {% for t in email_templates %}
+      <div class="col-sm-6 col-lg-4">
+        <a href="{% url 'manage_panel:email_template_edit' t.pk %}" class="border rounded p-3 text-decoration-none text-reset d-flex align-items-center gap-3 h-100">
+          <div class="rounded flex-shrink-0" style="width:36px;height:36px;background:{{ t.header_color|default:'#1363A2' }};"></div>
+          <div class="flex-grow-1 min-w-0">
+            <div class="fw-bold small text-truncate">{{ t.name }}{% if t.is_default %} <span class="badge bg-secondary fw-normal" style="font-size:0.65rem;">default</span>{% endif %}</div>
+            <div class="text-muted text-truncate" style="font-size:0.75rem;">{{ t.description|default:t.from_name }}</div>
+          </div>
+          <i class="bi bi-pencil text-muted" aria-hidden="true"></i>
+        </a>
       </div>
       {% endfor %}
     </div>
+    {% else %}
+    <div class="text-center py-4 border rounded" style="background:#f8f9fa;">
+      <i class="bi bi-envelope-plus text-muted display-6 d-block mb-2" aria-hidden="true"></i>
+      <p class="text-muted small mb-3">No email templates yet. Create one to brand your outgoing emails with the club colors and logo.</p>
+      <a href="{% url 'manage_panel:email_template_add' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Create First Template
+      </a>
+    </div>
+    {% endif %}
+
   </div>
 </div>
 
-<!-- What's built -->
-<div class="card border-0 shadow-sm mb-4">
-  <div class="card-header bg-white border-bottom py-3">
-    <h5 class="fw-bold mb-0"><i class="bi bi-grid me-2 text-primary"></i>What's Already Built</h5>
-  </div>
-  <div class="card-body p-0">
-    <div class="row g-0">
-      <div class="col-md-6 border-end">
-        <div class="p-4">
-          <h6 class="fw-semibold text-uppercase text-muted small mb-3">Public Website</h6>
-          <ul class="list-unstyled mb-0 small">
-            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i><strong>Home page</strong> — hero, stats, announcements, sponsors, Facebook feed</li>
-            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i><strong>About</strong> — officers with photos, directors</li>
-            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i><strong>Trail Work</strong> — logs with photos (members only)</li>
-            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i><strong>Contact</strong> — form + officer contact info</li>
-            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i><strong>Join</strong> — configurable membership application</li>
-            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i><strong>Member login, dashboard & password reset</strong></li>
-          </ul>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="p-4">
-          <h6 class="fw-semibold text-uppercase text-muted small mb-3">Management Panel</h6>
-          <ul class="list-unstyled mb-0 small">
-            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Announcements (email + text on post)</li>
-            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Officers, titles, sponsors</li>
-            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Trail work logs with photo uploads</li>
-            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Member management, applications, CSV import</li>
-            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Registration form builder</li>
-            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Dues tracking, email &amp; text reminders</li>
-            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Permissions management</li>
-            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Email blast + Text members</li>
-            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Facebook integration</li>
-          </ul>
+{# ───────────────────────────── DETAILS / REFERENCE — collapsed by default ───────────────────────────── #}
+<div class="d-flex align-items-center mb-3 mt-5">
+  <h2 class="h6 fw-bold mb-0 text-muted text-uppercase" style="letter-spacing:0.5px;">Setup &amp; Reference</h2>
+  <span class="text-muted small ms-3 d-none d-sm-inline">Click a section to expand</span>
+</div>
+
+<div class="accordion" id="setupReference">
+
+  <!-- Go-Live Checklist -->
+  <div class="accordion-item border-0 shadow-sm mb-2 rounded">
+    <h3 class="accordion-header">
+      <button class="accordion-button collapsed bg-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#refChecklist" aria-expanded="false" aria-controls="refChecklist">
+        <i class="bi bi-check2-square me-2 text-success" aria-hidden="true"></i>Go-Live Checklist
+      </button>
+    </h3>
+    <div id="refChecklist" class="accordion-collapse collapse" data-bs-parent="#setupReference">
+      <div class="accordion-body">
+        <div class="row g-2">
+          {% for item in checklist %}
+          <div class="col-md-6">
+            {% if item.url %}
+            <a href="{{ item.url }}" class="d-flex align-items-start gap-2 p-2 rounded text-decoration-none" style="background:#f8f9fa;" onmouseover="this.style.background='#e9ecef'" onmouseout="this.style.background='#f8f9fa'">
+              <i class="bi bi-square text-muted mt-1 flex-shrink-0" aria-hidden="true"></i>
+              <span class="small text-body">{{ item.text }}</span>
+              <i class="bi bi-arrow-right ms-auto text-muted mt-1 flex-shrink-0" aria-hidden="true"></i>
+            </a>
+            {% else %}
+            <div class="d-flex align-items-start gap-2 p-2 rounded" style="background:#f8f9fa;">
+              <i class="bi bi-square text-muted mt-1 flex-shrink-0" aria-hidden="true"></i>
+              <span class="small text-muted">{{ item.text }}</span>
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Communications link -->
-<div class="card border-0 shadow-sm mb-4" style="border-left: 4px solid var(--bs-primary) !important;">
-  <div class="card-body d-flex align-items-center justify-content-between gap-3 flex-wrap p-4">
-    <div>
-      <h5 class="fw-bold mb-1"><i class="bi bi-broadcast me-2 text-primary"></i>Email & SMS Setup</h5>
-      <p class="text-muted mb-0 small">Configure Brevo (email + SMS in one account) or Resend + Twilio. Enter your API keys directly in the panel — no server file editing needed.</p>
+  <!-- What's built -->
+  <div class="accordion-item border-0 shadow-sm mb-2 rounded">
+    <h3 class="accordion-header">
+      <button class="accordion-button collapsed bg-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#refBuilt" aria-expanded="false" aria-controls="refBuilt">
+        <i class="bi bi-grid me-2 text-primary" aria-hidden="true"></i>What's Already Built
+      </button>
+    </h3>
+    <div id="refBuilt" class="accordion-collapse collapse" data-bs-parent="#setupReference">
+      <div class="accordion-body p-0">
+        <div class="row g-0">
+          <div class="col-md-6 border-end">
+            <div class="p-4">
+              <h6 class="fw-semibold text-uppercase text-muted small mb-3">Public Website</h6>
+              <ul class="list-unstyled mb-0 small">
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i><strong>Home page</strong> — hero, stats, announcements, sponsors, Facebook feed</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i><strong>About</strong> — officers with photos, directors</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i><strong>Trail Work</strong> — logs with photos (members only)</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i><strong>Trail Conditions</strong> — public status with photos</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i><strong>Contact</strong> — form + officer contact info</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i><strong>Join</strong> — configurable membership application</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i><strong>Member login, dashboard &amp; password reset</strong></li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-4">
+              <h6 class="fw-semibold text-uppercase text-muted small mb-3">Management Panel</h6>
+              <ul class="list-unstyled mb-0 small">
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i>Announcements + photos (email + text on post)</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i>Trail conditions + photos</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i>Officers, titles, sponsors</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i>Trail work logs with photo uploads</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i>Member management, applications, CSV import</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i>Registration form builder</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i>Dues tracking, email &amp; text reminders</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i>Permissions management</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i>Email blast + Text members</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i>Facebook integration + social link preview</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <a href="{% url 'manage_panel:communications' %}" class="btn btn-primary flex-shrink-0">
-      <i class="bi bi-arrow-right me-1"></i>Go to Communications Setup
-    </a>
   </div>
-</div>
 
-<!-- Domain & Go-Live -->
-<div class="card border-0 shadow-sm mb-4">
-  <div class="card-header bg-white border-bottom py-3">
-    <h5 class="fw-bold mb-0"><i class="bi bi-globe me-2 text-primary"></i>Domain & Go-Live Settings</h5>
-  </div>
-  <div class="card-body">
-    <p class="text-muted small mb-3">When you're ready to point a real domain at the site, update the server's <code>.env</code> file with these values and run <code>./build.sh</code>:</p>
-    <pre class="bg-light p-3 rounded small mb-3"><code>DEBUG=False
+  <!-- Domain & Go-Live -->
+  <div class="accordion-item border-0 shadow-sm mb-2 rounded">
+    <h3 class="accordion-header">
+      <button class="accordion-button collapsed bg-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#refDomain" aria-expanded="false" aria-controls="refDomain">
+        <i class="bi bi-globe me-2 text-primary" aria-hidden="true"></i>Domain &amp; Go-Live Settings
+      </button>
+    </h3>
+    <div id="refDomain" class="accordion-collapse collapse" data-bs-parent="#setupReference">
+      <div class="accordion-body">
+        <p class="text-muted small mb-3">When you're ready to point a real domain at the site, update the server's <code>.env</code> file with these values and run <code>./build.sh</code>:</p>
+        <pre class="bg-light p-3 rounded small mb-3" style="overflow-x:auto;"><code>DEBUG=False
 ALLOWED_HOSTS=snodeos.com,www.snodeos.com
 CSRF_TRUSTED_ORIGINS=https://snodeos.com,https://www.snodeos.com
 SITE_URL=https://snodeos.com
 DEFAULT_FROM_EMAIL=Brainerd Snodeos &lt;noreply@snodeos.com&gt;</code></pre>
-    <p class="small text-muted mb-0">If using a Cloudflare Tunnel, add <code>CLOUDFLARE_TUNNEL_TOKEN=eyJh...</code> as well. The tunnel handles HTTPS automatically — no certificate setup needed.</p>
-  </div>
-</div>
-
-<!-- Hosting Options -->
-<div class="card border-0 shadow-sm mb-4">
-  <div class="card-header bg-white border-bottom py-3">
-    <h5 class="fw-bold mb-0"><i class="bi bi-server me-2 text-primary"></i>Hosting Options</h5>
-  </div>
-  <div class="card-body">
-    <p class="text-muted small mb-4">The site runs in Docker, so it can be hosted almost anywhere. Here are the most practical options for a club site:</p>
-
-    <div class="row g-4">
-
-      <div class="col-md-6">
-        <div class="border rounded p-3 h-100">
-          <div class="d-flex align-items-center gap-2 mb-2">
-            <h6 class="fw-bold mb-0">Home or Office Server</h6>
-            <span class="badge bg-success">Current setup</span>
-          </div>
-          <div class="text-muted small mb-3">Run on any PC or mini PC on your home or office network. Use a Cloudflare Tunnel (already configured) to expose it to the internet without opening firewall ports.</div>
-          <ul class="small mb-0 ps-3">
-            <li class="mb-1"><strong>Cost:</strong> $0/month (electricity only)</li>
-            <li class="mb-1"><strong>Hardware:</strong> Any machine that can run Docker (even a Raspberry Pi 4)</li>
-            <li class="mb-1"><strong>Uptime:</strong> Depends on your power/internet — fine for a club site</li>
-            <li><strong>Cloudflare Tunnel:</strong> Free, handles HTTPS, hides your home IP</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="col-md-6">
-        <div class="border rounded p-3 h-100">
-          <div class="d-flex align-items-center gap-2 mb-2">
-            <h6 class="fw-bold mb-0">DigitalOcean Droplet</h6>
-            <span class="badge bg-primary">Recommended cloud option</span>
-          </div>
-          <div class="text-muted small mb-3">A virtual server in the cloud. Run <code>./build.sh</code> the same way. No Cloudflare Tunnel needed — the droplet has a public IP and DigitalOcean provides free managed SSL via their App Platform or with Caddy/nginx.</div>
-          <ul class="small mb-0 ps-3">
-            <li class="mb-1"><strong>Cost:</strong> ~$6/month (Basic 1GB droplet)</li>
-            <li class="mb-1"><strong>Uptime:</strong> 99.99% SLA</li>
-            <li class="mb-1"><strong>Setup:</strong> Create droplet, install Docker, clone repo, run <code>./build.sh</code></li>
-            <li><strong>Backups:</strong> $1.20/month extra for automated snapshots</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="col-md-6">
-        <div class="border rounded p-3 h-100">
-          <h6 class="fw-bold mb-2">Hetzner Cloud</h6>
-          <div class="text-muted small mb-3">European cloud provider with excellent price-to-performance. Same Docker setup as DigitalOcean. Popular with developers for its value.</div>
-          <ul class="small mb-0 ps-3">
-            <li class="mb-1"><strong>Cost:</strong> ~$4–6/month (CX11 or CX21)</li>
-            <li class="mb-1"><strong>Uptime:</strong> 99.9% SLA</li>
-            <li class="mb-1"><strong>Data centers:</strong> US (Ashburn/Hillsboro) and Europe</li>
-            <li><strong>Note:</strong> Servers are in the EU by default — choose US location</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="col-md-6">
-        <div class="border rounded p-3 h-100">
-          <h6 class="fw-bold mb-2">Fly.io</h6>
-          <div class="text-muted small mb-3">Deploys Docker containers directly. No server management. Good free tier. The domain setup and SSL are handled automatically.</div>
-          <ul class="small mb-0 ps-3">
-            <li class="mb-1"><strong>Cost:</strong> Free tier available; ~$5–10/month for persistent volumes</li>
-            <li class="mb-1"><strong>Setup:</strong> Install <code>flyctl</code>, run <code>fly launch</code> — done</li>
-            <li class="mb-1"><strong>Persistent storage:</strong> Fly Volumes for the media and database</li>
-            <li><strong>Note:</strong> More DevOps knowledge needed for initial setup</li>
-          </ul>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="alert alert-info d-flex gap-2 align-items-start mt-4 mb-0 small">
-      <i class="bi bi-lightbulb-fill flex-shrink-0 mt-1"></i>
-      <div>
-        <strong>Recommendation for a club:</strong> If someone is already running it at home and it's reliable, stay there — the cost is $0. If uptime matters (members checking trail conditions in season), a <strong>$6/month DigitalOcean droplet</strong> gives you cloud reliability with the same simple <code>./build.sh</code> workflow.
+        <p class="small text-muted mb-0">If using a Cloudflare Tunnel, add <code>CLOUDFLARE_TUNNEL_TOKEN=eyJh...</code> as well. The tunnel handles HTTPS automatically — no certificate setup needed.</p>
       </div>
     </div>
+  </div>
 
-  </div>
-</div>
+  <!-- Hosting Options -->
+  <div class="accordion-item border-0 shadow-sm mb-2 rounded">
+    <h3 class="accordion-header">
+      <button class="accordion-button collapsed bg-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#refHosting" aria-expanded="false" aria-controls="refHosting">
+        <i class="bi bi-server me-2 text-primary" aria-hidden="true"></i>Hosting Options
+      </button>
+    </h3>
+    <div id="refHosting" class="accordion-collapse collapse" data-bs-parent="#setupReference">
+      <div class="accordion-body">
+        <p class="text-muted small mb-4">The site runs in Docker, so it can be hosted almost anywhere. Here are the most practical options for a club site:</p>
 
-<!-- Env vars reference -->
-<div class="card border-0 shadow-sm">
-  <div class="card-header bg-white border-bottom py-3">
-    <h5 class="fw-bold mb-0"><i class="bi bi-gear me-2 text-primary"></i>Server .env Variables Reference</h5>
+        <div class="row g-4">
+
+          <div class="col-md-6">
+            <div class="border rounded p-3 h-100">
+              <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                <h6 class="fw-bold mb-0">Home or Office Server</h6>
+                <span class="badge bg-success">Current setup</span>
+              </div>
+              <div class="text-muted small mb-3">Run on any PC or mini PC on your home or office network. Use a Cloudflare Tunnel (already configured) to expose it to the internet without opening firewall ports.</div>
+              <ul class="small mb-0 ps-3">
+                <li class="mb-1"><strong>Cost:</strong> $0/month (electricity only)</li>
+                <li class="mb-1"><strong>Hardware:</strong> Any machine that can run Docker (even a Raspberry Pi 4)</li>
+                <li class="mb-1"><strong>Uptime:</strong> Depends on your power/internet — fine for a club site</li>
+                <li><strong>Cloudflare Tunnel:</strong> Free, handles HTTPS, hides your home IP</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="border rounded p-3 h-100">
+              <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                <h6 class="fw-bold mb-0">DigitalOcean Droplet</h6>
+                <span class="badge bg-primary">Recommended cloud option</span>
+              </div>
+              <div class="text-muted small mb-3">A virtual server in the cloud. Run <code>./build.sh</code> the same way. No Cloudflare Tunnel needed — the droplet has a public IP.</div>
+              <ul class="small mb-0 ps-3">
+                <li class="mb-1"><strong>Cost:</strong> ~$6/month (Basic 1GB droplet)</li>
+                <li class="mb-1"><strong>Uptime:</strong> 99.99% SLA</li>
+                <li class="mb-1"><strong>Setup:</strong> Create droplet, install Docker, clone repo, run <code>./build.sh</code></li>
+                <li><strong>Backups:</strong> $1.20/month extra for automated snapshots</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="border rounded p-3 h-100">
+              <h6 class="fw-bold mb-2">Hetzner Cloud</h6>
+              <div class="text-muted small mb-3">European cloud provider with excellent price-to-performance. Same Docker setup as DigitalOcean.</div>
+              <ul class="small mb-0 ps-3">
+                <li class="mb-1"><strong>Cost:</strong> ~$4–6/month (CX11 or CX21)</li>
+                <li class="mb-1"><strong>Uptime:</strong> 99.9% SLA</li>
+                <li class="mb-1"><strong>Data centers:</strong> US (Ashburn/Hillsboro) and Europe</li>
+                <li><strong>Note:</strong> Choose US location for better latency from MN</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="border rounded p-3 h-100">
+              <h6 class="fw-bold mb-2">Fly.io</h6>
+              <div class="text-muted small mb-3">Deploys Docker containers directly. No server management. Good free tier.</div>
+              <ul class="small mb-0 ps-3">
+                <li class="mb-1"><strong>Cost:</strong> Free tier available; ~$5–10/month for persistent volumes</li>
+                <li class="mb-1"><strong>Setup:</strong> Install <code>flyctl</code>, run <code>fly launch</code> — done</li>
+                <li class="mb-1"><strong>Persistent storage:</strong> Fly Volumes for the media and database</li>
+                <li><strong>Note:</strong> More DevOps knowledge needed for initial setup</li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="alert alert-info d-flex gap-2 align-items-start mt-4 mb-0 small">
+          <i class="bi bi-lightbulb-fill flex-shrink-0 mt-1" aria-hidden="true"></i>
+          <div>
+            <strong>Recommendation for a club:</strong> If someone is already running it at home and it's reliable, stay there — the cost is $0. If uptime matters (members checking trail conditions in season), a <strong>$6/month DigitalOcean droplet</strong> gives you cloud reliability with the same simple <code>./build.sh</code> workflow.
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="card-body p-0">
-    <table class="table table-hover mb-0 small">
-      <thead class="table-light">
-        <tr>
-          <th class="ps-4 py-3">Variable</th>
-          <th class="py-3">Purpose</th>
-          <th class="pe-4 py-3">Example</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for row in env_vars %}
-        <tr>
-          <td class="ps-4 py-2"><code>{{ row.name }}</code></td>
-          <td class="py-2 text-muted">{{ row.purpose }}</td>
-          <td class="pe-4 py-2"><code class="text-muted" style="font-size:0.75rem;">{{ row.example }}</code></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+
+  <!-- Env vars reference -->
+  <div class="accordion-item border-0 shadow-sm mb-2 rounded">
+    <h3 class="accordion-header">
+      <button class="accordion-button collapsed bg-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#refEnvVars" aria-expanded="false" aria-controls="refEnvVars">
+        <i class="bi bi-gear me-2 text-primary" aria-hidden="true"></i>Server .env Variables Reference
+      </button>
+    </h3>
+    <div id="refEnvVars" class="accordion-collapse collapse" data-bs-parent="#setupReference">
+      <div class="accordion-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0 small">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4 py-3">Variable</th>
+                <th class="py-3">Purpose</th>
+                <th class="pe-4 py-3">Example</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in env_vars %}
+              <tr>
+                <td class="ps-4 py-2"><code>{{ row.name }}</code></td>
+                <td class="py-2 text-muted">{{ row.purpose }}</td>
+                <td class="pe-4 py-2"><code class="text-muted" style="font-size:0.75rem;">{{ row.example }}</code></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
+
 </div>
 
 {% endblock %}

@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.conf import settings
-from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, TrailCondition, TrailWorkLog, TrailWorkImage, ContactMessage, SiteSettings, EmailTemplate
+from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, AnnouncementImage, TrailCondition, TrailConditionImage, TrailWorkLog, TrailWorkImage, ContactMessage, SiteSettings, EmailTemplate
 from accounts.models import Member, RegistrationField
 from core.email import send_test_email
 from accounts.models import Member
@@ -244,9 +244,11 @@ def _zapier_post(announcement):
 @officer_required
 def announcement_add(request):
     if request.method == 'POST':
-        form = AnnouncementForm(request.POST)
+        form = AnnouncementForm(request.POST, request.FILES)
         if form.is_valid():
             ann = form.save()
+            for img in request.FILES.getlist('images'):
+                AnnouncementImage.objects.create(announcement=ann, image=img)
             _zapier_post(ann)
 
             send_email = 'send_email' in request.POST
@@ -256,6 +258,7 @@ def announcement_add(request):
             from core.email import send_email as _send_email, send_sms, _tmpl_override
             ann_url = f"{getattr(settings, 'SITE_URL', '').rstrip('/')}/announcements/{ann.pk}/"
             ann_tmpl_ctx = _tmpl_override('template_announcement')
+            image_urls = [i.absolute_url for i in ann.images.all()]
 
             if send_email:
                 active_members = Member.objects.filter(membership_status='active')
@@ -265,7 +268,7 @@ def announcement_add(request):
                             subject=f'Brainerd Snodeos: {ann.title}',
                             to=member.email,
                             template='announcement',
-                            context={'announcement': ann, 'ann_url': ann_url, **ann_tmpl_ctx},
+                            context={'announcement': ann, 'ann_url': ann_url, 'image_urls': image_urls, **ann_tmpl_ctx},
                         )
                         email_sent += 1
                     except Exception:
@@ -301,14 +304,30 @@ def announcement_add(request):
 def announcement_edit(request, pk):
     announcement = get_object_or_404(Announcement, pk=pk)
     if request.method == 'POST':
-        form = AnnouncementForm(request.POST, instance=announcement)
+        form = AnnouncementForm(request.POST, request.FILES, instance=announcement)
         if form.is_valid():
             form.save()
+            for img in request.FILES.getlist('images'):
+                AnnouncementImage.objects.create(announcement=announcement, image=img)
             messages.success(request, 'Announcement updated.')
             return redirect('manage_panel:announcement_list')
     else:
         form = AnnouncementForm(instance=announcement)
-    return render(request, 'manage_panel/announcements/form.html', {'form': form, 'action': 'Edit', 'object': announcement})
+    return render(request, 'manage_panel/announcements/form.html', {
+        'form': form, 'action': 'Edit', 'object': announcement,
+        'existing_images': announcement.images.all(),
+    })
+
+
+@officer_required
+@require_POST
+def announcement_image_delete(request, pk):
+    img = get_object_or_404(AnnouncementImage, pk=pk)
+    ann_pk = img.announcement_id
+    img.image.delete(save=False)
+    img.delete()
+    messages.success(request, 'Photo removed.')
+    return redirect('manage_panel:announcement_edit', pk=ann_pk)
 
 
 @officer_required
@@ -362,9 +381,11 @@ def _zapier_post_trail(condition):
 @officer_required
 def trail_condition_add(request):
     if request.method == 'POST':
-        form = TrailConditionForm(request.POST)
+        form = TrailConditionForm(request.POST, request.FILES)
         if form.is_valid():
             condition = form.save()
+            for img in request.FILES.getlist('images'):
+                TrailConditionImage.objects.create(condition=condition, image=img)
             _zapier_post_trail(condition)
 
             send_email = 'send_email' in request.POST
@@ -374,6 +395,7 @@ def trail_condition_add(request):
             from core.email import send_email as _send_email, send_sms, _tmpl_override
             cond_url = f"{getattr(settings, 'SITE_URL', '').rstrip('/')}/trail-conditions/{condition.pk}/"
             tmpl_ctx = _tmpl_override('template_trail_condition') or _tmpl_override('template_announcement')
+            image_urls = [i.absolute_url for i in condition.images.all()]
 
             if send_email:
                 active_members = Member.objects.filter(membership_status='active')
@@ -383,7 +405,7 @@ def trail_condition_add(request):
                             subject=f'Trail Update: {condition.title}',
                             to=member.email,
                             template='trail_condition',
-                            context={'condition': condition, 'cond_url': cond_url, **tmpl_ctx},
+                            context={'condition': condition, 'cond_url': cond_url, 'image_urls': image_urls, **tmpl_ctx},
                         )
                         email_sent += 1
                     except Exception:
@@ -423,14 +445,30 @@ def trail_condition_add(request):
 def trail_condition_edit(request, pk):
     condition = get_object_or_404(TrailCondition, pk=pk)
     if request.method == 'POST':
-        form = TrailConditionForm(request.POST, instance=condition)
+        form = TrailConditionForm(request.POST, request.FILES, instance=condition)
         if form.is_valid():
             form.save()
+            for img in request.FILES.getlist('images'):
+                TrailConditionImage.objects.create(condition=condition, image=img)
             messages.success(request, 'Trail condition updated.')
             return redirect('manage_panel:trail_condition_list')
     else:
         form = TrailConditionForm(instance=condition)
-    return render(request, 'manage_panel/trail_conditions/form.html', {'form': form, 'action': 'Edit', 'object': condition})
+    return render(request, 'manage_panel/trail_conditions/form.html', {
+        'form': form, 'action': 'Edit', 'object': condition,
+        'existing_images': condition.images.all(),
+    })
+
+
+@officer_required
+@require_POST
+def trail_condition_image_delete(request, pk):
+    img = get_object_or_404(TrailConditionImage, pk=pk)
+    cond_pk = img.condition_id
+    img.image.delete(save=False)
+    img.delete()
+    messages.success(request, 'Photo removed.')
+    return redirect('manage_panel:trail_condition_edit', pk=cond_pk)
 
 
 @officer_required
@@ -838,6 +876,16 @@ def communications(request):
             cfg.save()
             messages.success(request, 'Template assignments saved.')
 
+        elif action == 'save_social':
+            cfg.site_description = request.POST.get('site_description', '').strip()
+            if request.POST.get('clear_social_image') == '1' and cfg.social_image:
+                cfg.social_image.delete(save=False)
+                cfg.social_image = None
+            if request.FILES.get('social_image'):
+                cfg.social_image = request.FILES['social_image']
+            cfg.save()
+            messages.success(request, 'Social / link-preview settings saved.')
+
         elif action == 'test_email':
             recipient = request.POST.get('test_recipient', '').strip() or request.user.email
             try:
@@ -859,6 +907,23 @@ def communications(request):
 
 @officer_required
 def setup_guide(request):
+    cfg = SiteSettings.get()
+
+    # Handle the inline test-email button at the top of the setup page
+    if request.method == 'POST' and request.POST.get('action') == 'test_email':
+        recipient = request.POST.get('test_recipient', '').strip() or request.user.email
+        if not cfg.email_configured:
+            messages.error(request, 'Email is not configured yet — set up Brevo or Resend first.')
+        else:
+            try:
+                send_test_email(recipient)
+                messages.success(request, f'Test email sent to {recipient}. Check your inbox (and spam folder).')
+            except Exception as exc:
+                messages.error(request, f'Failed to send: {exc}')
+        return redirect('manage_panel:setup_guide')
+
+    email_templates = EmailTemplate.objects.all()
+
     checklist = [
         {'text': 'Configure email & SMS in Settings → Communications',          'url': reverse('manage_panel:communications')},
         {'text': 'Send a test email from the Communications page',               'url': reverse('manage_panel:communications')},
@@ -885,6 +950,9 @@ def setup_guide(request):
     return render(request, 'manage_panel/setup_guide.html', {
         'checklist': checklist,
         'env_vars': env_vars,
+        'cfg': cfg,
+        'email_templates': email_templates,
+        'default_test_recipient': request.user.email,
     })
 
 

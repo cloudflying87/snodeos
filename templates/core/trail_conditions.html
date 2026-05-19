@@ -16,9 +16,17 @@
       {% for tc in conditions %}
       <div class="col-md-6 col-lg-4">
         <div class="card border-0 shadow-sm h-100 {% if tc.is_pinned %}border-start border-4 border-primary{% endif %}">
-          <div class="card-body p-4">
-            {% if tc.is_pinned %}<span class="badge bg-primary mb-2"><i class="bi bi-pin-angle me-1"></i>Pinned</span>{% endif %}
-            <span class="badge {{ tc.status_badge_class }} mb-3 d-inline-block" style="font-size:0.85rem;padding:6px 14px;">
+          {% with tc.images.first as img %}
+          {% if img %}
+            <a href="{% url 'core:trail_condition_detail' tc.pk %}">
+              <img src="{{ img.image.url }}" class="card-img-top" alt="{{ img.caption|default:tc.title }}"
+                   style="height:180px;object-fit:cover;">
+            </a>
+          {% endif %}
+          {% endwith %}
+          <div class="card-body p-4 d-flex flex-column">
+            {% if tc.is_pinned %}<span class="badge bg-primary mb-2"><i class="bi bi-pin-angle me-1" aria-hidden="true"></i>Pinned</span>{% endif %}
+            <span class="badge {{ tc.status_badge_class }} mb-3 d-inline-block align-self-start" style="font-size:0.85rem;padding:6px 14px;">
               {{ tc.get_status_display }}
             </span>
             <h5 class="fw-bold mb-2">{{ tc.title }}</h5>

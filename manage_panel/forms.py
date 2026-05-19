@@ -94,12 +94,12 @@ class AnnouncementForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
+        self.helper.form_tag = False
         self.helper.layout = Layout(
             'title',
             'body',
             'visibility',
             Field('is_pinned'),
-            Submit('submit', 'Save Announcement', css_class='btn btn-primary mt-3'),
         )
 
 
@@ -112,6 +112,7 @@ class TrailConditionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
+        self.helper.form_tag = False
         self.helper.layout = Layout(
             Row(
                 Column('title', css_class='col-md-8'),
@@ -120,7 +121,6 @@ class TrailConditionForm(forms.ModelForm):
             'body',
             'visibility',
             Field('is_pinned'),
-            Submit('submit', 'Save Trail Condition', css_class='btn btn-primary mt-3'),
         )
 
 

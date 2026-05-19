@@ -18,6 +18,21 @@
       <div class="col-lg-8">
         <div class="card border-0 shadow-sm p-4 p-lg-5">
           <div style="white-space:pre-wrap;line-height:1.8;font-size:1.05rem;color:#344055;">{{ ann.body }}</div>
+
+          {% if ann.images.all %}
+          <div class="row g-3 mt-4">
+            {% for img in ann.images.all %}
+            <div class="col-12 col-md-6">
+              <a href="{{ img.image.url }}" target="_blank" rel="noopener">
+                <img src="{{ img.image.url }}" class="img-fluid rounded shadow-sm w-100"
+                     alt="{{ img.caption|default:ann.title }}"
+                     style="object-fit:cover;max-height:360px;">
+              </a>
+              {% if img.caption %}<p class="text-muted small mt-2 mb-0">{{ img.caption }}</p>{% endif %}
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
         </div>
         <div class="text-center mt-4">
           <a href="{% url 'core:home' %}#announcements" class="btn btn-outline-secondary me-2">

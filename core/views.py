@@ -12,7 +12,7 @@ def home(request):
     sponsors = Sponsor.objects.filter(is_active=True)
     announcements = Announcement.objects.filter(
         visibility__in=['public', 'both']
-    ).order_by('-is_pinned', '-created_at')[:5]
+    ).prefetch_related('images').order_by('-is_pinned', '-created_at')[:5]
     context = {
         'stats': stats,
         'officers': officers,
@@ -64,7 +64,7 @@ def trail_work(request):
 def trail_conditions(request):
     conditions = TrailCondition.objects.filter(
         visibility__in=['public', 'both']
-    ).order_by('-is_pinned', '-created_at')[:20]
+    ).prefetch_related('images').order_by('-is_pinned', '-created_at')[:20]
     return render(request, 'core/trail_conditions.html', {'conditions': conditions})
 
 

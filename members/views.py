@@ -25,10 +25,10 @@ def dashboard(request):
     member = request.user
     announcements = Announcement.objects.filter(
         visibility__in=['members', 'both']
-    ).order_by('-is_pinned', '-created_at')[:10]
+    ).prefetch_related('images').order_by('-is_pinned', '-created_at')[:10]
     trail_conditions = TrailCondition.objects.filter(
         visibility__in=['members', 'both']
-    ).order_by('-is_pinned', '-created_at')[:5]
+    ).prefetch_related('images').order_by('-is_pinned', '-created_at')[:5]
     trail_logs = TrailWorkLog.objects.prefetch_related('images').all()[:5]
     context = {
         'member': member,

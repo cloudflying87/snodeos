@@ -333,17 +333,51 @@
 }
 .mob-tap-row { cursor: pointer; }
 
-/* ── Swipe-to-delete cards ── */
+/* ── Swipe-to-delete cards ──
+   The wrapper is the visual card. The delete button sits absolutely behind
+   the row on the right. The row covers it with an opaque background; when
+   JS translates the row left, the delete is revealed. This is more robust
+   across browsers than flex+overflow:hidden. */
 .mob-card-list { padding: 10px 14px 4px; }
 .mob-swipe-wrapper {
-  display: flex;          /* row + delete zone sit side-by-side */
-  overflow: hidden;       /* clips delete zone until swiped */
+  position: relative;
+  overflow: hidden;       /* clip the row while it's translated */
   border-radius: 14px;
   margin-bottom: 10px;
+  background: #dc3545;    /* red shows through when row slides left */
   box-shadow: 0 1px 6px rgba(0,0,0,0.10);
+  /* Touch hint: signal swipeability to AT users */
+  touch-action: pan-y;
+}
+.mob-swipe-delete {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 80px;
+  display: flex;
+  align-items: stretch;
+  z-index: 0;
+}
+.mob-swipe-delete .btn {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mob-swipe-delete .btn:hover,
+.mob-swipe-delete .btn:focus {
+  background: rgba(0,0,0,0.10);
+  color: #fff;
 }
 .mob-swipe-row {
-  flex: 0 0 100%;         /* always exactly the wrapper width */
+  position: relative;
+  z-index: 1;
   background: #fff;
   border-radius: 14px;
   display: flex;
@@ -355,14 +389,10 @@
   text-decoration: none;
   color: inherit;
   cursor: pointer;
+  will-change: transform;
 }
 .mob-swipe-row:hover, .mob-swipe-row:focus { color: inherit; text-decoration: none; }
 .mob-swipe-row:active { background: #f8fbff; }
-.mob-swipe-delete {
-  flex: 0 0 80px;         /* always 80px, hidden to the right until card slides */
-  display: flex;
-  align-items: stretch;
-}
 
 /* ── Quick action button ── */
 .panel-quick-btn {
