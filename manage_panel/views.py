@@ -613,28 +613,20 @@ def facebook_settings(request):
 
 @officer_required
 def email_blast(request):
-    from django.core.mail import send_mail
-    recipients = Member.objects.filter(membership_status='active').values_list('email', flat=True)
+    from core.email import send_plain
+    recipients = Member.objects.filter(membership_status='active')
 
     if request.method == 'POST':
         subject = request.POST.get('subject', '').strip()
-        body = request.POST.get('body', '').strip()
+        body    = request.POST.get('body', '').strip()
         if not subject or not body:
             messages.error(request, 'Subject and body are required.')
         else:
-            sent = 0
-            failed = 0
-            for email in recipients:
-                try:
-                    send_mail(
-                        subject,
-                        body,
-                        settings.DEFAULT_FROM_EMAIL,
-                        [email],
-                        fail_silently=False,
-                    )
+            sent = failed = 0
+            for member in recipients:
+                if send_plain(subject, member.email, body):
                     sent += 1
-                except Exception:
+                else:
                     failed += 1
             if failed:
                 messages.warning(request, f'Sent to {sent} members. {failed} failed.')
@@ -647,31 +639,48 @@ def email_blast(request):
     })
 
 
-# ── Email Settings ─────────────────────────────────────────────────────────────
+# ── Email Settings → redirect to Communications ────────────────────────────────
 
 @officer_required
 def email_settings(request):
-    if request.method == 'POST' and 'send_test' in request.POST:
-        recipient = request.POST.get('test_recipient', '').strip() or request.user.email
-        try:
-            send_test_email(recipient)
-            messages.success(request, f'Test email sent to {recipient}. Check your inbox (and spam folder).')
-        except Exception as exc:
-            messages.error(request, f'Failed to send test email: {exc}')
-        return redirect('manage_panel:email_settings')
+    return redirect('manage_panel:communications')
 
-    config = {
-        'backend': settings.EMAIL_BACKEND,
-        'host': settings.EMAIL_HOST or '(not set)',
-        'port': settings.EMAIL_PORT,
-        'use_tls': settings.EMAIL_USE_TLS,
-        'user': settings.EMAIL_HOST_USER or '(not set)',
-        'from_email': settings.DEFAULT_FROM_EMAIL,
-        'notification_email': getattr(settings, 'NOTIFICATION_EMAIL', '') or '(not set)',
-        'is_console': 'console' in settings.EMAIL_BACKEND,
-        'is_smtp': 'smtp' in settings.EMAIL_BACKEND,
-    }
-    return render(request, 'manage_panel/email_settings.html', {'config': config})
+
+# ── Communications Setup ───────────────────────────────────────────────────────
+
+@officer_required
+def communications(request):
+    cfg = SiteSettings.get()
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'save_email':
+            cfg.brevo_smtp_key     = request.POST.get('brevo_smtp_key', '').strip()
+            cfg.resend_api_key     = request.POST.get('resend_api_key', '').strip()
+            cfg.notification_email = request.POST.get('notification_email', '').strip()
+            cfg.save()
+            messages.success(request, 'Email settings saved.')
+
+        elif action == 'save_sms':
+            cfg.brevo_api_key      = request.POST.get('brevo_api_key', '').strip()
+            cfg.twilio_account_sid = request.POST.get('twilio_account_sid', '').strip()
+            cfg.twilio_auth_token  = request.POST.get('twilio_auth_token', '').strip()
+            cfg.twilio_from_number = request.POST.get('twilio_from_number', '').strip()
+            cfg.save()
+            messages.success(request, 'SMS settings saved.')
+
+        elif action == 'test_email':
+            recipient = request.POST.get('test_recipient', '').strip() or request.user.email
+            try:
+                send_test_email(recipient)
+                messages.success(request, f'Test email sent to {recipient}. Check your inbox (and spam folder).')
+            except Exception as exc:
+                messages.error(request, f'Failed: {exc}')
+
+        return redirect('manage_panel:communications')
+
+    return render(request, 'manage_panel/communications.html', {'cfg': cfg})
 
 
 # ── Setup Guide ────────────────────────────────────────────────────────────────
@@ -679,38 +688,27 @@ def email_settings(request):
 @officer_required
 def setup_guide(request):
     checklist = [
-        'Configure email (Gmail app password is the easiest first step)',
-        'Send a test email from Settings → Email Settings',
-        'Add real officer names and photos in Club → Officers',
+        'Configure email & SMS in Settings → Communications',
+        'Send a test email from the Communications page',
+        'Add real officer names, photos, phone & email in Club → Officers',
         'Update club stats in Overview → Club Stats',
         'Add current sponsors with logos in Club → Sponsors',
         'Post a welcome announcement in Content → Announcements',
         'Review registration form fields in People → Registration Form',
         'Approve or import existing members in People → All Members',
-        'Optionally enable Facebook integration in Settings → Facebook',
+        'Configure Facebook integration in Settings → Facebook (Zapier recommended)',
         'Update domain/DNS when pointing to a custom domain',
         'Set DEBUG=False in .env when ready for public use',
-        'Contact developer when ready to add SMS/text reminders (Twilio)',
     ]
     env_vars = [
-        {'name': 'SECRET_KEY',            'purpose': 'Django security key (keep private)',              'example': '50-char random string'},
-        {'name': 'DEBUG',                 'purpose': 'Set to False in production',                      'example': 'False'},
-        {'name': 'ALLOWED_HOSTS',         'purpose': 'Comma-separated allowed domain names',            'example': 'snodeos.com,www.snodeos.com'},
-        {'name': 'DATABASE_URL',          'purpose': 'PostgreSQL connection string',                    'example': 'postgresql://user:pass@db/snodeos'},
-        {'name': 'CSRF_TRUSTED_ORIGINS',  'purpose': 'Domains allowed to submit forms',                 'example': 'https://snodeos.com'},
-        {'name': 'SITE_URL',              'purpose': 'Full public URL (used in emails)',                 'example': 'https://snodeos.com'},
-        {'name': 'EMAIL_BACKEND',         'purpose': 'Use smtp for real email',                         'example': 'django.core.mail.backends.smtp.EmailBackend'},
-        {'name': 'EMAIL_HOST',            'purpose': 'SMTP server hostname',                            'example': 'smtp.gmail.com'},
-        {'name': 'EMAIL_PORT',            'purpose': 'SMTP port',                                       'example': '587'},
-        {'name': 'EMAIL_USE_TLS',         'purpose': 'TLS encryption',                                  'example': 'True'},
-        {'name': 'EMAIL_HOST_USER',       'purpose': 'SMTP login email',                                'example': 'club@gmail.com'},
-        {'name': 'EMAIL_HOST_PASSWORD',   'purpose': 'SMTP password or app password',                   'example': 'xxxx xxxx xxxx xxxx'},
-        {'name': 'DEFAULT_FROM_EMAIL',    'purpose': '"From" name on outgoing emails',                  'example': 'Brainerd Snodeos <club@gmail.com>'},
-        {'name': 'NOTIFICATION_EMAIL',    'purpose': 'Officer alert destination (apps, messages)',       'example': 'officers@gmail.com'},
-        {'name': 'CLOUDFLARE_TOKEN',      'purpose': 'Cloudflare tunnel token (if using tunnel)',        'example': 'eyJh...'},
-        {'name': 'TWILIO_ACCOUNT_SID',    'purpose': 'Twilio account ID (when SMS is added)',           'example': 'ACxx...'},
-        {'name': 'TWILIO_AUTH_TOKEN',     'purpose': 'Twilio auth token (when SMS is added)',           'example': 'xxxx...'},
-        {'name': 'TWILIO_FROM_NUMBER',    'purpose': 'Twilio outbound phone number (when SMS is added)','example': '+12185550100'},
+        {'name': 'SECRET_KEY',              'purpose': 'Django security key — keep private, never share', 'example': '50-char random string'},
+        {'name': 'DEBUG',                   'purpose': 'Must be False in production',                     'example': 'False'},
+        {'name': 'ALLOWED_HOSTS',           'purpose': 'Comma-separated allowed domain names',            'example': 'snodeos.com,www.snodeos.com'},
+        {'name': 'DATABASE_URL',            'purpose': 'PostgreSQL connection string',                    'example': 'postgresql://user:pass@db/snodeos'},
+        {'name': 'CSRF_TRUSTED_ORIGINS',    'purpose': 'Domains allowed to submit forms',                 'example': 'https://snodeos.com'},
+        {'name': 'SITE_URL',                'purpose': 'Full public URL (used in email links)',            'example': 'https://snodeos.com'},
+        {'name': 'DEFAULT_FROM_EMAIL',      'purpose': '"From" name on system emails',                    'example': 'Brainerd Snodeos <noreply@snodeos.com>'},
+        {'name': 'CLOUDFLARE_TUNNEL_TOKEN', 'purpose': 'Cloudflare tunnel token (if using tunnel)',       'example': 'eyJh...'},
     ]
     return render(request, 'manage_panel/setup_guide.html', {
         'checklist': checklist,
@@ -722,55 +720,20 @@ def setup_guide(request):
 
 @officer_required
 def text_members(request):
-    brevo_api_key  = getattr(settings, 'BREVO_API_KEY', '')
-    twilio_sid     = getattr(settings, 'TWILIO_ACCOUNT_SID', '')
-    sms_configured = bool(brevo_api_key or twilio_sid)
+    from core.email import send_sms
+    cfg = SiteSettings.get()
+    sms_configured = cfg.sms_configured
 
-    sent = failed = 0
     if request.method == 'POST' and sms_configured:
         message = request.POST.get('message', '').strip()
         if message:
-            recipients = Member.objects.filter(
-                membership_status='active',
-                accepts_texts=True,
-            ).exclude(phone='')
-
-            if brevo_api_key:
-                import urllib.request, json as _json
-                for member in recipients:
-                    phone = member.phone.strip().replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
-                    if not phone.startswith('+'):
-                        phone = '+1' + phone
-                    payload = _json.dumps({
-                        'type': 'transactional',
-                        'unicodeEnabled': True,
-                        'sender': 'Snodeos',
-                        'recipient': phone,
-                        'content': message,
-                    }).encode()
-                    req = urllib.request.Request(
-                        'https://api.brevo.com/v3/transactionalSMS/sms',
-                        data=payload,
-                        headers={'api-key': brevo_api_key, 'Content-Type': 'application/json'},
-                    )
-                    try:
-                        urllib.request.urlopen(req, timeout=10)
-                        sent += 1
-                    except Exception:
-                        failed += 1
-
-            elif twilio_sid:
-                from twilio.rest import Client
-                twilio_token  = getattr(settings, 'TWILIO_AUTH_TOKEN', '')
-                twilio_from   = getattr(settings, 'TWILIO_FROM_NUMBER', '')
-                client = Client(twilio_sid, twilio_token)
-                for member in recipients:
-                    try:
-                        client.messages.create(body=message, from_=twilio_from, to=member.phone)
-                        sent += 1
-                    except Exception:
-                        failed += 1
-
+            recipients = Member.objects.filter(membership_status='active', accepts_texts=True).exclude(phone='')
+            sent = failed = 0
+            for member in recipients:
+                if send_sms(message, member.phone):
+                    sent += 1
+                else:
+                    failed += 1
             if failed:
                 messages.warning(request, f'Sent to {sent} members. {failed} failed.')
             else:
@@ -784,15 +747,8 @@ def text_members(request):
     })
 
 
-# ── SMS Settings ───────────────────────────────────────────────────────────────
+# ── SMS Settings → redirect to Communications ──────────────────────────────────
 
 @officer_required
 def sms_settings(request):
-    brevo_api_key  = getattr(settings, 'BREVO_API_KEY', '')
-    twilio_sid     = getattr(settings, 'TWILIO_ACCOUNT_SID', '')
-    return render(request, 'manage_panel/sms_settings.html', {
-        'brevo_configured':  bool(brevo_api_key),
-        'twilio_configured': bool(twilio_sid),
-        'brevo_api_key':     brevo_api_key[:8] + '…' if brevo_api_key else '',
-        'twilio_sid':        twilio_sid[:8] + '…' if twilio_sid else '',
-    })
+    return redirect('manage_panel:communications')

@@ -121,13 +121,44 @@ class Announcement(models.Model):
 class SiteSettings(models.Model):
     FACEBOOK_CHOICES = [
         ('none',   'Disabled'),
-        ('plugin', 'Option 1 — Facebook Page Plugin (show live feed on site)'),
-        ('zapier', 'Option 3 — Zapier Webhook (auto-post announcements to Facebook)'),
+        ('plugin', 'Page Plugin (embed feed on site — requires App ID)'),
+        ('zapier', 'Zapier Auto-Post (auto-post announcements to Facebook)'),
     ]
     facebook_integration = models.CharField(max_length=20, choices=FACEBOOK_CHOICES, default='none')
     facebook_page_url    = models.URLField(blank=True, default='https://www.facebook.com/brainerdsnodeos')
-    facebook_app_id      = models.CharField(max_length=50, blank=True, help_text='Facebook App ID (required for the Page Plugin to work)')
-    zapier_webhook_url   = models.URLField(blank=True, help_text='Paste your Zapier Catch Hook URL here')
+    facebook_app_id      = models.CharField(max_length=50, blank=True)
+    zapier_webhook_url   = models.URLField(blank=True)
+
+    # Communications — email
+    brevo_smtp_key    = models.CharField(max_length=200, blank=True)
+    resend_api_key    = models.CharField(max_length=200, blank=True)
+    notification_email = models.EmailField(blank=True, help_text='Where officer alerts go (new applications, contact messages)')
+
+    # Communications — SMS
+    brevo_api_key      = models.CharField(max_length=200, blank=True)
+    twilio_account_sid = models.CharField(max_length=50, blank=True)
+    twilio_auth_token  = models.CharField(max_length=50, blank=True)
+    twilio_from_number = models.CharField(max_length=20, blank=True)
+
+    class Meta:
+        verbose_name = 'Site Settings'
+
+    @classmethod
+    def get(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self):
+        return 'Site Settings'
+
+    # ── Helpers ──────────────────────────────────────────────────────────────
+    @property
+    def email_configured(self):
+        return bool(self.brevo_smtp_key or self.resend_api_key)
+
+    @property
+    def sms_configured(self):
+        return bool(self.brevo_api_key or self.twilio_account_sid)
 
     class Meta:
         verbose_name = 'Site Settings'

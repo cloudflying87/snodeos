@@ -118,11 +118,8 @@
         <a href="{% url 'manage_panel:facebook_settings' %}" class="panel-nav-link {% block active_facebook %}{% endblock %}">
           <i class="bi bi-facebook"></i> Facebook
         </a>
-        <a href="{% url 'manage_panel:email_settings' %}" class="panel-nav-link {% block active_email %}{% endblock %}">
-          <i class="bi bi-send"></i> Email Settings
-        </a>
-        <a href="{% url 'manage_panel:sms_settings' %}" class="panel-nav-link {% block active_sms %}{% endblock %}">
-          <i class="bi bi-phone"></i> SMS / Texting
+        <a href="{% url 'manage_panel:communications' %}" class="panel-nav-link {% block active_comms %}{% endblock %}">
+          <i class="bi bi-broadcast"></i> Communications
         </a>
         <a href="{% url 'manage_panel:setup_guide' %}" class="panel-nav-link {% block active_setup_guide %}{% endblock %}">
           <i class="bi bi-book"></i> Setup Guide

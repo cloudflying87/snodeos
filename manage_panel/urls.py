@@ -47,6 +47,7 @@ urlpatterns = [
     path('email/', views.email_settings, name='email_settings'),
     path('email/blast/', views.email_blast, name='email_blast'),
 
+    path('communications/', views.communications, name='communications'),
     path('setup-guide/', views.setup_guide, name='setup_guide'),
     path('text-members/', views.text_members, name='text_members'),
     path('sms-settings/', views.sms_settings, name='sms_settings'),

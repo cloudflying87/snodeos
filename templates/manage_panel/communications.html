@@ -1,0 +1,275 @@
+{% extends "manage_panel/base.html" %}
+{% block title %}Communications{% endblock %}
+{% block active_comms %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="h3 fw-bold mb-1">Communications Setup</h1>
+    <p class="text-muted mb-0">Configure how the site sends emails and text messages to members.</p>
+  </div>
+</div>
+
+<!-- Status bar -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3 p-3">
+        <div class="fs-3">{% if cfg.email_configured %}✅{% else %}⚠️{% endif %}</div>
+        <div>
+          <div class="fw-bold small">Email</div>
+          <div class="text-muted" style="font-size:0.78rem;">
+            {% if cfg.brevo_smtp_key %}Brevo SMTP configured
+            {% elif cfg.resend_api_key %}Resend API configured
+            {% else %}Not configured — emails won't send{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3 p-3">
+        <div class="fs-3">{% if cfg.sms_configured %}✅{% else %}⬜{% endif %}</div>
+        <div>
+          <div class="fw-bold small">SMS / Text</div>
+          <div class="text-muted" style="font-size:0.78rem;">
+            {% if cfg.brevo_api_key %}Brevo SMS configured
+            {% elif cfg.twilio_account_sid %}Twilio configured
+            {% else %}Not configured — optional{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3 p-3">
+        <div class="fs-3">{% if cfg.notification_email %}✅{% else %}⚠️{% endif %}</div>
+        <div>
+          <div class="fw-bold small">Officer Alerts</div>
+          <div class="text-muted" style="font-size:0.78rem;">
+            {% if cfg.notification_email %}{{ cfg.notification_email }}
+            {% else %}Not set — set below{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Option comparison -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white border-bottom py-3">
+    <h5 class="fw-bold mb-0">Which option is right for you?</h5>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0 small">
+      <thead class="table-light">
+        <tr>
+          <th class="ps-4 py-3"></th>
+          <th class="py-3">
+            <span class="badge bg-primary me-1">A</span> Brevo
+            <span class="badge bg-success ms-1" style="font-size:0.65rem;">Recommended</span>
+          </th>
+          <th class="py-3">
+            <span class="badge bg-secondary me-1">B</span> Resend + Twilio
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="ps-4 py-2 text-muted fw-semibold">Email</td><td class="py-2">✅ 300 free/day</td><td class="py-2">✅ 3,000 free/month</td></tr>
+        <tr><td class="ps-4 py-2 text-muted fw-semibold">SMS / Text</td><td class="py-2">✅ ~$0.008/msg (shared sender)</td><td class="py-2">✅ ~$0.008/msg (dedicated number)</td></tr>
+        <tr><td class="ps-4 py-2 text-muted fw-semibold">Phone number</td><td class="py-2">Shared — texts come from a generic number, no monthly fee</td><td class="py-2">Dedicated ~$1.15/month — members see your number every time</td></tr>
+        <tr><td class="ps-4 py-2 text-muted fw-semibold">Accounts needed</td><td class="py-2">1 (Brevo covers both)</td><td class="py-2">2 (Resend for email, Twilio for SMS)</td></tr>
+        <tr><td class="ps-4 py-2 text-muted fw-semibold">Email deliverability</td><td class="py-2">Good</td><td class="py-2">Excellent</td></tr>
+        <tr><td class="ps-4 py-2 text-muted fw-semibold">Setup complexity</td><td class="py-2">Simple — one API key</td><td class="py-2">Moderate — two accounts</td></tr>
+        <tr><td class="ps-4 py-2 text-muted fw-semibold">Best for</td><td class="py-2">Getting started quickly</td><td class="pe-4 py-2">Clubs that text members frequently</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="row g-4">
+
+  <!-- Email setup -->
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white border-bottom py-3">
+        <h5 class="fw-bold mb-0"><i class="bi bi-envelope me-2 text-primary"></i>Email Configuration</h5>
+      </div>
+      <div class="card-body p-4">
+
+        <p class="text-muted small mb-4">Enter credentials for <strong>one</strong> provider. Brevo SMTP takes priority if both are filled in.</p>
+
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="save_email">
+
+          <h6 class="fw-semibold mb-1">
+            <span class="badge bg-primary me-1">A</span> Brevo SMTP Key
+          </h6>
+          <p class="text-muted small mb-2">
+            Get from <strong>brevo.com → Transactional → Email → Settings → SMTP & API → SMTP tab</strong>.<br>
+            Starts with <code>xsmtpib-</code>
+          </p>
+          <div class="mb-4">
+            <input type="password" name="brevo_smtp_key" class="form-control form-control-sm font-monospace"
+                   value="{{ cfg.brevo_smtp_key }}"
+                   placeholder="xsmtpib-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                   autocomplete="new-password">
+          </div>
+
+          <h6 class="fw-semibold mb-1">
+            <span class="badge bg-secondary me-1">B</span> Resend API Key
+          </h6>
+          <p class="text-muted small mb-2">
+            Get from <strong>resend.com → API Keys → Create API Key</strong>.<br>
+            Starts with <code>re_</code>
+          </p>
+          <div class="mb-4">
+            <input type="password" name="resend_api_key" class="form-control form-control-sm font-monospace"
+                   value="{{ cfg.resend_api_key }}"
+                   placeholder="re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                   autocomplete="new-password">
+          </div>
+
+          <h6 class="fw-semibold mb-1">Officer Alert Email</h6>
+          <p class="text-muted small mb-2">Where new application and contact form notifications are delivered.</p>
+          <div class="mb-4">
+            <input type="email" name="notification_email" class="form-control form-control-sm"
+                   value="{{ cfg.notification_email }}"
+                   placeholder="officers@yourclub.com">
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-sm w-100">
+            <i class="bi bi-save me-1"></i>Save Email Settings
+          </button>
+        </form>
+
+        <hr class="my-4">
+
+        <h6 class="fw-semibold mb-2">Send Test Email</h6>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="test_email">
+          <div class="input-group input-group-sm">
+            <input type="email" name="test_recipient" class="form-control"
+                   value="{{ request.user.email }}" placeholder="you@example.com">
+            <button type="submit" class="btn btn-outline-primary px-3">
+              <i class="bi bi-send me-1"></i>Send Test
+            </button>
+          </div>
+          {% if not cfg.email_configured %}
+          <p class="text-warning small mt-1 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>No email provider configured — test will use server .env settings.</p>
+          {% endif %}
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- SMS setup -->
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white border-bottom py-3">
+        <h5 class="fw-bold mb-0"><i class="bi bi-chat-dots me-2 text-success"></i>SMS / Text Configuration <span class="badge bg-secondary ms-1" style="font-size:0.7rem;">Optional</span></h5>
+      </div>
+      <div class="card-body p-4">
+
+        <p class="text-muted small mb-4">Enter credentials for <strong>one</strong> provider. Brevo takes priority if both are filled in.</p>
+
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="save_sms">
+
+          <h6 class="fw-semibold mb-1">
+            <span class="badge bg-primary me-1">A</span> Brevo API Key (for SMS)
+          </h6>
+          <p class="text-muted small mb-2">
+            Get from <strong>brevo.com → Transactional → Email → Settings → SMTP & API → API Keys tab</strong>.<br>
+            Starts with <code>xkeysib-</code> &nbsp;·&nbsp; Uses a <strong>shared sender</strong> — texts come from a generic number, not your own.
+          </p>
+          <div class="mb-4">
+            <input type="password" name="brevo_api_key" class="form-control form-control-sm font-monospace"
+                   value="{{ cfg.brevo_api_key }}"
+                   placeholder="xkeysib-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                   autocomplete="new-password">
+          </div>
+
+          <h6 class="fw-semibold mb-1">
+            <span class="badge bg-secondary me-1">B</span> Twilio (dedicated phone number)
+          </h6>
+          <p class="text-muted small mb-2">
+            From <strong>twilio.com → Console Dashboard</strong>. Gives you your own number (~$1.15/month) so members always see the same sender.
+          </p>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold mb-1">Account SID</label>
+            <input type="password" name="twilio_account_sid" class="form-control form-control-sm font-monospace"
+                   value="{{ cfg.twilio_account_sid }}"
+                   placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                   autocomplete="new-password">
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold mb-1">Auth Token</label>
+            <input type="password" name="twilio_auth_token" class="form-control form-control-sm font-monospace"
+                   value="{{ cfg.twilio_auth_token }}"
+                   placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                   autocomplete="new-password">
+          </div>
+          <div class="mb-4">
+            <label class="form-label small fw-semibold mb-1">From Number</label>
+            <input type="text" name="twilio_from_number" class="form-control form-control-sm"
+                   value="{{ cfg.twilio_from_number }}"
+                   placeholder="+12185550100">
+          </div>
+
+          <button type="submit" class="btn btn-success btn-sm w-100">
+            <i class="bi bi-save me-1"></i>Save SMS Settings
+          </button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Setup walkthrough -->
+<div class="row g-4 mt-1">
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white border-bottom py-3">
+        <h6 class="fw-bold mb-0"><span class="badge bg-primary me-2">A</span>Setting up Brevo (Recommended)</h6>
+      </div>
+      <div class="card-body p-4">
+        <ol class="small mb-0">
+          <li class="mb-2">Go to <strong>brevo.com</strong> and create a free account</li>
+          <li class="mb-2">Verify your sender domain under <strong>Senders, Domains & Dedicated IPs</strong></li>
+          <li class="mb-2">Go to <strong>SMTP & API → SMTP tab</strong> → copy the SMTP key (starts with <code>xsmtpib-</code>) → paste above under Brevo SMTP Key</li>
+          <li class="mb-2">For SMS: go to <strong>SMTP & API → API Keys tab</strong> → create a key (starts with <code>xkeysib-</code>) → paste above under Brevo API Key</li>
+          <li class="mb-2">Fill in your <strong>Officer Alert Email</strong> and save</li>
+          <li>Send a test email to confirm it's working</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white border-bottom py-3">
+        <h6 class="fw-bold mb-0"><span class="badge bg-secondary me-2">B</span>Setting up Resend + Twilio</h6>
+      </div>
+      <div class="card-body p-4">
+        <ol class="small mb-0">
+          <li class="mb-2"><strong>Email:</strong> Create account at <strong>resend.com</strong>, verify your domain, create an API key (starts with <code>re_</code>) → paste above</li>
+          <li class="mb-2"><strong>SMS:</strong> Create account at <strong>twilio.com</strong>, purchase a US phone number (~$1.15/month)</li>
+          <li class="mb-2">Copy <strong>Account SID</strong> and <strong>Auth Token</strong> from the Twilio console dashboard</li>
+          <li class="mb-2">Paste all three Twilio values above and save</li>
+          <li>Send a test email to confirm Resend is working</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
