@@ -79,9 +79,19 @@ fi
 echo "✅ .env found"
 echo ""
 
-# ── PHASE 1: Git pull ──────────────────────────────────────────────────────────
+# ── PHASE 1: Tear down ─────────────────────────────────────────────────────────
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "PHASE 1: $([ "$SKIP_GIT_PULL" = true ] && echo "Using Current Code (Skipping Git Pull)" || echo "Pulling Latest Code")"
+echo "PHASE 1: Stopping Services"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+docker compose down
+echo "✅ Services stopped"
+echo ""
+
+# ── PHASE 2: Git pull ──────────────────────────────────────────────────────────
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "PHASE 2: $([ "$SKIP_GIT_PULL" = true ] && echo "Using Current Code (Skipping Git Pull)" || echo "Pulling Latest Code")"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
@@ -97,7 +107,7 @@ echo ""
 
 # ── PHASE 2: Build images ──────────────────────────────────────────────────────
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "PHASE 2: $([ "$REBUILD" = true ] && echo "Rebuilding Docker Images" || echo "Using Existing Images (No Rebuild)")"
+echo "PHASE 3: $([ "$REBUILD" = true ] && echo "Rebuilding Docker Images" || echo "Using Existing Images (No Rebuild)")"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
@@ -116,7 +126,7 @@ echo ""
 
 # ── PHASE 3: Database ──────────────────────────────────────────────────────────
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "PHASE 3: Database"
+echo "PHASE 4: Database"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
@@ -135,7 +145,7 @@ echo ""
 
 # ── PHASE 4: Static files ──────────────────────────────────────────────────────
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "PHASE 4: Static Files"
+echo "PHASE 5: Static Files"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
@@ -145,7 +155,7 @@ echo ""
 
 # ── PHASE 5: Seed data ─────────────────────────────────────────────────────────
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "PHASE 5: Seed Data"
+echo "PHASE 6: Seed Data"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
@@ -155,7 +165,7 @@ echo ""
 
 # ── PHASE 6: Start services ────────────────────────────────────────────────────
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "PHASE 6: Starting Services"
+echo "PHASE 7: Starting Services"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
