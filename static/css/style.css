@@ -85,8 +85,8 @@ body {
   background:
     linear-gradient(180deg, rgba(0,0,0,0.75) 0%, rgba(0,44,78,0.88) 100%),
     url('../images/navbar-bg.jpg') center center / cover no-repeat;
-  padding-top: 25px;
-  padding-bottom: 25px;
+  padding-top: 40px;
+  padding-bottom: 60px; /* extra room so bottom wave doesn't cut into stats */
 }
 
 /* Hero wave containers */

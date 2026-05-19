@@ -414,6 +414,71 @@ def member_import(request):
     return render(request, 'manage_panel/member_import.html', {'results': results})
 
 
+# ── Dues Management ────────────────────────────────────────────────────────────
+
+@officer_required
+def dues(request):
+    import datetime
+    from django.core.mail import send_mail
+
+    active = Member.objects.filter(membership_status='active').order_by('last_name', 'first_name')
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'mark_paid':
+            ids = request.POST.getlist('member_ids')
+            if ids:
+                today = datetime.date.today()
+                Member.objects.filter(pk__in=ids).update(dues_paid=True, dues_paid_date=today)
+                messages.success(request, f'{len(ids)} member(s) marked as dues paid.')
+
+        elif action == 'mark_unpaid':
+            ids = request.POST.getlist('member_ids')
+            if ids:
+                Member.objects.filter(pk__in=ids).update(dues_paid=False, dues_paid_date=None)
+                messages.success(request, f'{len(ids)} member(s) marked as unpaid.')
+
+        elif action == 'reset_all':
+            active.update(dues_paid=False, dues_paid_date=None)
+            messages.success(request, 'All members reset to unpaid (new dues year).')
+
+        elif action == 'send_reminder':
+            unpaid = active.filter(dues_paid=False)
+            sent = 0
+            for member in unpaid:
+                try:
+                    send_mail(
+                        subject='Brainerd Snodeos — Dues Reminder',
+                        message=(
+                            f'Hi {member.first_name},\n\n'
+                            'This is a friendly reminder that your Brainerd Snodeos '
+                            'membership dues are outstanding.\n\n'
+                            'Please contact an officer or visit our next monthly meeting '
+                            '(every third Monday at 7:00 PM) to pay your dues.\n\n'
+                            'Thank you for being a member!\n\n'
+                            'Brainerd Snodeos Snowmobile Club'
+                        ),
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[member.email],
+                        fail_silently=True,
+                    )
+                    sent += 1
+                except Exception:
+                    pass
+            messages.success(request, f'Dues reminder sent to {sent} unpaid member(s).')
+
+        return redirect('manage_panel:dues')
+
+    unpaid_count = active.filter(dues_paid=False).count()
+    paid_count   = active.filter(dues_paid=True).count()
+    return render(request, 'manage_panel/dues.html', {
+        'members': active,
+        'unpaid_count': unpaid_count,
+        'paid_count': paid_count,
+    })
+
+
 # ── Permissions ────────────────────────────────────────────────────────────────
 
 @officer_required

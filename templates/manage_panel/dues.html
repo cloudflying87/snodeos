@@ -1,0 +1,95 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}Dues Management{% endblock %}
+{% block active_dues %}active{% endblock %}
+
+{% block content %}
+<div class="panel-page-header d-flex align-items-start justify-content-between mb-4 flex-wrap gap-3">
+  <div>
+    <h1 class="panel-page-title">Dues Management</h1>
+    <p class="text-muted mb-0">
+      <span class="badge bg-success me-1">{{ paid_count }} paid</span>
+      <span class="badge bg-danger">{{ unpaid_count }} unpaid</span>
+    </p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="send_reminder">
+      <button type="submit" class="btn btn-warning btn-sm"
+              onclick="return confirm('Send dues reminder email to all {{ unpaid_count }} unpaid members?')">
+        <i class="bi bi-envelope me-1"></i>Email Reminder to Unpaid ({{ unpaid_count }})
+      </button>
+    </form>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="reset_all">
+      <button type="submit" class="btn btn-outline-secondary btn-sm"
+              onclick="return confirm('Reset ALL members to unpaid? Use this at the start of a new dues year.')">
+        <i class="bi bi-arrow-counterclockwise me-1"></i>New Year Reset
+      </button>
+    </form>
+  </div>
+</div>
+
+<form method="post" id="duesForm">
+  {% csrf_token %}
+  <div class="panel-card">
+    <div class="panel-card-header d-flex align-items-center justify-content-between">
+      <h5 class="panel-card-title mb-0">Active Members</h5>
+      <div class="d-flex gap-2">
+        <button type="submit" name="action" value="mark_paid" class="btn btn-success btn-sm">
+          <i class="bi bi-check-lg me-1"></i>Mark Selected Paid
+        </button>
+        <button type="submit" name="action" value="mark_unpaid" class="btn btn-outline-danger btn-sm">
+          <i class="bi bi-x-lg me-1"></i>Mark Selected Unpaid
+        </button>
+      </div>
+    </div>
+    <div class="panel-card-body p-0">
+      <table class="table panel-table mb-0">
+        <thead>
+          <tr>
+            <th style="width:40px;">
+              <input type="checkbox" id="selectAll" class="form-check-input">
+            </th>
+            <th>Member</th>
+            <th>Email</th>
+            <th class="text-center">Dues Status</th>
+            <th class="text-center">Date Paid</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for member in members %}
+          <tr class="{% if not member.dues_paid %}table-warning{% endif %}">
+            <td>
+              <input type="checkbox" name="member_ids" value="{{ member.pk }}"
+                     class="form-check-input member-check">
+            </td>
+            <td class="fw-semibold">{{ member.get_full_name }}</td>
+            <td class="text-muted small">{{ member.email }}</td>
+            <td class="text-center">
+              {% if member.dues_paid %}
+                <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>Paid</span>
+              {% else %}
+                <span class="badge bg-danger">Unpaid</span>
+              {% endif %}
+            </td>
+            <td class="text-center text-muted small">
+              {{ member.dues_paid_date|date:"M j, Y"|default:"—" }}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="text-center text-muted py-4">No active members.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</form>
+
+<script>
+document.getElementById('selectAll').addEventListener('change', function() {
+  document.querySelectorAll('.member-check').forEach(cb => cb.checked = this.checked);
+});
+</script>
+{% endblock %}

@@ -55,6 +55,9 @@ class Member(AbstractBaseUser, PermissionsMixin):
     date_applied = models.DateTimeField(auto_now_add=True)
     date_approved = models.DateField(null=True, blank=True)
 
+    dues_paid      = models.BooleanField(default=False)
+    dues_paid_date = models.DateField(null=True, blank=True)
+
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
