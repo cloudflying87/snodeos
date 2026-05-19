@@ -196,12 +196,13 @@
 
   // Swipe-to-delete for any .mob-swipe-wrapper rows
   (function () {
-    const SWIPE_WIDTH = 75;
     let openRow = null;
 
     document.querySelectorAll('.mob-swipe-wrapper').forEach(wrapper => {
       const row = wrapper.querySelector('.mob-swipe-row');
       if (!row) return;
+      const deleteZone = wrapper.querySelector('.mob-swipe-delete');
+      const SWIPE_WIDTH = deleteZone ? deleteZone.offsetWidth : 75;
       let startX = 0, startY = 0, dx = 0, dragging = false;
 
       row.addEventListener('touchstart', e => {

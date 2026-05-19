@@ -340,9 +340,9 @@
   right: 0; top: 0; bottom: 0;
   width: 75px;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
 }
+.mob-swipe-delete.dual { width: 150px; }
 .mob-swipe-row {
   position: relative;
   transform: translateX(0);

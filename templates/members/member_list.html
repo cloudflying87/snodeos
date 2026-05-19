@@ -45,8 +45,8 @@
   </div>
 </div>
 
-<!-- Table -->
-<div class="card border-0 shadow-sm">
+<!-- Desktop table -->
+<div class="card border-0 shadow-sm d-none d-md-block">
   <div class="table-responsive">
     <table class="table table-hover mb-0 align-middle">
       <thead class="table-light">
@@ -100,4 +100,98 @@
   </div>
 </div>
 
+<!-- Mobile list -->
+<div class="card border-0 shadow-sm d-md-none">
+  <div class="mob-list">
+    {% for member in members %}
+    {% with s=member.membership_status %}
+    <div class="mob-row mob-tap-row"
+         data-bs-toggle="modal" data-bs-target="#memberModal"
+         data-name="{{ member.get_full_name }}"
+         data-email="{{ member.email }}"
+         data-sled="{{ member.get_snowmobile_brand_display|default:'—' }}"
+         data-status="{{ s }}"
+         data-status-label="{{ member.get_membership_status_display }}"
+         data-applied="{{ member.date_applied|date:'M j, Y' }}"
+         data-photo="{% if member.photo %}{{ member.photo.url }}{% endif %}"
+         data-edit-url="{% url 'members:member_edit' member.pk %}"
+         data-view-url="{% url 'members:member_detail' member.pk %}">
+      <div class="position-relative flex-shrink-0">
+        {% if member.photo %}
+          <img src="{{ member.photo.url }}" class="rounded-circle" style="width:44px;height:44px;object-fit:cover;">
+        {% else %}
+          <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width:44px;height:44px;">
+            <i class="bi bi-person-fill text-white"></i>
+          </div>
+        {% endif %}
+        <span class="position-absolute bottom-0 end-0 rounded-circle border border-2 border-white"
+              style="width:12px;height:12px;background:{% if s == 'active' %}#198754{% elif s == 'pending' %}#ffc107{% elif s == 'inactive' %}#6c757d{% else %}#dc3545{% endif %};"></span>
+      </div>
+      <div class="mob-info">
+        <div class="mob-title">{{ member.get_full_name }}</div>
+        <div class="mob-sub">{{ member.get_snowmobile_brand_display|default:"No sled listed" }}</div>
+      </div>
+      <i class="bi bi-chevron-right text-muted" style="flex-shrink:0;font-size:0.8rem;"></i>
+    </div>
+    {% endwith %}
+    {% empty %}
+    <div class="text-center text-muted py-5">No members found.</div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Member detail modal (mobile) -->
+<div class="modal fade" id="memberModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-2 text-center px-4">
+        <div id="mmPhoto" class="mb-3 d-flex justify-content-center"></div>
+        <h5 id="mmName" class="fw-bold mb-1"></h5>
+        <div id="mmBadge" class="mb-3"></div>
+        <div class="text-start">
+          <p id="mmSled" class="text-muted small mb-1"></p>
+          <p id="mmEmail" class="text-muted small mb-1"></p>
+          <p id="mmApplied" class="text-muted small mb-0"></p>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-3 gap-2">
+        <a id="mmViewBtn" href="#" class="btn btn-outline-primary flex-fill">
+          <i class="bi bi-eye me-1"></i>View
+        </a>
+        <a id="mmEditBtn" href="#" class="btn btn-primary flex-fill">
+          <i class="bi bi-pencil me-1"></i>Edit
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('memberModal').addEventListener('show.bs.modal', e => {
+  const row = e.relatedTarget;
+  const d = row.dataset;
+  const statusColors = { active: '#198754', pending: '#ffc107', inactive: '#6c757d' };
+  const statusClasses = { active: 'bg-success', pending: 'bg-warning text-dark', inactive: 'bg-secondary' };
+  const dotColor = statusColors[d.status] || '#dc3545';
+  const badgeClass = statusClasses[d.status] || 'bg-danger';
+
+  document.getElementById('mmPhoto').innerHTML = d.photo
+    ? `<div class="position-relative d-inline-block"><img src="${d.photo}" class="rounded-circle" style="width:72px;height:72px;object-fit:cover;"><span class="position-absolute bottom-0 end-0 rounded-circle border border-2 border-white" style="width:14px;height:14px;background:${dotColor};"></span></div>`
+    : `<div class="position-relative d-inline-block"><div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width:72px;height:72px;"><i class="bi bi-person-fill text-white fs-3"></i></div><span class="position-absolute bottom-0 end-0 rounded-circle border border-2 border-white" style="width:14px;height:14px;background:${dotColor};"></span></div>`;
+
+  document.getElementById('mmName').textContent = d.name;
+  document.getElementById('mmBadge').innerHTML = `<span class="badge ${badgeClass}">${d.statusLabel}</span>`;
+  document.getElementById('mmSled').innerHTML = `<i class="bi bi-snow me-1"></i>${d.sled}`;
+  document.getElementById('mmEmail').innerHTML = `<i class="bi bi-envelope me-1"></i>${d.email}`;
+  document.getElementById('mmApplied').innerHTML = `<i class="bi bi-calendar me-1"></i>Applied ${d.applied}`;
+  document.getElementById('mmViewBtn').href = d.viewUrl;
+  document.getElementById('mmEditBtn').href = d.editUrl;
+});
+</script>
 {% endblock %}
