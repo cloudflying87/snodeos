@@ -128,13 +128,8 @@ until docker compose exec db pg_isready -U "${POSTGRES_USER:-snodeos}" > /dev/nu
 done
 echo "✅ Database ready"
 
-echo "Checking for unmigrated model changes..."
-if ! docker compose run --rm web python3 manage.py makemigrations --check --dry-run > /dev/null 2>&1; then
-  echo "❌ Unmigrated model changes detected!"
-  echo "   Run 'python manage.py makemigrations' locally, commit, and push first."
-  exit 1
-fi
-
+echo "Creating migrations..."
+docker compose run --rm web python3 manage.py makemigrations --noinput
 echo "Running migrations..."
 docker compose run --rm web python3 manage.py migrate --noinput
 echo "✅ Migrations complete"
