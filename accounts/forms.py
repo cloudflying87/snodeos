@@ -5,7 +5,6 @@ from crispy_forms.layout import Layout, Row, Column, Submit, Fieldset
 from .models import Member, RegistrationField
 
 
-# All optional fields that can be toggled via the management panel
 _OPTIONAL_FIELDS = ['phone', 'address', 'city', 'state', 'zip_code', 'snowmobile_brand']
 
 
@@ -13,22 +12,40 @@ class MembershipApplicationForm(forms.ModelForm):
     password1 = forms.CharField(label='Password', widget=forms.PasswordInput)
     password2 = forms.CharField(label='Confirm Password', widget=forms.PasswordInput)
 
+    ACCEPTS_TEXTS_CHOICES = [
+        ('', '— Select —'),
+        (True, 'Yes'),
+        (False, 'No'),
+    ]
+    accepts_texts = forms.NullBooleanField(
+        label='Can you receive text messages?',
+        help_text='We send communications via email but at times text.',
+        widget=forms.RadioSelect(choices=[('True', 'Yes'), ('False', 'No')]),
+        required=True,
+    )
+
     class Meta:
         model = Member
-        # Include all possible fields; __init__ removes disabled ones
         fields = [
             'first_name', 'last_name', 'email',
             'phone', 'address', 'city', 'state', 'zip_code',
             'snowmobile_brand',
+            'accepts_texts', 'num_snowmobiles', 'referral_source',
         ]
         widgets = {
             'state': forms.TextInput(attrs={'placeholder': 'MN'}),
+            'referral_source': forms.Textarea(attrs={'rows': 3}),
+            'num_snowmobiles': forms.NumberInput(attrs={'min': 0, 'max': 20}),
+        }
+        labels = {
+            'num_snowmobiles': 'Number of Snowmobiles (MnUSA)',
+            'referral_source': 'How did you find our club?',
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Load field config from DB
+        # Load configurable field config from DB
         try:
             config = {f.field_name: f for f in RegistrationField.objects.all()}
         except Exception:
@@ -44,7 +61,7 @@ class MembershipApplicationForm(forms.ModelForm):
                     self.fields[field_name].label = cfg.label
                 self.fields[field_name].required = cfg.is_required
 
-        # Build dynamic layout based on remaining fields
+        # Build dynamic layout
         personal_fields = [
             Row(Column('first_name', css_class='col-md-6'), Column('last_name', css_class='col-md-6')),
             Row(Column('email', css_class='col-md-6'),
@@ -66,6 +83,16 @@ class MembershipApplicationForm(forms.ModelForm):
             layout_items.append(Fieldset('Address', *address_fields))
         if 'snowmobile_brand' in self.fields:
             layout_items.append(Fieldset('Snowmobile Info', 'snowmobile_brand'))
+
+        layout_items.append(Fieldset('Communication',
+            'accepts_texts',
+        ))
+        layout_items.append(Fieldset('Additional Info',
+            Row(
+                Column('num_snowmobiles', css_class='col-md-4'),
+                Column('referral_source', css_class='col-md-8'),
+            ),
+        ))
         layout_items.append(Fieldset('Account Setup',
             Row(Column('password1', css_class='col-md-6'), Column('password2', css_class='col-md-6')),
         ))
@@ -80,6 +107,14 @@ class MembershipApplicationForm(forms.ModelForm):
         if p1 and p2 and p1 != p2:
             raise forms.ValidationError('Passwords do not match.')
         return p2
+
+    def clean_accepts_texts(self):
+        val = self.cleaned_data.get('accepts_texts')
+        if val == 'True':
+            return True
+        if val == 'False':
+            return False
+        return val
 
     def save(self, commit=True):
         member = super().save(commit=False)

@@ -84,6 +84,15 @@
             </td>
           </tr>
           <tr><td class="text-muted">Panel Access</td><td>{% if member.is_officer %}Yes{% else %}No{% endif %}</td></tr>
+          <tr><td class="text-muted">Accepts Texts</td>
+            <td>{% if member.accepts_texts is None %}—{% elif member.accepts_texts %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}</td>
+          </tr>
+          {% if member.num_snowmobiles is not None %}
+          <tr><td class="text-muted">Snowmobiles (MnUSA)</td><td>{{ member.num_snowmobiles }}</td></tr>
+          {% endif %}
+          {% if member.referral_source %}
+          <tr><td class="text-muted">Found us via</td><td>{{ member.referral_source }}</td></tr>
+          {% endif %}
         </table>
       </div>
     </div>

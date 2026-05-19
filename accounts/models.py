@@ -84,6 +84,10 @@ class Member(AbstractBaseUser, PermissionsMixin):
     date_applied = models.DateTimeField(auto_now_add=True)
     date_approved = models.DateField(null=True, blank=True)
 
+    accepts_texts   = models.BooleanField(null=True, blank=True)  # SMS consent (Yes/No/not answered)
+    num_snowmobiles = models.PositiveSmallIntegerField(null=True, blank=True)
+    referral_source = models.TextField(blank=True)
+
     dues_paid      = models.BooleanField(default=False)
     dues_paid_date = models.DateField(null=True, blank=True)
 
