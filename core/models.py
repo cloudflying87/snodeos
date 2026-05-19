@@ -337,6 +337,27 @@ class ContactMessage(models.Model):
         return f'{self.name} — {self.subject}'
 
 
+class EmailLog(models.Model):
+    """Per-recipient log of outgoing emails so officers can investigate delivery failures."""
+    STATUS_CHOICES = [
+        ('success', 'Sent'),
+        ('failed',  'Failed'),
+    ]
+    subject     = models.CharField(max_length=255)
+    recipient   = models.EmailField()
+    template    = models.CharField(max_length=80, blank=True, help_text='Template name used to render the email')
+    status      = models.CharField(max_length=10, choices=STATUS_CHOICES, default='success', db_index=True)
+    error       = models.TextField(blank=True, help_text='Exception message if status=failed')
+    provider    = models.CharField(max_length=20, blank=True, help_text='resend / brevo / django')
+    sent_at     = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-sent_at']
+
+    def __str__(self):
+        return f'{self.recipient} — {self.subject} ({self.get_status_display()})'
+
+
 class AuditLog(models.Model):
     """Record of significant officer actions for accountability."""
     ACTION_CHOICES = [

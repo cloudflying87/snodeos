@@ -79,10 +79,23 @@ def _tmpl_override(cfg_attr):
     }
 
 
+def _log_email(subject, recipient, template, status, error='', provider=''):
+    """Write an EmailLog row. Never raises — logging is best-effort."""
+    try:
+        from core.models import EmailLog
+        EmailLog.objects.create(
+            subject=subject[:255], recipient=recipient, template=template[:80],
+            status=status, error=str(error)[:2000], provider=provider,
+        )
+    except Exception as exc:
+        logger.error('Failed to write EmailLog: %s', exc)
+
+
 def send_email(subject, to, template, context=None):
     """
     Render an HTML email template and send it.
     Priority: Resend API → Brevo SMTP (DB) → Django default backend (.env).
+    Returns True on success, False on failure. Logs every attempt to EmailLog.
     """
     ctx = {
         'site_url': _site_url(),
@@ -91,16 +104,19 @@ def send_email(subject, to, template, context=None):
         **(context or {}),
     }
     to_list = [to] if isinstance(to, str) else to
+    recipient_str = to if isinstance(to, str) else ', '.join(to_list)
 
     try:
         html_body = render_to_string(f'emails/{template}.html', ctx)
         text_body = render_to_string(f'emails/{template}.txt', ctx)
     except Exception as exc:
         logger.error('Failed to render email template "%s": %s', template, exc)
-        return
+        _log_email(subject, recipient_str, template, 'failed', error=f'Template render: {exc}')
+        return False
 
     cfg = _cfg()
     from_email = settings.DEFAULT_FROM_EMAIL
+    provider = 'resend' if cfg.resend_api_key else ('brevo' if cfg.brevo_smtp_key else 'django')
 
     try:
         if cfg.resend_api_key:
@@ -118,8 +134,12 @@ def send_email(subject, to, template, context=None):
             msg.attach_alternative(html_body, 'text/html')
             msg.send()
         logger.info('Email sent: %s → %s', subject, to)
+        _log_email(subject, recipient_str, template, 'success', provider=provider)
+        return True
     except Exception as exc:
         logger.error('Failed to send email "%s" to %s: %s', subject, to, exc)
+        _log_email(subject, recipient_str, template, 'failed', error=str(exc), provider=provider)
+        return False
 
 
 def send_plain(subject, to, body):

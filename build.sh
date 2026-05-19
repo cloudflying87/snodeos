@@ -138,6 +138,31 @@ until docker compose exec db pg_isready -U "${POSTGRES_USER:-snodeos}" > /dev/nu
 done
 echo "✅ Database ready"
 
+# ── Snapshot before migrations ────────────────────────────────────────────────
+# A bad migration is easier to recover from with a dump than without one.
+# Dumps are kept on the host in ./backups/, last 10 retained.
+BACKUP_DIR="$(pwd)/backups"
+mkdir -p "$BACKUP_DIR"
+BACKUP_FILE="$BACKUP_DIR/snodeos-$(date +%Y%m%d-%H%M%S).sql.gz"
+
+# Skip on fresh install (no tables yet) — pg_dump still succeeds but file is empty
+if docker compose exec -T db psql -U "${POSTGRES_USER:-snodeos}" -d "${POSTGRES_DB:-snodeos}" -tAc "SELECT 1 FROM pg_tables WHERE schemaname='public' LIMIT 1" 2>/dev/null | grep -q 1; then
+  echo "Snapshotting database to $BACKUP_FILE..."
+  docker compose exec -T db pg_dump -U "${POSTGRES_USER:-snodeos}" -d "${POSTGRES_DB:-snodeos}" --no-owner --no-privileges 2>/dev/null | gzip > "$BACKUP_FILE"
+  if [ -s "$BACKUP_FILE" ]; then
+    SIZE=$(du -h "$BACKUP_FILE" | cut -f1)
+    echo "✅ Backup saved ($SIZE)"
+    # Prune to last 10 dumps
+    ls -1t "$BACKUP_DIR"/snodeos-*.sql.gz 2>/dev/null | tail -n +11 | xargs -r rm -f
+  else
+    echo "⚠️  Backup file is empty — pg_dump may have failed. Continuing anyway."
+    rm -f "$BACKUP_FILE"
+  fi
+else
+  echo "ℹ️  Fresh install — no existing tables to back up"
+fi
+echo ""
+
 echo "Running migrations..."
 docker compose run --rm web python3 manage.py migrate --noinput
 echo "✅ Migrations complete"

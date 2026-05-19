@@ -64,6 +64,7 @@ urlpatterns = [
     path('email-templates/<int:pk>/test/', views.email_template_test, name='email_template_test'),
     path('setup-guide/', views.setup_guide, name='setup_guide'),
     path('audit-log/', views.audit_log, name='audit_log'),
+    path('email-log/', views.email_log, name='email_log'),
     path('text-members/', views.text_members, name='text_members'),
     path('sms-settings/', views.sms_settings, name='sms_settings'),
 ]

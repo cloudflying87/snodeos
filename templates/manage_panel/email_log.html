@@ -1,0 +1,121 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}Email Log{% endblock %}
+{% block active_email_log %}active{% endblock %}
+
+{% block content %}
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">Email Log</h1>
+    <p class="panel-breadcrumb mb-0">
+      <a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> / Email Log
+    </p>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-sm-6">
+    <a href="?status=failed" class="card border-0 shadow-sm text-decoration-none text-reset h-100 {% if status_filter == 'failed' %}border-start border-3 border-danger{% endif %}">
+      <div class="card-body d-flex align-items-center gap-3">
+        <i class="bi bi-x-circle-fill text-danger fs-2" aria-hidden="true"></i>
+        <div>
+          <div class="fw-bold fs-4">{{ counts.failed }}</div>
+          <div class="text-muted small">Failed sends</div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-sm-6">
+    <a href="?status=success" class="card border-0 shadow-sm text-decoration-none text-reset h-100 {% if status_filter == 'success' %}border-start border-3 border-success{% endif %}">
+      <div class="card-body d-flex align-items-center gap-3">
+        <i class="bi bi-check-circle-fill text-success fs-2" aria-hidden="true"></i>
+        <div>
+          <div class="fw-bold fs-4">{{ counts.success }}</div>
+          <div class="text-muted small">Successful sends</div>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<div class="panel-card">
+  <div class="panel-card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <h2 class="panel-card-title mb-0">
+      Showing
+      {% if status_filter == 'failed' %}<span class="text-danger">failed</span>{% elif status_filter == 'success' %}<span class="text-success">successful</span>{% else %}all{% endif %}
+      sends (last 200)
+    </h2>
+    <div class="btn-group btn-group-sm" role="group" aria-label="Filter by status">
+      <a href="?status=failed"  class="btn btn-outline-secondary {% if status_filter == 'failed'  %}active{% endif %}">Failed</a>
+      <a href="?status=success" class="btn btn-outline-secondary {% if status_filter == 'success' %}active{% endif %}">Successful</a>
+      <a href="?status=all"     class="btn btn-outline-secondary {% if status_filter == 'all'     %}active{% endif %}">All</a>
+    </div>
+  </div>
+  {% if logs %}
+
+  <div class="d-none d-md-block">
+    <table class="panel-table">
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>To</th>
+          <th>Subject</th>
+          <th>Template</th>
+          <th>Provider</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td class="text-muted small text-nowrap">{{ log.sent_at|date:"M j, Y" }}<br><span style="font-size:0.75rem;">{{ log.sent_at|date:"g:i A" }}</span></td>
+          <td class="small">{{ log.recipient }}</td>
+          <td class="small">{{ log.subject }}</td>
+          <td class="small text-muted">{{ log.template|default:"—" }}</td>
+          <td class="small text-muted">{{ log.provider|default:"—" }}</td>
+          <td>
+            {% if log.status == 'success' %}
+              <span class="badge bg-success-subtle text-success-emphasis"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>Sent</span>
+            {% else %}
+              <span class="badge bg-danger-subtle text-danger-emphasis" title="{{ log.error }}"><i class="bi bi-x-lg me-1" aria-hidden="true"></i>Failed</span>
+            {% endif %}
+            {% if log.error %}<div class="text-muted small text-truncate" style="max-width:280px;" title="{{ log.error }}">{{ log.error|truncatechars:60 }}</div>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="d-md-none">
+    {% for log in logs %}
+    <div class="px-3 py-3 border-bottom">
+      <div class="d-flex align-items-center justify-content-between mb-1">
+        {% if log.status == 'success' %}
+          <span class="badge bg-success-subtle text-success-emphasis"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>Sent</span>
+        {% else %}
+          <span class="badge bg-danger-subtle text-danger-emphasis"><i class="bi bi-x-lg me-1" aria-hidden="true"></i>Failed</span>
+        {% endif %}
+        <small class="text-muted">{{ log.sent_at|date:"M j, g:i A" }}</small>
+      </div>
+      <div class="fw-semibold small">{{ log.subject }}</div>
+      <div class="text-muted small">to {{ log.recipient }}</div>
+      {% if log.error %}<div class="text-danger" style="font-size:0.78rem;">{{ log.error|truncatechars:140 }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="panel-card-body text-center py-5">
+    <i class="bi bi-envelope display-4 text-muted mb-3 d-block" aria-hidden="true"></i>
+    <p class="text-muted mb-0">
+      {% if status_filter == 'failed' %}
+        No failed sends. Nice.
+      {% else %}
+        No emails in this view yet.
+      {% endif %}
+    </p>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

@@ -139,6 +139,9 @@
         <a href="{% url 'manage_panel:audit_log' %}" class="panel-nav-link {% block active_audit_log %}{% endblock %}">
           <i class="bi bi-clock-history"></i> Audit Log
         </a>
+        <a href="{% url 'manage_panel:email_log' %}" class="panel-nav-link {% block active_email_log %}{% endblock %}">
+          <i class="bi bi-envelope-check"></i> Email Log
+        </a>
         {% endif %}
       </div>
 

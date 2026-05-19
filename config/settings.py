@@ -136,6 +136,22 @@ CSRF_TRUSTED_ORIGINS = [
     o for o in os.environ.get('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',') if o
 ]
 
+# ── HTTPS hardening (production only) ─────────────────────────────────────
+# Cloudflare Tunnel (cloudflared) terminates TLS and forwards plain HTTP to
+# nginx → web. To detect HTTPS, Django needs to trust the X-Forwarded-Proto
+# header that cloudflared/nginx sets. nginx.conf must forward this header.
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT     = True
+    SESSION_COOKIE_SECURE   = True
+    CSRF_COOKIE_SECURE      = True
+    SECURE_HSTS_SECONDS     = 60 * 60 * 24 * 30   # 30 days; bump to 1 year once verified
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD     = False               # opt in after HSTS has run for a few months
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_REFERRER_POLICY  = 'same-origin'
+    X_FRAME_OPTIONS         = 'DENY'
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

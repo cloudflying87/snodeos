@@ -5,28 +5,28 @@
 
 {% block content %}
 
-<section class="page-hero py-5">
+<section class="page-hero py-4 py-lg-5">
   <div class="container text-center sn-on-blue">
-    <h1 class="display-4 fw-bold font-oswald">Join the Club</h1>
-    <p class="lead sn-muted-on-blue">Fill out the form below to apply for membership. An officer will review your application.</p>
+    <h1 class="display-5 display-md-4 fw-bold font-oswald">Join the Club</h1>
+    <p class="lead sn-muted-on-blue mb-0">Fill out the form below to apply for membership. An officer will review your application.</p>
   </div>
 </section>
 
-<section class="py-6">
+<section class="py-4 py-lg-6">
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-lg-8">
-        <div class="card border-0 shadow-sm p-4 p-lg-5">
+        <div class="card border-0 shadow-sm p-3 p-md-4 p-lg-5">
           <div class="text-center mb-4">
-            <i class="bi bi-person-plus display-4 text-primary"></i>
+            <i class="bi bi-person-plus display-4 text-primary" aria-hidden="true"></i>
             <h3 class="fw-bold font-oswald mt-2">Membership Application</h3>
-            <p class="text-muted">Already a member? <a href="{% url 'accounts:login' %}">Log in here.</a></p>
+            <p class="text-muted mb-0">Already a member? <a href="{% url 'accounts:login' %}">Log in here.</a></p>
           </div>
           {% crispy form %}
         </div>
 
-        <div class="card border-0 text-white p-4 mt-4 rounded-3 text-center" style="background:var(--sn-blue);">
-          <i class="bi bi-info-circle fs-3 mb-2"></i>
+        <div class="card border-0 text-white p-3 p-md-4 mt-4 rounded-3 text-center" style="background:var(--sn-blue);">
+          <i class="bi bi-info-circle fs-3 mb-2" aria-hidden="true"></i>
           <p class="mb-0">After submitting, a club officer will review your application. You'll be able to log in once your membership is approved.</p>
         </div>
       </div>

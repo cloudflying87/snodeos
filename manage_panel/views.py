@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.conf import settings
-from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, AnnouncementImage, TrailCondition, TrailConditionImage, TrailWorkLog, TrailWorkImage, ContactMessage, SiteSettings, EmailTemplate, AuditLog
+from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, AnnouncementImage, TrailCondition, TrailConditionImage, TrailWorkLog, TrailWorkImage, ContactMessage, SiteSettings, EmailTemplate, AuditLog, EmailLog
 from accounts.models import Member, RegistrationField
 from core.email import send_test_email
 from accounts.models import Member
@@ -263,16 +263,13 @@ def announcement_add(request):
             if send_email:
                 active_members = Member.objects.filter(membership_status='active')
                 for member in active_members:
-                    try:
-                        _send_email(
-                            subject=f'Brainerd Snodeos: {ann.title}',
-                            to=member.email,
-                            template='announcement',
-                            context={'announcement': ann, 'ann_url': ann_url, 'image_urls': image_urls, **ann_tmpl_ctx},
-                        )
+                    if _send_email(
+                        subject=f'Brainerd Snodeos: {ann.title}',
+                        to=member.email,
+                        template='announcement',
+                        context={'announcement': ann, 'ann_url': ann_url, 'image_urls': image_urls, **ann_tmpl_ctx},
+                    ):
                         email_sent += 1
-                    except Exception:
-                        pass
 
             if send_text:
                 snippet = ann.body[:120] + ('…' if len(ann.body) > 120 else '')
@@ -405,16 +402,13 @@ def trail_condition_add(request):
             if send_email:
                 active_members = Member.objects.filter(membership_status='active')
                 for member in active_members:
-                    try:
-                        _send_email(
-                            subject=f'Trail Update: {condition.title}',
-                            to=member.email,
-                            template='trail_condition',
-                            context={'condition': condition, 'cond_url': cond_url, 'image_urls': image_urls, **tmpl_ctx},
-                        )
+                    if _send_email(
+                        subject=f'Trail Update: {condition.title}',
+                        to=member.email,
+                        template='trail_condition',
+                        context={'condition': condition, 'cond_url': cond_url, 'image_urls': image_urls, **tmpl_ctx},
+                    ):
                         email_sent += 1
-                    except Exception:
-                        pass
 
             if send_text:
                 status_label = condition.get_status_display()
@@ -820,15 +814,14 @@ def email_blast(request):
                 }
             sent = failed = 0
             for member in recipients:
-                try:
-                    _send_email(
-                        subject=subject,
-                        to=member.email,
-                        template='blast',
-                        context={'blast_body': blast_html, 'blast_plain': blast_plain, **extra_ctx},
-                    )
+                if _send_email(
+                    subject=subject,
+                    to=member.email,
+                    template='blast',
+                    context={'blast_body': blast_html, 'blast_plain': blast_plain, **extra_ctx},
+                ):
                     sent += 1
-                except Exception:
+                else:
                     failed += 1
             from core.audit import log_action
             log_action(request.user, 'email_blast',
@@ -1157,3 +1150,22 @@ def audit_log(request):
     """View recent admin actions. Site-admin only since it can reveal officer activity."""
     logs = AuditLog.objects.select_related('actor').all()[:200]
     return render(request, 'manage_panel/audit_log.html', {'logs': logs})
+
+
+@site_admin_required
+def email_log(request):
+    """Recent email delivery history. Defaults to failures-only since that's what officers care about."""
+    status_filter = request.GET.get('status', 'failed')
+    logs = EmailLog.objects.all()
+    if status_filter in ('success', 'failed'):
+        logs = logs.filter(status=status_filter)
+    logs = logs[:200]
+    counts = {
+        'failed':  EmailLog.objects.filter(status='failed').count(),
+        'success': EmailLog.objects.filter(status='success').count(),
+    }
+    return render(request, 'manage_panel/email_log.html', {
+        'logs': logs,
+        'status_filter': status_filter,
+        'counts': counts,
+    })
