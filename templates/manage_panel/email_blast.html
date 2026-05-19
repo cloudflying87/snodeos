@@ -1,0 +1,57 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}Email Members{% endblock %}
+{% block active_blast %}active{% endblock %}
+
+{% block content %}
+<div class="panel-page-header d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="panel-page-title">Email Members</h1>
+    <p class="text-muted mb-0">Send an email to all <strong>{{ recipient_count }}</strong> active members.</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h5 class="panel-card-title mb-0"><i class="bi bi-broadcast me-2"></i>Compose Email</h5>
+      </div>
+      <div class="panel-card-body">
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Subject</label>
+            <input type="text" name="subject" class="form-control" placeholder="e.g. Trail Update — December 2025" required>
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Message</label>
+            <textarea name="body" class="form-control" rows="10" placeholder="Write your message here..." required></textarea>
+          </div>
+          <div class="d-flex gap-2 align-items-center">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-send me-2"></i>Send to {{ recipient_count }} Members
+            </button>
+            <span class="text-muted small">Plain text — no HTML formatting</span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h5 class="panel-card-title mb-0"><i class="bi bi-info-circle me-2"></i>Notes</h5>
+      </div>
+      <div class="panel-card-body">
+        <ul class="list-unstyled mb-0 small">
+          <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Sends to <strong>active members only</strong> — not pending or inactive.</li>
+          <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Sent individually per member (not a mass BCC).</li>
+          <li class="mb-2"><i class="bi bi-exclamation-triangle text-warning me-2"></i>Make sure your email settings are configured under <a href="{% url 'manage_panel:email_settings' %}">Email Settings</a> first.</li>
+          <li class="mb-2"><i class="bi bi-exclamation-triangle text-warning me-2"></i>Plain text only — no HTML or images supported.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

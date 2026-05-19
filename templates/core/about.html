@@ -1,38 +1,39 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}About Us — Brainerd Snodeos{% endblock %}
 
 {% block content %}
 
-<section class="page-hero bg-dark text-white py-5">
+<section class="page-hero text-white py-5">
   <div class="container text-center">
     <h1 class="display-4 fw-bold font-oswald">About Us</h1>
-    <p class="lead text-muted">Our history, mission, and the people who make it happen.</p>
+    <p class="lead">Our history, mission, and the people who make it happen.</p>
   </div>
 </section>
 
-<section class="py-6">
+<section class="py-6 bg-white">
   <div class="container">
     <div class="row g-5 align-items-start">
       <div class="col-lg-7">
         <span class="badge bg-primary text-uppercase mb-3 px-3 py-2">Our Story</span>
         <h2 class="display-5 fw-bold font-oswald">Established 1975</h2>
-        <p class="lead text-muted">
-          The Brainerd Snodeos Snowmobile Club was founded in 1975 in response to growing safety concerns about snowmobile usage within city limits. A group of passionate riders came together with a shared mission: create a safe, organized environment for snowmobiling in the Brainerd Lakes area.
+        <p class="lead">
+          Welcome to the Brainerd Snodeos Trail System!
         </p>
         <p>
-          Over the past 50 years, we have grown from a small group of local enthusiasts into a thriving club of over 125 members. We maintain 107+ miles of groomed trails through partnerships with local landowners, the Minnesota DNR, and community businesses.
+          We proudly groom 107 miles of snowmobile trails in the Brainerd Lakes area, thanks to the dedication of over 50 volunteer members. Since 1975, when a group of snowmobilers formed the Brainerd Snodeos in response to a city request for safer snowmobiling, our club has grown to 125 members and evolved from hand-cut trails to operating two state-of-the-art Tucker Sno-Cats.
         </p>
         <p>
-          Our trails are 100% volunteer-maintained. Members dedicate countless hours throughout the season — from early fall preparations to spring wind-down — using our two state-of-the-art Tucker Sno-Cats to keep every mile in top condition.
+          Maintaining the trails is a year-round effort involving tree clearing, bridge building, and signage. Our volunteers work hard to ensure safe and enjoyable rides for all. To help us keep trails smooth, please ride responsibly&mdash;stay right, avoid spinning your track, and take corners with care.
         </p>
         <p>
-          We meet every third Monday of the month at 7:00 PM. New members are always welcome — whether you are a lifelong rider or brand new to the sport.
+          Thank you for supporting the Brainerd Snodeos. Follow us on <a href="https://www.facebook.com/brainerdsnodeos" target="_blank">Facebook</a> for updates!
         </p>
 
         <div class="card border-0 bg-primary text-white p-4 rounded-3 mt-4">
           <h5 class="fw-bold mb-1"><i class="bi bi-calendar-event me-2"></i>Monthly Meeting</h5>
-          <p class="mb-0">Every Third Monday &bull; 7:00 PM</p>
+          <p class="mb-0">Every Third Monday of the month &bull; 7:00 PM</p>
         </div>
       </div>
 
@@ -41,24 +42,19 @@
           <h5 class="fw-bold mb-4">Club at a Glance</h5>
           <ul class="list-group list-group-flush">
             <li class="list-group-item d-flex justify-content-between px-0">
-              <span class="text-muted">Founded</span>
-              <strong>1975</strong>
+              <span class="text-muted">Founded</span><strong>1975</strong>
             </li>
             <li class="list-group-item d-flex justify-content-between px-0">
-              <span class="text-muted">Active Members</span>
-              <strong>125+</strong>
+              <span class="text-muted">Active Members</span><strong>125+</strong>
             </li>
             <li class="list-group-item d-flex justify-content-between px-0">
-              <span class="text-muted">Miles Maintained</span>
-              <strong>107+</strong>
+              <span class="text-muted">Miles Maintained</span><strong>107+</strong>
             </li>
             <li class="list-group-item d-flex justify-content-between px-0">
-              <span class="text-muted">Groomers</span>
-              <strong>2 Tucker Sno-Cats</strong>
+              <span class="text-muted">Groomers</span><strong>2 Tucker Sno-Cats</strong>
             </li>
             <li class="list-group-item d-flex justify-content-between px-0">
-              <span class="text-muted">Location</span>
-              <strong>Brainerd, MN</strong>
+              <span class="text-muted">Location</span><strong>Brainerd, MN</strong>
             </li>
           </ul>
         </div>
@@ -96,7 +92,7 @@
             <h5 class="fw-bold mb-1">{{ officer.name }}</h5>
             <p class="text-primary fw-semibold mb-1 small text-uppercase">{{ officer.title }}</p>
             {% if officer.snowmobile_brand %}
-              <p class="text-muted small mb-0"><i class="bi bi-snow me-1"></i>{{ officer.snowmobile_brand }}</p>
+              <p class="text-muted small mb-0">{{ officer.snowmobile_brand }}</p>
             {% endif %}
             {% if officer.email %}
               <a href="mailto:{{ officer.email }}" class="btn btn-outline-primary btn-sm mt-3">

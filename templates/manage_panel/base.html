@@ -98,6 +98,9 @@
 
       <div class="panel-nav-section">
         <span class="panel-nav-label">Settings</span>
+        <a href="{% url 'manage_panel:email_blast' %}" class="panel-nav-link {% block active_blast %}{% endblock %}">
+          <i class="bi bi-broadcast"></i> Email Members
+        </a>
         <a href="{% url 'manage_panel:email_settings' %}" class="panel-nav-link {% block active_email %}{% endblock %}">
           <i class="bi bi-send"></i> Email Settings
         </a>

@@ -36,4 +36,5 @@ urlpatterns = [
     path('messages/<int:pk>/delete/', views.message_delete, name='message_delete'),
 
     path('email/', views.email_settings, name='email_settings'),
+    path('email/blast/', views.email_blast, name='email_blast'),
 ]

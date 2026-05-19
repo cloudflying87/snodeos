@@ -296,6 +296,44 @@ def message_delete(request, pk):
     return redirect('manage_panel:message_list')
 
 
+# ── Email Blast ────────────────────────────────────────────────────────────────
+
+@officer_required
+def email_blast(request):
+    from django.core.mail import send_mail
+    recipients = Member.objects.filter(membership_status='active').values_list('email', flat=True)
+
+    if request.method == 'POST':
+        subject = request.POST.get('subject', '').strip()
+        body = request.POST.get('body', '').strip()
+        if not subject or not body:
+            messages.error(request, 'Subject and body are required.')
+        else:
+            sent = 0
+            failed = 0
+            for email in recipients:
+                try:
+                    send_mail(
+                        subject,
+                        body,
+                        settings.DEFAULT_FROM_EMAIL,
+                        [email],
+                        fail_silently=False,
+                    )
+                    sent += 1
+                except Exception:
+                    failed += 1
+            if failed:
+                messages.warning(request, f'Sent to {sent} members. {failed} failed.')
+            else:
+                messages.success(request, f'Email sent to {sent} active members.')
+            return redirect('manage_panel:email_blast')
+
+    return render(request, 'manage_panel/email_blast.html', {
+        'recipient_count': recipients.count(),
+    })
+
+
 # ── Email Settings ─────────────────────────────────────────────────────────────
 
 @officer_required
