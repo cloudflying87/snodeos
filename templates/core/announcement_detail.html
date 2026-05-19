@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}{{ ann.title }} — Brainerd Snodeos{% endblock %}
+
+{% block content %}
+<section class="page-hero text-center">
+  <div class="container sn-on-blue">
+    {% if ann.is_pinned %}
+      <p class="mb-1"><span class="badge bg-light text-primary">📌 Pinned Announcement</span></p>
+    {% endif %}
+    <h1 class="display-5 fw-bold font-oswald mb-2">{{ ann.title }}</h1>
+    <p class="sn-muted-on-blue mb-0">{{ ann.created_at|date:"F j, Y" }}</p>
+  </div>
+</section>
+
+<section class="py-6 bg-white">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm p-4 p-lg-5">
+          <div style="white-space:pre-wrap;line-height:1.8;font-size:1.05rem;color:#344055;">{{ ann.body }}</div>
+        </div>
+        <div class="text-center mt-4">
+          <a href="{% url 'core:home' %}#announcements" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-arrow-left me-1"></i>Back to Home
+          </a>
+          {% if user.is_authenticated and user.is_officer %}
+          <a href="{% url 'manage_panel:announcement_edit' ann.pk %}" class="btn btn-outline-primary">
+            <i class="bi bi-pencil me-1"></i>Edit
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

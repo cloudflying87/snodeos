@@ -113,6 +113,7 @@
         </a>
       </div>
 
+      {% if request.user.is_site_admin or request.user.is_staff %}
       <div class="panel-nav-section">
         <span class="panel-nav-label">Settings</span>
         <a href="{% url 'manage_panel:facebook_settings' %}" class="panel-nav-link {% block active_facebook %}{% endblock %}">
@@ -121,6 +122,10 @@
         <a href="{% url 'manage_panel:communications' %}" class="panel-nav-link {% block active_comms %}{% endblock %}">
           <i class="bi bi-broadcast"></i> Communications
         </a>
+      </div>
+      {% endif %}
+      <div class="panel-nav-section">
+        <span class="panel-nav-label">Help</span>
         <a href="{% url 'manage_panel:setup_guide' %}" class="panel-nav-link {% block active_setup_guide %}{% endblock %}">
           <i class="bi bi-book"></i> Setup Guide
         </a>

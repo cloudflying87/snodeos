@@ -1,0 +1,11 @@
+{{ announcement.title }}
+Posted {{ announcement.created_at|date:"F j, Y" }}
+
+{{ announcement.body }}
+
+{% if ann_url %}Read more: {{ ann_url }}{% endif %}
+
+---
+Brainerd Snodeos Snowmobile Club
+{{ site_url }}
+To stop receiving emails, contact an officer.

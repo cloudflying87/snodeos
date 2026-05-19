@@ -1,0 +1,17 @@
+{% extends 'emails/base_email.html' %}
+{% block body %}
+<h2>{{ announcement.title }}</h2>
+<p style="font-size:0.82rem;color:#9ab0c8;margin-bottom:20px;">
+  {% if announcement.is_pinned %}<span class="badge badge-blue">📌 Pinned</span>&nbsp;{% endif %}
+  Posted {{ announcement.created_at|date:"F j, Y" }}
+</p>
+
+<p>{{ announcement.body|linebreaksbr }}</p>
+
+{% if ann_url %}
+<hr class="divider">
+<div class="btn-wrap">
+  <a href="{{ ann_url }}" class="btn">Read Full Announcement →</a>
+</div>
+{% endif %}
+{% endblock %}

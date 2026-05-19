@@ -1,0 +1,17 @@
+Hi {{ msg.name }},
+
+Thanks for reaching out! We received your message and a club officer will get back to you shortly.
+
+Here's a copy of what you sent:
+Subject: {{ msg.subject }}
+Sent: {{ msg.submitted_at|date:"F j, Y" }}
+
+---
+{{ msg.message }}
+---
+
+In the meantime, find us on Facebook at facebook.com/brainerdsnodeos or stop by our monthly meeting (every third Monday at 7:00 PM).
+
+Thanks,
+The Brainerd Snodeos
+{{ site_url }}

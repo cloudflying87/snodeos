@@ -18,9 +18,21 @@ def officer_required(view_func):
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect('accounts:login')
-        if not (request.user.is_officer or request.user.is_staff):
+        if not (request.user.is_officer or request.user.is_site_admin or request.user.is_staff):
             messages.error(request, 'Officer access required.')
             return redirect('core:home')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+def site_admin_required(view_func):
+    """Restricts to site admins (is_site_admin or is_staff) — for settings pages."""
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('accounts:login')
+        if not (request.user.is_site_admin or request.user.is_staff):
+            messages.error(request, 'Site admin access required for this page.')
+            return redirect('manage_panel:dashboard')
         return view_func(request, *args, **kwargs)
     return wrapper
 
@@ -240,53 +252,30 @@ def announcement_add(request):
             send_text  = 'send_text'  in request.POST
             email_sent = text_sent = 0
 
+            from core.email import send_email as _send_email, send_sms
+            ann_url = f"{getattr(settings, 'SITE_URL', '').rstrip('/')}/announcements/{ann.pk}/"
+
             if send_email:
-                from django.core.mail import send_mail as _send_mail
-                active_emails = Member.objects.filter(membership_status='active').values_list('email', flat=True)
-                for email in active_emails:
+                active_members = Member.objects.filter(membership_status='active')
+                for member in active_members:
                     try:
-                        _send_mail(
+                        _send_email(
                             subject=f'Brainerd Snodeos: {ann.title}',
-                            message=ann.body,
-                            from_email=settings.DEFAULT_FROM_EMAIL,
-                            recipient_list=[email],
-                            fail_silently=True,
+                            to=member.email,
+                            template='announcement',
+                            context={'announcement': ann, 'ann_url': ann_url},
                         )
                         email_sent += 1
                     except Exception:
                         pass
 
             if send_text:
-                brevo_key  = getattr(settings, 'BREVO_API_KEY', '')
-                twilio_sid = getattr(settings, 'TWILIO_ACCOUNT_SID', '')
-                sms_body   = f'Brainerd Snodeos: {ann.title}\n{ann.body[:120]}'
+                snippet = ann.body[:120] + ('…' if len(ann.body) > 120 else '')
+                sms_body = f'Brainerd Snodeos: {ann.title}\n{snippet}\n{ann_url}'
                 recipients = Member.objects.filter(membership_status='active', accepts_texts=True).exclude(phone='')
-
-                if brevo_key:
-                    import urllib.request, json as _json
-                    for m in recipients:
-                        phone = m.phone.strip().replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
-                        if not phone.startswith('+'): phone = '+1' + phone
-                        payload = _json.dumps({'type': 'transactional', 'unicodeEnabled': True,
-                                               'sender': 'Snodeos', 'recipient': phone, 'content': sms_body}).encode()
-                        req = urllib.request.Request(
-                            'https://api.brevo.com/v3/transactionalSMS/sms', data=payload,
-                            headers={'api-key': brevo_key, 'Content-Type': 'application/json'})
-                        try:
-                            urllib.request.urlopen(req, timeout=10)
-                            text_sent += 1
-                        except Exception:
-                            pass
-                elif twilio_sid:
-                    from twilio.rest import Client
-                    client = Client(twilio_sid, getattr(settings, 'TWILIO_AUTH_TOKEN', ''))
-                    from_num = getattr(settings, 'TWILIO_FROM_NUMBER', '')
-                    for m in recipients:
-                        try:
-                            client.messages.create(body=sms_body, from_=from_num, to=m.phone)
-                            text_sent += 1
-                        except Exception:
-                            pass
+                for m in recipients:
+                    if send_sms(sms_body, m.phone):
+                        text_sent += 1
 
             parts = ['Announcement posted.']
             if email_sent:  parts.append(f'Emailed {email_sent} members.')
@@ -296,12 +285,11 @@ def announcement_add(request):
     else:
         form = AnnouncementForm()
 
-    brevo_key  = getattr(settings, 'BREVO_API_KEY', '')
-    twilio_sid = getattr(settings, 'TWILIO_ACCOUNT_SID', '')
+    cfg = SiteSettings.get()
     return render(request, 'manage_panel/announcements/form.html', {
         'form': form,
         'action': 'New',
-        'sms_configured': bool(brevo_key or twilio_sid),
+        'sms_configured': cfg.sms_configured,
         'opted_in_count': Member.objects.filter(membership_status='active', accepts_texts=True).exclude(phone='').count(),
         'active_count': Member.objects.filter(membership_status='active').count(),
     })
@@ -571,21 +559,30 @@ def dues(request):
 
 # ── Permissions ────────────────────────────────────────────────────────────────
 
-@officer_required
+@site_admin_required
 def permissions(request):
     if request.method == 'POST':
         member_id = request.POST.get('member_id')
         action    = request.POST.get('action')
         member = get_object_or_404(Member, pk=member_id)
-        if action == 'grant':
+
+        if action == 'grant_officer':
             member.is_officer = True
             member.save()
-            messages.success(request, f'{member.get_full_name()} granted management panel access.')
+            messages.success(request, f'{member.get_full_name()} granted Officer access.')
+        elif action == 'grant_admin':
+            member.is_officer = True
+            member.is_site_admin = True
+            member.save()
+            messages.success(request, f'{member.get_full_name()} granted Site Admin access.')
         elif action == 'revoke':
             if member == request.user:
                 messages.error(request, "You can't revoke your own access.")
+            elif member.is_staff:
+                messages.error(request, "Cannot modify a superuser.")
             else:
                 member.is_officer = False
+                member.is_site_admin = False
                 member.save()
                 messages.success(request, f'{member.get_full_name()} access revoked.')
         return redirect('manage_panel:permissions')
@@ -595,7 +592,7 @@ def permissions(request):
 
 # ── Facebook Integration ───────────────────────────────────────────────────────
 
-@officer_required
+@site_admin_required
 def facebook_settings(request):
     cfg = SiteSettings.get()
     if request.method == 'POST':
@@ -648,7 +645,7 @@ def email_settings(request):
 
 # ── Communications Setup ───────────────────────────────────────────────────────
 
-@officer_required
+@site_admin_required
 def communications(request):
     cfg = SiteSettings.get()
 

@@ -5,8 +5,42 @@
 {% block content %}
 <div class="panel-page-header mb-4">
   <div>
-    <h1 class="panel-page-title">Management Panel Permissions</h1>
-    <p class="text-muted mb-0">Control which active members can access this management panel.</p>
+    <h1 class="panel-page-title">Permissions</h1>
+    <p class="text-muted mb-0">Control which members can access the management panel and at what level.</p>
+  </div>
+</div>
+
+<!-- Role legend -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body p-3">
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="badge bg-success">Officer</span>
+        </div>
+        <p class="small text-muted mb-0">Can manage content — announcements, trail work, members, sponsors, officers, dues. Cannot access Communications or Facebook settings.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body p-3">
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="badge" style="background:var(--sn-blue);">Site Admin</span>
+        </div>
+        <p class="small text-muted mb-0">All Officer permissions PLUS Communications setup (email/SMS credentials), Facebook settings, and Permissions management.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body p-3">
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="badge bg-dark">No access</span>
+        </div>
+        <p class="small text-muted mb-0">Regular member — can log into their member dashboard but cannot access the management panel.</p>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -22,8 +56,8 @@
         <tr>
           <th>Member</th>
           <th>Email</th>
-          <th class="text-center">Panel Access</th>
-          <th class="text-end">Action</th>
+          <th class="text-center">Access Level</th>
+          <th class="text-end">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -44,36 +78,46 @@
           </td>
           <td class="text-muted small">{{ member.email }}</td>
           <td class="text-center">
-            {% if member.is_officer or member.is_staff %}
-              <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>Granted</span>
+            {% if member.is_staff %}
+              <span class="badge bg-dark">Superuser</span>
+            {% elif member.is_site_admin %}
+              <span class="badge" style="background:var(--sn-blue);">Site Admin</span>
+            {% elif member.is_officer %}
+              <span class="badge bg-success">Officer</span>
             {% else %}
               <span class="badge bg-secondary">No Access</span>
             {% endif %}
           </td>
           <td class="text-end">
             {% if member.is_staff %}
-              <span class="text-muted small">Super admin</span>
+              <span class="text-muted small">Superuser — cannot modify</span>
             {% elif member == request.user %}
-              <span class="text-muted small">Cannot revoke own</span>
-            {% elif member.is_officer %}
-              <form method="post" class="d-inline">
-                {% csrf_token %}
-                <input type="hidden" name="member_id" value="{{ member.pk }}">
-                <input type="hidden" name="action" value="revoke">
-                <button type="submit" class="btn btn-sm btn-outline-danger"
-                        onclick="return confirm('Revoke panel access for {{ member.get_full_name }}?')">
-                  <i class="bi bi-x-circle me-1"></i>Revoke
-                </button>
-              </form>
+              <span class="text-muted small">Cannot modify yourself</span>
             {% else %}
-              <form method="post" class="d-inline">
-                {% csrf_token %}
-                <input type="hidden" name="member_id" value="{{ member.pk }}">
-                <input type="hidden" name="action" value="grant">
-                <button type="submit" class="btn btn-sm btn-outline-success">
-                  <i class="bi bi-check-circle me-1"></i>Grant Access
-                </button>
-              </form>
+              <div class="d-flex gap-1 justify-content-end">
+                {% if not member.is_officer %}
+                <form method="post" class="d-inline">{% csrf_token %}
+                  <input type="hidden" name="member_id" value="{{ member.pk }}">
+                  <input type="hidden" name="action" value="grant_officer">
+                  <button type="submit" class="btn btn-sm btn-outline-success">Grant Officer</button>
+                </form>
+                {% endif %}
+                {% if not member.is_site_admin %}
+                <form method="post" class="d-inline">{% csrf_token %}
+                  <input type="hidden" name="member_id" value="{{ member.pk }}">
+                  <input type="hidden" name="action" value="grant_admin">
+                  <button type="submit" class="btn btn-sm btn-outline-primary">Grant Admin</button>
+                </form>
+                {% endif %}
+                {% if member.is_officer or member.is_site_admin %}
+                <form method="post" class="d-inline">{% csrf_token %}
+                  <input type="hidden" name="member_id" value="{{ member.pk }}">
+                  <input type="hidden" name="action" value="revoke">
+                  <button type="submit" class="btn btn-sm btn-outline-danger"
+                          onclick="return confirm('Revoke all panel access for {{ member.get_full_name }}?')">Revoke</button>
+                </form>
+                {% endif %}
+              </div>
             {% endif %}
           </td>
         </tr>
@@ -87,54 +131,51 @@
   <!-- Mobile list -->
   <div class="d-md-none mob-list">
     {% for member in members %}
-    <div class="mob-row">
-      {% if member.photo %}
-        <img src="{{ member.photo.url }}" class="rounded-circle flex-shrink-0" style="width:42px;height:42px;object-fit:cover;">
-      {% else %}
-        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:42px;height:42px;">
-          <span class="text-white fw-bold">{{ member.first_name.0 }}</span>
-        </div>
-      {% endif %}
-      <div class="mob-info">
-        <div class="mob-title">
-          {{ member.get_full_name }}
-          {% if member == request.user %}<span class="badge bg-secondary ms-1" style="font-size:0.65rem;">You</span>{% endif %}
-        </div>
-        <div class="mob-sub">
-          {% if member.is_officer or member.is_staff %}
-            <span class="text-success fw-semibold"><i class="bi bi-check-circle-fill me-1"></i>Has access</span>
-          {% else %}
-            <span class="text-muted">No access</span>
-          {% endif %}
-        </div>
-      </div>
-      <div class="mob-actions">
-        {% if member.is_staff %}
-          <span class="text-muted small">Admin</span>
-        {% elif member == request.user %}
-          <span class="text-muted small" style="font-size:0.72rem;">—</span>
-        {% elif member.is_officer %}
-          <form method="post">
-            {% csrf_token %}
-            <input type="hidden" name="member_id" value="{{ member.pk }}">
-            <input type="hidden" name="action" value="revoke">
-            <button type="submit" class="btn btn-sm btn-outline-danger"
-                    style="min-height:40px;white-space:nowrap;"
-                    onclick="return confirm('Revoke access for {{ member.get_full_name }}?')">
-              <i class="bi bi-x-circle me-1"></i>Revoke
-            </button>
-          </form>
+    <div class="mob-row flex-wrap" style="gap:10px;">
+      <div class="d-flex align-items-center gap-2 flex-shrink-0">
+        {% if member.photo %}
+          <img src="{{ member.photo.url }}" class="rounded-circle" style="width:40px;height:40px;object-fit:cover;">
         {% else %}
-          <form method="post">
-            {% csrf_token %}
-            <input type="hidden" name="member_id" value="{{ member.pk }}">
-            <input type="hidden" name="action" value="grant">
-            <button type="submit" class="btn btn-sm btn-outline-success" style="min-height:40px;white-space:nowrap;">
-              <i class="bi bi-check-circle me-1"></i>Grant
-            </button>
-          </form>
+          <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width:40px;height:40px;">
+            <span class="text-white fw-bold">{{ member.first_name.0 }}</span>
+          </div>
         {% endif %}
       </div>
+      <div class="mob-info">
+        <div class="mob-title">{{ member.get_full_name }}{% if member == request.user %} <span class="badge bg-secondary" style="font-size:0.6rem;">You</span>{% endif %}</div>
+        <div class="mob-sub">
+          {% if member.is_staff %}<span class="badge bg-dark" style="font-size:0.65rem;">Superuser</span>
+          {% elif member.is_site_admin %}<span class="badge" style="background:var(--sn-blue);font-size:0.65rem;">Site Admin</span>
+          {% elif member.is_officer %}<span class="badge bg-success" style="font-size:0.65rem;">Officer</span>
+          {% else %}<span class="text-muted">No access</span>{% endif %}
+        </div>
+      </div>
+      {% if not member.is_staff and member != request.user %}
+      <div style="width:100%;display:flex;gap:6px;flex-wrap:wrap;padding-top:4px;">
+        {% if not member.is_officer %}
+        <form method="post">{% csrf_token %}
+          <input type="hidden" name="member_id" value="{{ member.pk }}">
+          <input type="hidden" name="action" value="grant_officer">
+          <button type="submit" class="btn btn-sm btn-outline-success" style="min-height:38px;">Officer</button>
+        </form>
+        {% endif %}
+        {% if not member.is_site_admin %}
+        <form method="post">{% csrf_token %}
+          <input type="hidden" name="member_id" value="{{ member.pk }}">
+          <input type="hidden" name="action" value="grant_admin">
+          <button type="submit" class="btn btn-sm btn-outline-primary" style="min-height:38px;">Admin</button>
+        </form>
+        {% endif %}
+        {% if member.is_officer or member.is_site_admin %}
+        <form method="post">{% csrf_token %}
+          <input type="hidden" name="member_id" value="{{ member.pk }}">
+          <input type="hidden" name="action" value="revoke">
+          <button type="submit" class="btn btn-sm btn-outline-danger" style="min-height:38px;"
+                  onclick="return confirm('Revoke all access for {{ member.get_full_name }}?')">Revoke</button>
+        </form>
+        {% endif %}
+      </div>
+      {% endif %}
     </div>
     {% empty %}
     <div class="text-center text-muted py-4">No active members found.</div>

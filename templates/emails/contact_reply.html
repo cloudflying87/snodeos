@@ -1,0 +1,25 @@
+{% extends 'emails/base_email.html' %}
+{% block body %}
+<h2>Thanks for reaching out!</h2>
+<p>Hi {{ msg.name }},</p>
+<p>We received your message and a club officer will get back to you shortly. Here's a copy of what you sent:</p>
+
+<div class="info-box">
+  <div class="info-row">
+    <span class="info-label">Subject</span>
+    <span class="info-value">{{ msg.subject }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Sent</span>
+    <span class="info-value">{{ msg.submitted_at|date:"F j, Y \a\t g:i A" }}</span>
+  </div>
+</div>
+
+<div class="message-block">
+  <p>{{ msg.message }}</p>
+</div>
+
+<p>In the meantime, you can find us on <a href="https://www.facebook.com/brainerdsnodeos" style="color:#1363A2;">Facebook</a> or stop by one of our monthly meetings — every third Monday at 7:00 PM.</p>
+
+<p>Thanks again,<br><strong>The Brainerd Snodeos</strong></p>
+{% endblock %}

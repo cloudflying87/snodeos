@@ -3,46 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block subject %}Brainerd Snodeos{% endblock %}</title>
+  <title>Brainerd Snodeos</title>
   <style>
-    body { margin: 0; padding: 0; background: #f0f4f8; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #344055; }
-    .wrapper { max-width: 580px; margin: 32px auto; background: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
-    .header { background: #0f1923; padding: 28px 36px; text-align: center; }
-    .header-icon { font-size: 2rem; color: #0d6efd; }
-    .header h1 { margin: 8px 0 0; color: #ffffff; font-size: 1.2rem; font-weight: 700; letter-spacing: 0.5px; }
-    .body { padding: 36px; }
-    .body h2 { margin: 0 0 16px; font-size: 1.2rem; color: #1a2b3c; }
-    .body p { margin: 0 0 14px; line-height: 1.65; color: #4a5568; font-size: 0.95rem; }
-    .info-box { background: #f8fbff; border: 1px solid #dce8f8; border-radius: 8px; padding: 18px 20px; margin: 20px 0; }
-    .info-row { display: flex; gap: 12px; margin-bottom: 8px; font-size: 0.88rem; }
-    .info-row:last-child { margin-bottom: 0; }
-    .info-label { color: #7a96b0; font-weight: 600; min-width: 110px; }
-    .info-value { color: #1a2b3c; font-weight: 500; }
-    .btn { display: inline-block; background: #0d6efd; color: #ffffff !important; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 700; font-size: 0.95rem; margin: 8px 0; }
-    .btn-outline { background: transparent; border: 2px solid #0d6efd; color: #0d6efd !important; }
-    .footer { background: #f8fbff; border-top: 1px solid #e2eaf2; padding: 20px 36px; text-align: center; }
-    .footer p { margin: 0; font-size: 0.78rem; color: #9ab0c8; line-height: 1.6; }
-    .footer a { color: #0d6efd; text-decoration: none; }
-    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
-    .badge-warning { background: #fff3cd; color: #856404; }
-    .badge-success { background: #d1e7dd; color: #0a3622; }
+    body,table,td{margin:0;padding:0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;}
+    body{background:#f0f4f8;}
+    img{border:0;display:block;}
+    .wrapper{max-width:600px;margin:32px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.09);}
+    .header{background:#1363A2;padding:32px 40px;text-align:center;}
+    .header-snowflake{font-size:2.5rem;display:block;margin-bottom:8px;}
+    .header h1{margin:0;color:#ffffff;font-size:1.35rem;font-weight:700;letter-spacing:0.5px;}
+    .header-sub{color:rgba(255,255,255,0.75);font-size:0.8rem;margin-top:4px;}
+    .body{padding:36px 40px;}
+    .body h2{margin:0 0 16px;font-size:1.2rem;color:#1a2b3c;font-weight:700;}
+    .body p{margin:0 0 14px;line-height:1.7;color:#4a5568;font-size:0.95rem;}
+    .body p:last-child{margin-bottom:0;}
+    .info-box{background:#f6f9fe;border:1px solid #d4e5f8;border-radius:8px;padding:20px 24px;margin:20px 0;}
+    .info-row{margin-bottom:10px;font-size:0.88rem;line-height:1.5;}
+    .info-row:last-child{margin-bottom:0;}
+    .info-label{color:#7a96b0;font-weight:700;display:inline-block;min-width:120px;vertical-align:top;}
+    .info-value{color:#1a2b3c;font-weight:500;}
+    .message-block{background:#f6f9fe;border-left:4px solid #1363A2;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;}
+    .message-block p{margin:0;white-space:pre-wrap;font-size:0.92rem;line-height:1.7;color:#344055;}
+    .btn-wrap{text-align:center;margin:28px 0 8px;}
+    .btn{display:inline-block;background:#1363A2;color:#ffffff !important;text-decoration:none;padding:13px 30px;border-radius:7px;font-weight:700;font-size:0.95rem;}
+    .btn-outline{background:transparent;border:2px solid #1363A2;color:#1363A2 !important;padding:11px 28px;}
+    .divider{border:none;border-top:1px solid #e8eef6;margin:24px 0;}
+    .footer{background:#f8fbff;border-top:1px solid #e2eaf2;padding:22px 40px;text-align:center;}
+    .footer p{margin:0 0 4px;font-size:0.78rem;color:#9ab0c8;line-height:1.7;}
+    .footer a{color:#1363A2;text-decoration:none;}
+    .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;}
+    .badge-success{background:#d1e7dd;color:#0a3622;}
+    .badge-warning{background:#fff3cd;color:#856404;}
+    .badge-blue{background:#dce8f8;color:#1363A2;}
+    @media(max-width:640px){
+      .wrapper{margin:0;border-radius:0;}
+      .header,.body,.footer{padding:24px 20px;}
+    }
   </style>
 </head>
 <body>
   <div class="wrapper">
     <div class="header">
-      <div class="header-icon">❄</div>
+      <span class="header-snowflake">❄</span>
       <h1>Brainerd Snodeos Snowmobile Club</h1>
+      <div class="header-sub">Brainerd Lakes Area, Minnesota &bull; Est. 1975</div>
     </div>
     <div class="body">
       {% block body %}{% endblock %}
     </div>
     <div class="footer">
-      <p>
-        <a href="{{ site_url }}">snodeos.flyhomemnlab.com</a> &bull;
-        Brainerd Lakes Area, Minnesota &bull; Est. 1975
-      </p>
-      <p style="margin-top:6px;">You're receiving this because you're a member or officer of the Brainerd Snodeos club.</p>
+      <p><a href="{{ site_url }}">{{ site_url }}</a></p>
+      <p>You're receiving this because you're a member or officer of the Brainerd Snodeos.</p>
     </div>
   </div>
 </body>
