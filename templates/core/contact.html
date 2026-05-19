@@ -23,6 +23,35 @@
       </div>
 
       <div class="col-lg-5">
+
+        <!-- Officer contacts (shown when officers have phone/email filled in) -->
+        {% if contact_officers %}
+        <div class="card border-0 shadow-sm p-4 mb-4">
+          <h5 class="fw-bold mb-4"><i class="bi bi-person-badge me-2 text-primary"></i>Contact an Officer</h5>
+          {% for officer in contact_officers %}
+          <div class="d-flex gap-3 {% if not forloop.last %}mb-4 pb-4 border-bottom{% endif %}">
+            {% if officer.photo %}
+              <img src="{{ officer.photo.url }}" class="rounded-circle flex-shrink-0" style="width:48px;height:48px;object-fit:cover;">
+            {% else %}
+              <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:48px;height:48px;">
+                <i class="bi bi-person-fill text-white"></i>
+              </div>
+            {% endif %}
+            <div>
+              <div class="fw-bold">{{ officer.name }}</div>
+              <div class="text-primary small fw-semibold mb-1">{{ officer.title }}</div>
+              {% if officer.phone %}
+              <div class="small"><i class="bi bi-telephone me-1 text-muted"></i><a href="tel:{{ officer.phone }}" class="text-decoration-none text-dark">{{ officer.phone }}</a></div>
+              {% endif %}
+              {% if officer.email %}
+              <div class="small"><i class="bi bi-envelope me-1 text-muted"></i><a href="mailto:{{ officer.email }}" class="text-decoration-none text-dark">{{ officer.email }}</a></div>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
         <div class="card border-0 sn-blue text-white p-4 mb-4 rounded-3">
           <h5 class="fw-bold mb-4"><i class="bi bi-info-circle me-2"></i>Club Info</h5>
           <ul class="list-unstyled mb-0">

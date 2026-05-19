@@ -34,7 +34,7 @@ class ClubStatsForm(forms.ModelForm):
 class OfficerForm(forms.ModelForm):
     class Meta:
         model = Officer
-        fields = ['name', 'title', 'snowmobile_brand', 'email', 'photo', 'order']
+        fields = ['name', 'title', 'snowmobile_brand', 'email', 'phone', 'photo', 'order']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -50,13 +50,14 @@ class OfficerForm(forms.ModelForm):
                 Column('title', css_class='col-md-6'),
             ),
             Row(
-                Column('snowmobile_brand', css_class='col-md-6'),
                 Column('email', css_class='col-md-6'),
+                Column('phone', css_class='col-md-6'),
             ),
             Row(
-                Column('photo', css_class='col-md-8'),
-                Column('order', css_class='col-md-4'),
+                Column('snowmobile_brand', css_class='col-md-6'),
+                Column('order', css_class='col-md-6'),
             ),
+            'photo',
             Submit('submit', 'Save Officer', css_class='btn btn-primary mt-3'),
         )
 

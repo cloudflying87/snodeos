@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.db import models
 from .models import ClubStats, Officer, Sponsor, TrailWorkLog, Announcement
 from .forms import ContactForm
 from .email import notify_contact_message
@@ -37,7 +38,10 @@ def contact(request):
             return redirect('core:contact')
     else:
         form = ContactForm()
-    return render(request, 'core/contact.html', {'form': form})
+    contact_officers = Officer.objects.exclude(title='Director').filter(
+        models.Q(email__gt='') | models.Q(phone__gt='')
+    )
+    return render(request, 'core/contact.html', {'form': form, 'contact_officers': contact_officers})
 
 
 from django.contrib.auth.decorators import login_required

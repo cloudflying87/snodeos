@@ -33,6 +33,7 @@ class Officer(models.Model):
     snowmobile_brand = models.CharField(max_length=50, blank=True)
     photo            = models.ImageField(upload_to='officers/', blank=True, null=True)
     email            = models.EmailField(blank=True)
+    phone            = models.CharField(max_length=20, blank=True)
     order            = models.PositiveIntegerField(default=0)
 
     class Meta:
