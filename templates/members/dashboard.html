@@ -148,4 +148,27 @@
   </div>
 </section>
 
+{% if announcements %}
+<section class="pb-5">
+  <div class="container">
+    <h4 class="fw-bold font-oswald mb-4"><i class="bi bi-megaphone me-2 text-primary"></i>Club Announcements</h4>
+    <div class="row g-4">
+      {% for a in announcements %}
+      <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm h-100 {% if a.is_pinned %}border-start border-4 border-primary{% endif %}">
+          <div class="card-body p-4">
+            {% if a.is_pinned %}<span class="badge bg-primary mb-2"><i class="bi bi-pin-angle me-1"></i>Pinned</span>{% endif %}
+            {% if a.visibility == 'members' %}<span class="badge bg-secondary mb-2">Members Only</span>{% endif %}
+            <h5 class="fw-bold mb-2">{{ a.title }}</h5>
+            <p class="text-muted mb-3">{{ a.body|truncatewords:40 }}</p>
+            <small class="text-muted">{{ a.created_at|date:"M j, Y" }}</small>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
 {% endblock %}

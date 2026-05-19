@@ -49,6 +49,34 @@
   </div>
 </section>
 
+<!-- Announcements — public or both -->
+{% if announcements %}
+<section class="py-5 bg-white">
+  <div class="container">
+    <div class="text-center mb-4">
+      <span class="badge text-uppercase mb-3 px-3 py-2" style="background:var(--sn-blue);">Latest News</span>
+      <h2 class="display-6 fw-bold font-oswald">Club Announcements</h2>
+    </div>
+    <div class="row g-4 justify-content-center">
+      {% for a in announcements %}
+      <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm h-100 {% if a.is_pinned %}border-start border-4 border-primary{% endif %}">
+          <div class="card-body p-4">
+            {% if a.is_pinned %}
+              <span class="badge bg-primary mb-2"><i class="bi bi-pin-angle me-1"></i>Pinned</span>
+            {% endif %}
+            <h5 class="fw-bold mb-2">{{ a.title }}</h5>
+            <p class="text-muted mb-3">{{ a.body|truncatewords:30 }}</p>
+            <small class="text-muted">{{ a.created_at|date:"M j, Y" }}</small>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
 <!-- About Section — blue with wave-brush top and bottom -->
 <section class="sn-blue-section">
   <!-- Wave at TOP (inside blue, fill=white, points down) — 75px tall like original -->
