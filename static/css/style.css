@@ -5,15 +5,25 @@ body {
 }
 .font-oswald { font-family: 'Oswald', sans-serif; }
 
-/* ── Site Header (blue wrapper + nav + wave) ──────────────────── */
+/* ── Site Header ──────────────────────────────────────────────── */
+/* Uses ::before overlay (91% opacity) matching Elementor's exact approach */
 .site-header-wrap {
-  background-color: #1363A2;
   background-image: url('../images/navbar-bg.jpg');
   background-size: cover;
-  background-position: center;
-  background-blend-mode: multiply;
-  z-index: 1030;
+  background-position: center center;
+  position: relative;
+  z-index: 100;
 }
+.site-header-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(19, 99, 162, 0.91); /* #1363A2 at 91% opacity */
+  z-index: 0;
+  pointer-events: none;
+}
+.site-header-wrap > * { position: relative; z-index: 1; }
+
 .site-navbar { background: transparent !important; }
 .navbar-brand img { transition: opacity 0.2s; }
 .navbar-brand:hover img { opacity: 0.85; }
@@ -28,7 +38,7 @@ body {
 }
 .site-nav-link:hover { color: #fff !important; text-decoration: underline; }
 
-/* Wave at bottom of header — all 9 paths, fill=white */
+/* Wave at bottom of header: white paths on blue, 25px */
 .site-header-wave {
   line-height: 0;
   overflow: hidden;
@@ -43,11 +53,42 @@ body {
 }
 
 /* ── Hero ─────────────────────────────────────────────────────── */
+/* Same background image as header + dark gradient (matching original) */
 .hero-section {
-  min-height: 80vh;
-  background: linear-gradient(rgba(0,0,0,0.50), rgba(0,0,0,0.50)),
-              url('../images/hero-sled.webp') center center / cover no-repeat;
-  background-attachment: fixed;
+  min-height: 75vh;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.75) 0%, rgba(0,44,78,0.88) 100%),
+    url('../images/navbar-bg.jpg') center center / cover no-repeat;
+  padding-top: 25px;    /* clearance for top wave */
+  padding-bottom: 25px; /* clearance for bottom wave */
+}
+
+/* Hero wave containers */
+.wave-hero-top {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  overflow: hidden; line-height: 0; z-index: 2;
+}
+.wave-hero-top svg {
+  display: block;
+  width: calc(100% + 1.3px);
+  height: 25px;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.wave-hero-bottom {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  overflow: hidden; line-height: 0; z-index: 2;
+}
+.wave-hero-bottom svg {
+  display: block;
+  width: calc(100% + 1.3px);
+  height: 25px;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%) scaleY(-1);
 }
 
 /* ── Page Hero (inner pages) ──────────────────────────────────── */
@@ -57,25 +98,24 @@ body {
 }
 
 /* ── Stats ────────────────────────────────────────────────────── */
-.stat-number { color: #0d6efd; line-height: 1; }
+.stat-number { color: #333; line-height: 1; }
 .stat-label { letter-spacing: 0.05em; }
 
 /* ── Spacing ──────────────────────────────────────────────────── */
 .py-6 { padding-top: 5rem; padding-bottom: 5rem; }
 
-/* ── About section — blue with wave-brush top & bottom ───────── */
+/* ── About blue section — wave top + bottom ───────────────────── */
 .about-blue-section {
   background: #1363A2;
   position: relative;
-  padding-top: 90px;   /* clearance for 75px top wave */
-  padding-bottom: 65px; /* clearance for 50px bottom wave */
+  padding-top: 90px;
+  padding-bottom: 65px;
 }
 
-/* Shared wave container — absolutely positioned inside the blue section */
+/* Shared wave container inside any section */
 .wave-shape {
   position: absolute;
-  left: 0;
-  right: 0;
+  left: 0; right: 0;
   overflow: hidden;
   line-height: 0;
   z-index: 1;
@@ -86,7 +126,7 @@ body {
   left: 50%;
 }
 
-/* Top wave — fill=white, points down into blue, 75px tall */
+/* About top wave: 75px, white fill pointing down into blue */
 .wave-shape-top { top: 0; }
 .wave-shape-top svg {
   width: calc(100% + 1.3px);
@@ -94,7 +134,7 @@ body {
   transform: translateX(-50%);
 }
 
-/* Bottom wave — fill=white, scaleY flipped so it points up, 50px tall */
+/* About bottom wave: flipped, white fill pointing up into blue */
 .wave-shape-bottom { bottom: 0; }
 .wave-shape-bottom svg {
   width: calc(160% + 1.3px);
@@ -103,22 +143,23 @@ body {
 }
 
 /* ── Officer Cards ────────────────────────────────────────────── */
-.officer-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
+.officer-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
 .officer-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 .75rem 1.5rem rgba(0,0,0,.12) !important;
 }
+/* Square photos matching original site style */
 .officer-photo {
-  width: 120px;
-  height: 120px;
+  width: 140px;
+  height: 140px;
   object-fit: cover;
+  border-radius: 6px;
 }
 .officer-avatar {
-  width: 120px;
-  height: 120px;
-  background: linear-gradient(135deg, #0d6efd, #0a58ca);
+  width: 140px;
+  height: 140px;
+  background: linear-gradient(135deg, #1363A2, #0a58ca);
+  border-radius: 6px;
 }
 
 /* ── Sponsors ─────────────────────────────────────────────────── */
@@ -128,15 +169,10 @@ body {
   filter: grayscale(20%);
   transition: filter 0.2s, transform 0.2s;
 }
-.sponsor-link:hover .sponsor-logo {
-  filter: grayscale(0%);
-  transform: scale(1.05);
-}
+.sponsor-link:hover .sponsor-logo { filter: grayscale(0%); transform: scale(1.05); }
 .sponsor-placeholder {
   min-height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
 }
 
 /* ── Footer ───────────────────────────────────────────────────── */
@@ -152,10 +188,10 @@ body {
 
 /* ── Mobile ───────────────────────────────────────────────────── */
 @media (max-width: 767.98px) {
-  .hero-section { min-height: 60vh; background-attachment: scroll; }
+  .hero-section { min-height: 60vh; }
   .display-2 { font-size: 2.2rem; }
   .py-6 { padding-top: 3rem; padding-bottom: 3rem; }
-  .officer-photo, .officer-avatar { width: 90px; height: 90px; }
+  .officer-photo, .officer-avatar { width: 100px; height: 100px; }
   .wave-shape-top svg { height: 45px; }
   .wave-shape-bottom svg { height: 35px; }
   .about-blue-section { padding-top: 60px; padding-bottom: 45px; }
