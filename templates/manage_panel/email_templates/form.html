@@ -68,7 +68,7 @@
             <label class="form-label fw-semibold">Header Image URL <span class="text-muted fw-normal small">(optional)</span></label>
             <input type="url" name="header_image_url" id="headerImageUrl" class="form-control"
                    value="{{ tmpl.header_image_url|default:'' }}" placeholder="https://yoursite.com/logo.png">
-            <div class="form-text">A publicly accessible image URL shown at the top of the email (replaces the snowflake). Must be HTTPS. Dimensions around 200×60px work best.</div>
+            <div class="form-text">A publicly accessible image URL used as the full-width email header banner (replaces the colored bar entirely). Must be HTTPS. Recommended size: 600×200px or similar wide banner ratio.</div>
           </div>
 
           <div class="mb-3">
@@ -109,13 +109,13 @@
       <div class="panel-card-body p-0">
         <div style="background:#f0f4f8;padding:16px;">
           <div style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.08);">
-            <!-- Header -->
+            <!-- Header: colored bar with snowflake (no image), or full-width image -->
             <div id="prev-header" style="background:#1363A2;padding:20px;text-align:center;">
               <div id="prev-snowflake" style="font-size:1.4rem;">❄</div>
-              <div id="prev-header-img" style="display:none;margin-bottom:4px;">
-                <img id="prev-img-tag" src="" alt="" style="max-height:60px;max-width:180px;object-fit:contain;">
-              </div>
               <div id="prev-from-name" style="color:#fff;font-weight:700;font-size:0.85rem;margin-top:4px;">Brainerd Snodeos</div>
+            </div>
+            <div id="prev-header-img" style="display:none;line-height:0;">
+              <img id="prev-img-tag" src="" alt="" style="width:100%;height:auto;display:block;">
             </div>
             <!-- Body -->
             <div style="padding:18px;">
@@ -160,11 +160,11 @@ function update() {
 
   const url = headerImageUrl.value.trim();
   if (url) {
-    document.getElementById('prev-snowflake').style.display = 'none';
+    document.getElementById('prev-header').style.display = 'none';
     document.getElementById('prev-header-img').style.display = 'block';
     document.getElementById('prev-img-tag').src = url;
   } else {
-    document.getElementById('prev-snowflake').style.display = 'block';
+    document.getElementById('prev-header').style.display = 'block';
     document.getElementById('prev-header-img').style.display = 'none';
   }
 }

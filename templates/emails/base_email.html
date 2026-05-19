@@ -38,21 +38,26 @@
     @media(max-width:640px){
       .wrapper{margin:0;border-radius:0;}
       .header,.body,.footer{padding:24px 20px;}
+      .header-img{border-radius:0!important;}
     }
   </style>
 </head>
 <body>
   <div class="wrapper">
+    {% if email_header_image_url %}
+    <div style="line-height:0;">
+      <img src="{{ email_header_image_url }}"
+           alt="{{ email_from_name|default:'Brainerd Snodeos' }}"
+           width="600"
+           style="width:100%;max-width:600px;height:auto;display:block;">
+    </div>
+    {% else %}
     <div class="header">
-      {% if email_header_image_url %}
-      <img src="{{ email_header_image_url }}" alt="{{ email_from_name|default:'Brainerd Snodeos' }}"
-           style="max-height:70px;max-width:260px;width:auto;object-fit:contain;margin-bottom:8px;">
-      {% else %}
       <span class="header-snowflake">❄</span>
-      {% endif %}
       <h1>{{ email_from_name|default:"Brainerd Snodeos" }}</h1>
       <div class="header-sub">Brainerd Lakes Area, Minnesota &bull; Est. 1975</div>
     </div>
+    {% endif %}
     <div class="body">
       {% block body %}{% endblock %}
     </div>
