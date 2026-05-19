@@ -1,12 +1,44 @@
-/* ── Fonts & Base ─────────────────────────────────────────────── */
-body {
-  font-family: 'Open Sans', sans-serif;
-  color: #333;
+/* ═══════════════════════════════════════════════════════════════
+   SNODEOS — Design System
+   All brand colors defined here as CSS variables.
+   Change one variable → updates every page automatically.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Brand palette */
+  --sn-blue:          #1363A2;
+  --sn-blue-dark:     #002C4E;
+  --sn-blue-overlay:  rgba(19, 99, 162, 0.91);
+  --sn-blue-card:     rgba(255, 255, 255, 0.15);
+
+  /* Text on blue sections */
+  --sn-on-blue:       #F6F9FE;   /* near-white — matches snodeos.com */
+  --sn-muted-on-blue: rgba(246, 249, 254, 0.75);
+
+  /* Standard page text */
+  --sn-text:          #333333;
+  --sn-muted:         #6c757d;
+
+  /* Fonts */
+  --sn-font-head:     'Oswald', sans-serif;
+  --sn-font-body:     'Open Sans', sans-serif;
 }
-.font-oswald { font-family: 'Oswald', sans-serif; }
+
+/* ── Base ─────────────────────────────────────────────────────── */
+body {
+  font-family: var(--sn-font-body);
+  color: var(--sn-text);
+}
+.font-oswald { font-family: var(--sn-font-head); }
+
+/* ── Semantic color utilities ─────────────────────────────────── */
+.sn-blue       { background: var(--sn-blue) !important; }
+.sn-blue-dark  { background: var(--sn-blue-dark) !important; }
+.sn-on-blue    { color: var(--sn-on-blue) !important; }
+.sn-muted-on-blue { color: var(--sn-muted-on-blue) !important; }
+.sn-card-on-blue  { background: var(--sn-blue-card); border-radius: 6px; }
 
 /* ── Site Header ──────────────────────────────────────────────── */
-/* Uses ::before overlay (91% opacity) matching Elementor's exact approach */
 .site-header-wrap {
   background-image: url('../images/navbar-bg.jpg');
   background-size: cover;
@@ -18,19 +50,18 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(19, 99, 162, 0.91); /* #1363A2 at 91% opacity */
+  background: var(--sn-blue-overlay);
   z-index: 0;
   pointer-events: none;
 }
 .site-header-wrap > * { position: relative; z-index: 1; }
-
 .site-navbar { background: transparent !important; }
 .navbar-brand img { transition: opacity 0.2s; }
 .navbar-brand:hover img { opacity: 0.85; }
 .navbar-toggler-icon { filter: invert(1); }
 
 .site-nav-link {
-  color: #F9F5F3 !important;
+  color: var(--sn-on-blue) !important;
   font-weight: 700;
   font-size: 1rem;
   padding: 0.5rem 1rem !important;
@@ -38,11 +69,7 @@ body {
 }
 .site-nav-link:hover { color: #fff !important; text-decoration: underline; }
 
-/* Wave at bottom of header: white paths on blue, 25px */
-.site-header-wave {
-  line-height: 0;
-  overflow: hidden;
-}
+.site-header-wave { line-height: 0; overflow: hidden; }
 .site-header-wave svg {
   display: block;
   width: calc(100% + 1.3px);
@@ -52,134 +79,86 @@ body {
   transform: translateX(-50%);
 }
 
-/* ── Hero ─────────────────────────────────────────────────────── */
-/* Same background image as header + dark gradient (matching original) */
+/* ── Hero (home page) ─────────────────────────────────────────── */
 .hero-section {
   min-height: 75vh;
   background:
     linear-gradient(180deg, rgba(0,0,0,0.75) 0%, rgba(0,44,78,0.88) 100%),
     url('../images/navbar-bg.jpg') center center / cover no-repeat;
-  padding-top: 25px;    /* clearance for top wave */
-  padding-bottom: 25px; /* clearance for bottom wave */
+  padding-top: 25px;
+  padding-bottom: 25px;
 }
 
 /* Hero wave containers */
-.wave-hero-top {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  overflow: hidden; line-height: 0; z-index: 2;
-}
-.wave-hero-top svg {
+.wave-hero-top  { position: absolute; top: 0; left: 0; right: 0; overflow: hidden; line-height: 0; z-index: 2; }
+.wave-hero-bottom { position: absolute; bottom: 0; left: 0; right: 0; overflow: hidden; line-height: 0; z-index: 2; }
+.wave-hero-top svg, .wave-hero-bottom svg {
   display: block;
   width: calc(100% + 1.3px);
   height: 25px;
   position: relative;
   left: 50%;
-  transform: translateX(-50%);
 }
-.wave-hero-bottom {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  overflow: hidden; line-height: 0; z-index: 2;
-}
-.wave-hero-bottom svg {
-  display: block;
-  width: calc(100% + 1.3px);
-  height: 25px;
-  position: relative;
-  left: 50%;
-  transform: translateX(-50%) scaleY(-1);
-}
+.wave-hero-top svg  { transform: translateX(-50%); }
+.wave-hero-bottom svg { transform: translateX(-50%) scaleY(-1); }
 
-/* ── Page Hero (inner pages) ──────────────────────────────────── */
+/* ── Page Hero (inner pages: about, trail work, contact) ──────── */
+/* Change --sn-blue to change ALL inner page heroes at once */
 .page-hero {
-  background: linear-gradient(135deg, #0d1117 0%, #1a2740 100%);
+  background-image: url('../images/navbar-bg.jpg');
+  background-size: cover;
+  background-position: center center;
   padding: 4rem 0;
+  position: relative;
 }
+.page-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--sn-blue-overlay);
+  z-index: 0;
+}
+.page-hero > .container { position: relative; z-index: 1; }
 
-/* ── Stats ────────────────────────────────────────────────────── */
-.stat-number { color: #333; line-height: 1; }
-.stat-label { letter-spacing: 0.05em; }
-
-/* ── Spacing ──────────────────────────────────────────────────── */
-.py-6 { padding-top: 5rem; padding-bottom: 5rem; }
-
-/* ── About blue section — wave top + bottom ───────────────────── */
-.about-blue-section {
-  background: #1363A2;
+/* ── Blue wave sections ───────────────────────────────────────── */
+.sn-blue-section {
+  background: var(--sn-blue);
   position: relative;
   padding-top: 90px;
   padding-bottom: 65px;
 }
 
-/* Shared wave container inside any section */
-.wave-shape {
-  position: absolute;
-  left: 0; right: 0;
-  overflow: hidden;
-  line-height: 0;
-  z-index: 1;
-}
-.wave-shape svg {
-  display: block;
-  position: relative;
-  left: 50%;
-}
-
-/* About top wave: 75px, white fill pointing down into blue */
+.wave-shape { position: absolute; left: 0; right: 0; overflow: hidden; line-height: 0; z-index: 1; }
+.wave-shape svg { display: block; position: relative; left: 50%; }
 .wave-shape-top { top: 0; }
-.wave-shape-top svg {
-  width: calc(100% + 1.3px);
-  height: 75px;
-  transform: translateX(-50%);
-}
-
-/* About bottom wave: flipped, white fill pointing up into blue */
+.wave-shape-top svg { width: calc(100% + 1.3px); height: 75px; transform: translateX(-50%); }
 .wave-shape-bottom { bottom: 0; }
-.wave-shape-bottom svg {
-  width: calc(160% + 1.3px);
-  height: 50px;
-  transform: translateX(-50%) scaleY(-1);
-}
+.wave-shape-bottom svg { width: calc(160% + 1.3px); height: 50px; transform: translateX(-50%) scaleY(-1); }
+
+/* ── Stats ────────────────────────────────────────────────────── */
+.stat-number { line-height: 1; }
+.stat-label  { letter-spacing: 0.05em; }
+
+/* ── Spacing ──────────────────────────────────────────────────── */
+.py-6 { padding-top: 5rem; padding-bottom: 5rem; }
 
 /* ── Officer Cards ────────────────────────────────────────────── */
 .officer-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-.officer-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 .75rem 1.5rem rgba(0,0,0,.12) !important;
-}
-/* Square photos matching original site style */
-.officer-photo {
-  width: 140px;
-  height: 140px;
-  object-fit: cover;
-  border-radius: 6px;
-}
-.officer-avatar {
-  width: 140px;
-  height: 140px;
-  background: linear-gradient(135deg, #1363A2, #0a58ca);
-  border-radius: 6px;
-}
+.officer-card:hover { transform: translateY(-4px); box-shadow: 0 .75rem 1.5rem rgba(0,0,0,.12) !important; }
+.officer-photo { width: 140px; height: 140px; object-fit: cover; border-radius: 6px; }
+.officer-avatar { width: 140px; height: 140px; background: linear-gradient(135deg, var(--sn-blue), var(--sn-blue-dark)); border-radius: 6px; }
 
 /* ── Sponsors ─────────────────────────────────────────────────── */
-.sponsor-logo {
-  max-height: 70px;
-  width: auto;
-  filter: grayscale(20%);
-  transition: filter 0.2s, transform 0.2s;
-}
+.sponsor-logo { max-height: 70px; width: auto; filter: grayscale(20%); transition: filter 0.2s, transform 0.2s; }
 .sponsor-link:hover .sponsor-logo { filter: grayscale(0%); transform: scale(1.05); }
-.sponsor-placeholder {
-  min-height: 60px;
-  display: flex; align-items: center; justify-content: center;
-}
+.sponsor-placeholder { min-height: 60px; display: flex; align-items: center; justify-content: center; }
 
 /* ── Footer ───────────────────────────────────────────────────── */
+.site-footer { background: var(--sn-blue); }
 .footer-link { transition: color 0.15s; }
-.footer-link:hover { color: #0d6efd !important; }
+.footer-link:hover { color: #fff !important; }
 
-/* ── Member Dashboard ─────────────────────────────────────────── */
+/* ── Dashboard ────────────────────────────────────────────────── */
 .dashboard-link { transition: background 0.15s, transform 0.15s; }
 .dashboard-link:hover { background: #f0f4ff; transform: translateX(4px); }
 
@@ -194,5 +173,6 @@ body {
   .officer-photo, .officer-avatar { width: 100px; height: 100px; }
   .wave-shape-top svg { height: 45px; }
   .wave-shape-bottom svg { height: 35px; }
-  .about-blue-section { padding-top: 60px; padding-bottom: 45px; }
+  .sn-blue-section { padding-top: 60px; padding-bottom: 45px; }
+  .page-hero { padding: 2.5rem 0; }
 }

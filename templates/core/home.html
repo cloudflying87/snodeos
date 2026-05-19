@@ -57,7 +57,7 @@
 </section>
 
 <!-- About Section — blue with wave-brush top and bottom -->
-<section class="about-blue-section">
+<section class="sn-blue-section">
   <!-- Wave at TOP (inside blue, fill=white, points down) — 75px tall like original -->
   <div class="wave-shape wave-shape-top" aria-hidden="true">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 283.5 27.8" preserveAspectRatio="none">
@@ -78,12 +78,12 @@
       <div class="col-md-4 text-center">
         <img src="{% static 'images/snodeos-4c.png' %}" alt="Brainerd Snodeos" class="img-fluid" style="max-width:280px;">
       </div>
-      <div class="col-md-8 text-center" style="color:#1a2b3c;">
-        <h2 class="display-6 fw-bold font-oswald mb-4" style="color:#1a2b3c;">ABOUT US</h2>
-        <p class="fw-bold mb-2" style="color:#1a2b3c;">Welcome to the Brainerd Snodeos Trail System!</p>
-        <p style="color:#1a2b3c;">We proudly groom 107 miles of snowmobile trails in the Brainerd Lakes area, thanks to the dedication of over 50 volunteer members. Since 1975, when a group of snowmobilers formed the Brainerd Snodeos in response to a city request for safer snowmobiling, our club has grown to 125 members and evolved from hand-cut trails to operating two state-of-the-art Tucker Sno-Cats.</p>
-        <p style="color:#1a2b3c;">Maintaining the trails is a year-round effort involving tree clearing, bridge building, and signage. Our volunteers work hard to ensure safe and enjoyable rides for all. To help us keep trails smooth, please ride responsibly&mdash;stay right, avoid spinning your track, and take corners with care.</p>
-        <p style="color:#1a2b3c;">Thank you for supporting the Brainerd Snodeos. Follow us on <a href="https://www.facebook.com/brainerdsnodeos" target="_blank" style="color:#1a2b3c;font-weight:bold;text-decoration:underline;">Facebook</a> for updates!</p>
+      <div class="col-md-8 text-center sn-on-blue">
+        <h2 class="display-6 fw-bold font-oswald mb-4">ABOUT US</h2>
+        <p class="fw-bold mb-2">Welcome to the Brainerd Snodeos Trail System!</p>
+        <p>We proudly groom 107 miles of snowmobile trails in the Brainerd Lakes area, thanks to the dedication of over 50 volunteer members. Since 1975, when a group of snowmobilers formed the Brainerd Snodeos in response to a city request for safer snowmobiling, our club has grown to 125 members and evolved from hand-cut trails to operating two state-of-the-art Tucker Sno-Cats.</p>
+        <p>Maintaining the trails is a year-round effort involving tree clearing, bridge building, and signage. Our volunteers work hard to ensure safe and enjoyable rides for all. To help us keep trails smooth, please ride responsibly&mdash;stay right, avoid spinning your track, and take corners with care.</p>
+        <p>Thank you for supporting the Brainerd Snodeos. Follow us on <a href="https://www.facebook.com/brainerdsnodeos" target="_blank" class="text-white fw-bold">Facebook</a> for updates!</p>
         <div class="mt-4">
           <a href="{% url 'accounts:register' %}" class="btn btn-dark btn-lg px-5 fw-bold">Join the Brainerd Snodeos!</a>
         </div>
@@ -174,7 +174,7 @@
 {% endif %}
 
 <!-- CTA -->
-<section class="py-6 text-white text-center" style="background:#1363A2;">
+<section class="py-6 text-white text-center sn-blue">
   <div class="container">
     <h2 class="display-5 fw-bold font-oswald mb-3">Ready to Ride?</h2>
     <p class="lead text-muted mb-4">Join the Brainerd Snodeos and help us keep the trails open for everyone.</p>

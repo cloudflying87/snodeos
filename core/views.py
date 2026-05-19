@@ -7,7 +7,7 @@ from .email import notify_contact_message
 
 def home(request):
     stats = ClubStats.objects.first()
-    officers = Officer.objects.all()
+    officers = Officer.objects.exclude(title='Director')
     sponsors = Sponsor.objects.filter(is_active=True)
     announcements = Announcement.objects.all()[:5]
     context = {
@@ -20,8 +20,9 @@ def home(request):
 
 
 def about(request):
-    officers = Officer.objects.all()
-    return render(request, 'core/about.html', {'officers': officers})
+    officers = Officer.objects.exclude(title='Director')
+    directors = Officer.objects.filter(title='Director')
+    return render(request, 'core/about.html', {'officers': officers, 'directors': directors})
 
 
 def contact(request):

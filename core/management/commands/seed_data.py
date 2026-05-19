@@ -38,19 +38,26 @@ class Command(BaseCommand):
 
     def _seed_officers(self):
         officers = [
-            {'name': 'John Schommer',  'title': 'President',      'snowmobile_brand': 'Polaris',       'order': 1, 'photo_file': 'officer-john.jpg'},
-            {'name': 'Ryan Frank',     'title': 'Vice President',  'snowmobile_brand': 'Ski-Doo',       'order': 2, 'photo_file': 'officer-ryan.jpeg'},
-            {'name': 'Nathan Hulinsky','title': 'Secretary',       'snowmobile_brand': 'Polaris',       'order': 3, 'photo_file': 'officer-nathan.jpg'},
-            {'name': 'Dan Johnson',    'title': 'Treasurer',       'snowmobile_brand': 'Yamaha',        'order': 4, 'photo_file': 'officer-dan.jpg'},
+            {'name': 'John Schommer',  'title': 'President',      'snowmobile_brand': 'Polaris',  'order': 1,  'photo_file': 'officer-john.jpg'},
+            {'name': 'Ryan Frank',     'title': 'Vice President',  'snowmobile_brand': 'Ski-Doo', 'order': 2,  'photo_file': 'officer-ryan.jpeg'},
+            {'name': 'Nathan Hulinsky','title': 'Secretary',       'snowmobile_brand': 'Polaris',  'order': 3,  'photo_file': 'officer-nathan.jpg'},
+            {'name': 'Dan Johnson',    'title': 'Treasurer',       'snowmobile_brand': 'Yamaha',   'order': 4,  'photo_file': 'officer-dan.jpg'},
+            {'name': 'Steve Houle',    'title': 'Director',        'snowmobile_brand': 'Polaris',  'order': 5,  'photo_file': None},
+            {'name': 'George Burton',  'title': 'Director',        'snowmobile_brand': 'Polaris',  'order': 6,  'photo_file': None},
+            {'name': 'Tim M',          'title': 'Director',        'snowmobile_brand': 'Ski-Doo',  'order': 7,  'photo_file': None},
+            {'name': 'Chuck Kaphing',  'title': 'Director',        'snowmobile_brand': 'Polaris',  'order': 8,  'photo_file': None},
+            {'name': 'Scott Berry',    'title': 'Director',        'snowmobile_brand': 'Ski-Doo',  'order': 9,  'photo_file': None},
+            {'name': 'Trent Baumann',  'title': 'Director',        'snowmobile_brand': 'Ski-Doo',  'order': 10, 'photo_file': None},
         ]
         for data in officers:
             photo_file = data.pop('photo_file')
             obj, created = Officer.objects.get_or_create(name=data['name'], defaults=data)
             if created:
-                photo_path = self._copy_image(photo_file, 'officers')
-                if photo_path:
-                    obj.photo = photo_path
-                    obj.save()
+                if photo_file:
+                    photo_path = self._copy_image(photo_file, 'officers')
+                    if photo_path:
+                        obj.photo = photo_path
+                        obj.save()
                 self.stdout.write(f'  Created officer: {obj.name}')
 
     def _seed_sponsors(self):
