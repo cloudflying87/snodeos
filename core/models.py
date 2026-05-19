@@ -134,6 +134,12 @@ class SiteSettings(models.Model):
     resend_api_key    = models.CharField(max_length=200, blank=True)
     notification_email = models.EmailField(blank=True, help_text='Where officer alerts go (new applications, contact messages)')
 
+    # Email branding
+    email_from_name   = models.CharField(max_length=100, blank=True, default='Brainerd Snodeos')
+    email_header_color = models.CharField(max_length=7, blank=True, default='#1363A2', help_text='Hex color for the email header bar')
+    email_accent_color = models.CharField(max_length=7, blank=True, default='#1363A2', help_text='Hex color for buttons and accents')
+    email_footer_text  = models.TextField(blank=True, default="You're receiving this because you're a member of the Brainerd Snodeos Snowmobile Club.")
+
     # Communications — SMS
     brevo_api_key      = models.CharField(max_length=200, blank=True)
     twilio_account_sid = models.CharField(max_length=50, blank=True)

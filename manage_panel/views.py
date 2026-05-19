@@ -610,20 +610,29 @@ def facebook_settings(request):
 
 @officer_required
 def email_blast(request):
-    from core.email import send_plain
+    from core.email import send_email as _send_email
+    import re
     recipients = Member.objects.filter(membership_status='active')
 
     if request.method == 'POST':
-        subject = request.POST.get('subject', '').strip()
-        body    = request.POST.get('body', '').strip()
-        if not subject or not body:
+        subject   = request.POST.get('subject', '').strip()
+        blast_html = request.POST.get('body_html', '').strip()
+        if not subject or not blast_html:
             messages.error(request, 'Subject and body are required.')
         else:
+            # Strip tags for the plain-text fallback
+            blast_plain = re.sub(r'<[^>]+>', '', blast_html).strip()
             sent = failed = 0
             for member in recipients:
-                if send_plain(subject, member.email, body):
+                try:
+                    _send_email(
+                        subject=subject,
+                        to=member.email,
+                        template='blast',
+                        context={'blast_body': blast_html, 'blast_plain': blast_plain},
+                    )
                     sent += 1
-                else:
+                except Exception:
                     failed += 1
             if failed:
                 messages.warning(request, f'Sent to {sent} members. {failed} failed.')
@@ -666,6 +675,14 @@ def communications(request):
             cfg.twilio_from_number = request.POST.get('twilio_from_number', '').strip()
             cfg.save()
             messages.success(request, 'SMS settings saved.')
+
+        elif action == 'save_branding':
+            cfg.email_from_name    = request.POST.get('email_from_name', '').strip()
+            cfg.email_header_color = request.POST.get('email_header_color', '#1363A2').strip()
+            cfg.email_accent_color = request.POST.get('email_accent_color', '#1363A2').strip()
+            cfg.email_footer_text  = request.POST.get('email_footer_text', '').strip()
+            cfg.save()
+            messages.success(request, 'Email appearance saved.')
 
         elif action == 'test_email':
             recipient = request.POST.get('test_recipient', '').strip() or request.user.email

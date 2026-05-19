@@ -272,4 +272,99 @@
   </div>
 </div>
 
+<!-- Email Branding -->
+<div class="card border-0 shadow-sm mt-4">
+  <div class="card-header bg-white border-bottom py-3">
+    <h5 class="fw-bold mb-0"><i class="bi bi-palette me-2 text-primary"></i>Email Appearance</h5>
+    <p class="text-muted small mb-0 mt-1">Controls the header color, button color, sender name, and footer on all outgoing emails.</p>
+  </div>
+  <div class="card-body p-4">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="save_branding">
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <label class="form-label fw-semibold small">Header Color</label>
+              <div class="input-group input-group-sm">
+                <input type="color" name="email_header_color" class="form-control form-control-color"
+                       value="{{ cfg.email_header_color|default:'#1363A2' }}" style="max-width:48px;" id="headerColor">
+                <input type="text" class="form-control font-monospace" id="headerColorText"
+                       value="{{ cfg.email_header_color|default:'#1363A2' }}" maxlength="7">
+              </div>
+              <div class="form-text">Background of the email header bar</div>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label fw-semibold small">Button / Accent Color</label>
+              <div class="input-group input-group-sm">
+                <input type="color" name="email_accent_color" class="form-control form-control-color"
+                       value="{{ cfg.email_accent_color|default:'#1363A2' }}" style="max-width:48px;" id="accentColor">
+                <input type="text" class="form-control font-monospace" id="accentColorText"
+                       value="{{ cfg.email_accent_color|default:'#1363A2' }}" maxlength="7">
+              </div>
+              <div class="form-text">Color of buttons and links in emails</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold small">Sender Display Name</label>
+              <input type="text" name="email_from_name" class="form-control form-control-sm"
+                     value="{{ cfg.email_from_name|default:'Brainerd Snodeos' }}" placeholder="Brainerd Snodeos">
+              <div class="form-text">Appears as the "From" name in the email header</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold small">Footer Text</label>
+              <textarea name="email_footer_text" class="form-control form-control-sm" rows="2"
+                        placeholder="You're receiving this as a member of the Brainerd Snodeos.">{{ cfg.email_footer_text }}</textarea>
+              <div class="form-text">Shown at the bottom of every outgoing email</div>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm mt-3">
+            <i class="bi bi-save me-1"></i>Save Appearance
+          </button>
+        </div>
+        <div class="col-lg-6">
+          <label class="form-label fw-semibold small">Live Preview</label>
+          <div style="background:#f0f4f8;padding:12px;border-radius:8px;">
+            <div style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.08);">
+              <div id="prev-header" style="background:{{ cfg.email_header_color|default:'#1363A2' }};padding:18px;text-align:center;">
+                <div style="font-size:1.4rem;">❄</div>
+                <div style="color:#fff;font-weight:700;font-size:0.85rem;" id="prev-name">{{ cfg.email_from_name|default:'Brainerd Snodeos' }}</div>
+                <div style="color:rgba(255,255,255,0.7);font-size:0.68rem;">Brainerd Lakes Area, Minnesota · Est. 1975</div>
+              </div>
+              <div style="padding:16px;">
+                <div style="font-weight:700;font-size:0.88rem;color:#1a2b3c;margin-bottom:8px;">Email Subject Line</div>
+                <div style="font-size:0.78rem;color:#4a5568;line-height:1.6;margin-bottom:14px;">Your message content appears here. Members see this when they open the email.</div>
+                <div style="text-align:center;"><span id="prev-btn" style="display:inline-block;background:{{ cfg.email_accent_color|default:'#1363A2' }};color:#fff;padding:9px 20px;border-radius:6px;font-weight:700;font-size:0.78rem;">Read More →</span></div>
+              </div>
+              <div style="background:#f8fbff;border-top:1px solid #e2eaf2;padding:10px 16px;text-align:center;">
+                <div style="font-size:0.63rem;color:#9ab0c8;" id="prev-footer">{{ cfg.email_footer_text|default:"You're receiving this as a member of the Brainerd Snodeos." }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function syncColor(colorId, textId, previewId, prop) {
+  const col = document.getElementById(colorId);
+  const txt = document.getElementById(textId);
+  const prv = document.getElementById(previewId);
+  col.addEventListener('input', () => { txt.value = col.value; prv.style[prop] = col.value; });
+  txt.addEventListener('input', () => { if (/^#[0-9a-fA-F]{6}$/.test(txt.value)) { col.value = txt.value; prv.style[prop] = txt.value; } });
+}
+syncColor('headerColor', 'headerColorText', 'prev-header', 'background');
+syncColor('accentColor', 'accentColorText', 'prev-btn', 'background');
+document.querySelector('input[name="email_from_name"]').addEventListener('input', e => {
+  document.getElementById('prev-name').textContent = e.target.value || 'Brainerd Snodeos';
+});
+document.querySelector('textarea[name="email_footer_text"]').addEventListener('input', e => {
+  document.getElementById('prev-footer').textContent = e.target.value;
+});
+</script>
 {% endblock %}

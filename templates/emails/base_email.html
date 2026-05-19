@@ -9,7 +9,7 @@
     body{background:#f0f4f8;}
     img{border:0;display:block;}
     .wrapper{max-width:600px;margin:32px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.09);}
-    .header{background:#1363A2;padding:32px 40px;text-align:center;}
+    .header{background:{{ email_header_color|default:"#1363A2" }};padding:32px 40px;text-align:center;}
     .header-snowflake{font-size:2.5rem;display:block;margin-bottom:8px;}
     .header h1{margin:0;color:#ffffff;font-size:1.35rem;font-weight:700;letter-spacing:0.5px;}
     .header-sub{color:rgba(255,255,255,0.75);font-size:0.8rem;margin-top:4px;}
@@ -25,8 +25,8 @@
     .message-block{background:#f6f9fe;border-left:4px solid #1363A2;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;}
     .message-block p{margin:0;white-space:pre-wrap;font-size:0.92rem;line-height:1.7;color:#344055;}
     .btn-wrap{text-align:center;margin:28px 0 8px;}
-    .btn{display:inline-block;background:#1363A2;color:#ffffff !important;text-decoration:none;padding:13px 30px;border-radius:7px;font-weight:700;font-size:0.95rem;}
-    .btn-outline{background:transparent;border:2px solid #1363A2;color:#1363A2 !important;padding:11px 28px;}
+    .btn{display:inline-block;background:{{ email_accent_color|default:"#1363A2" }};color:#ffffff !important;text-decoration:none;padding:13px 30px;border-radius:7px;font-weight:700;font-size:0.95rem;}
+    .btn-outline{background:transparent;border:2px solid {{ email_accent_color|default:"#1363A2" }};color:{{ email_accent_color|default:"#1363A2" }} !important;padding:11px 28px;}
     .divider{border:none;border-top:1px solid #e8eef6;margin:24px 0;}
     .footer{background:#f8fbff;border-top:1px solid #e2eaf2;padding:22px 40px;text-align:center;}
     .footer p{margin:0 0 4px;font-size:0.78rem;color:#9ab0c8;line-height:1.7;}
@@ -45,7 +45,7 @@
   <div class="wrapper">
     <div class="header">
       <span class="header-snowflake">❄</span>
-      <h1>Brainerd Snodeos Snowmobile Club</h1>
+      <h1>{{ email_from_name|default:"Brainerd Snodeos" }}</h1>
       <div class="header-sub">Brainerd Lakes Area, Minnesota &bull; Est. 1975</div>
     </div>
     <div class="body">
@@ -53,7 +53,7 @@
     </div>
     <div class="footer">
       <p><a href="{{ site_url }}">{{ site_url }}</a></p>
-      <p>You're receiving this because you're a member or officer of the Brainerd Snodeos.</p>
+      <p>{{ email_footer_text|default:"You're receiving this as a member of the Brainerd Snodeos." }}</p>
     </div>
   </div>
 </body>

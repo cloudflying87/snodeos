@@ -1,0 +1,6 @@
+{{ blast_plain }}
+
+---
+{{ email_from_name }}
+{{ site_url }}
+{{ email_footer_text }}

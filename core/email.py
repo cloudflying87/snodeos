@@ -53,12 +53,28 @@ def _get_smtp_connection(cfg):
     )
 
 
+def _email_brand_ctx():
+    """Returns email branding vars pulled from DB settings."""
+    cfg = _cfg()
+    return {
+        'email_from_name':    cfg.email_from_name    or 'Brainerd Snodeos',
+        'email_header_color': cfg.email_header_color or '#1363A2',
+        'email_accent_color': cfg.email_accent_color or '#1363A2',
+        'email_footer_text':  cfg.email_footer_text  or "You're receiving this as a member of the Brainerd Snodeos.",
+    }
+
+
 def send_email(subject, to, template, context=None):
     """
     Render an HTML email template and send it.
     Priority: Resend API → Brevo SMTP (DB) → Django default backend (.env).
     """
-    ctx = {'site_url': _site_url(), 'site_name': 'Brainerd Snodeos', **(context or {})}
+    ctx = {
+        'site_url': _site_url(),
+        'site_name': 'Brainerd Snodeos',
+        **_email_brand_ctx(),
+        **(context or {}),
+    }
     to_list = [to] if isinstance(to, str) else to
 
     try:
