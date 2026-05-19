@@ -60,6 +60,23 @@
                    value="{{ cfg.facebook_page_url }}"
                    placeholder="https://www.facebook.com/yourpage">
           </div>
+          <div class="mt-3">
+            <label class="form-label fw-semibold small">Facebook App ID <span class="badge bg-warning text-dark ms-1">Required for reliable display</span></label>
+            <input type="text" name="facebook_app_id" class="form-control form-control-sm"
+                   value="{{ cfg.facebook_app_id }}"
+                   placeholder="123456789012345">
+            <div class="form-text mt-2">
+              Without an App ID, the feed may be blocked by Safari, Firefox, and browsers with privacy settings turned up.
+              <strong>To get a free App ID:</strong>
+              <ol class="mt-1 mb-0 small ps-3">
+                <li>Go to <strong>developers.facebook.com</strong> and log in with your Facebook account</li>
+                <li>Click <strong>My Apps → Create App</strong></li>
+                <li>Choose <strong>"Other"</strong> → <strong>"None"</strong> → give it a name like "Snodeos Site"</li>
+                <li>From the App Dashboard, copy the <strong>App ID</strong> (a long number) and paste it above</li>
+                <li>Under <strong>Settings → Basic</strong>, add your site's domain (e.g. snodeos.com) to App Domains</li>
+              </ol>
+            </div>
+          </div>
         </div>
       </label>
     </div>

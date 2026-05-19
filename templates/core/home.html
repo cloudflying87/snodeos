@@ -171,7 +171,7 @@
 {% endif %}
 
 <!-- Facebook Page Plugin — shown when Option 1 is active -->
-{% if site_settings.facebook_integration == 'plugin' %}
+{% if site_settings.facebook_integration == 'plugin' and site_settings.facebook_page_url %}
 <section class="py-6 bg-light">
   <div class="container">
     <div class="text-center mb-4">
@@ -179,13 +179,32 @@
       <h2 class="display-6 fw-bold font-oswald d-inline">Follow Us on Facebook</h2>
     </div>
     <div class="d-flex justify-content-center">
-      <iframe
-        src="https://www.facebook.com/plugins/page.php?href={{ site_settings.facebook_page_url|urlencode }}&tabs=timeline&width=500&height=600&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true"
-        width="500" height="600"
-        style="border:none;overflow:hidden;max-width:100%;"
-        scrolling="no" frameborder="0" allowfullscreen="true"
-        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
-      </iframe>
+      {% if site_settings.facebook_app_id %}
+        <!-- JS SDK embed — requires Facebook App ID; most reliable across browsers -->
+        <div id="fb-root"></div>
+        <div class="fb-page"
+          data-href="{{ site_settings.facebook_page_url }}"
+          data-tabs="timeline"
+          data-width="500"
+          data-height="600"
+          data-small-header="false"
+          data-adapt-container-width="true"
+          data-hide-cover="false"
+          data-show-facepile="true">
+          <blockquote cite="{{ site_settings.facebook_page_url }}" class="fb-xfbml-parse-ignore">
+            <a href="{{ site_settings.facebook_page_url }}">Brainerd Snodeos on Facebook</a>
+          </blockquote>
+        </div>
+      {% else %}
+        <!-- Fallback iframe — works in most browsers but may be blocked by strict privacy settings -->
+        <iframe
+          src="https://www.facebook.com/plugins/page.php?href={{ site_settings.facebook_page_url|urlencode }}&tabs=timeline&width=500&height=600&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true&appId="
+          width="500" height="600"
+          style="border:none;overflow:hidden;max-width:100%;"
+          scrolling="no" frameborder="0" allowfullscreen="true"
+          allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
+        </iframe>
+      {% endif %}
     </div>
   </div>
 </section>

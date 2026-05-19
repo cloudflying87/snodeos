@@ -536,6 +536,7 @@ def facebook_settings(request):
     if request.method == 'POST':
         cfg.facebook_integration = request.POST.get('facebook_integration', 'none')
         cfg.facebook_page_url    = request.POST.get('facebook_page_url', '').strip()
+        cfg.facebook_app_id      = request.POST.get('facebook_app_id', '').strip()
         cfg.zapier_webhook_url   = request.POST.get('zapier_webhook_url', '').strip()
         cfg.save()
         messages.success(request, 'Facebook integration settings saved.')

@@ -126,6 +126,7 @@ class SiteSettings(models.Model):
     ]
     facebook_integration = models.CharField(max_length=20, choices=FACEBOOK_CHOICES, default='none')
     facebook_page_url    = models.URLField(blank=True, default='https://www.facebook.com/brainerdsnodeos')
+    facebook_app_id      = models.CharField(max_length=50, blank=True, help_text='Facebook App ID (required for the Page Plugin to work)')
     zapier_webhook_url   = models.URLField(blank=True, help_text='Paste your Zapier Catch Hook URL here')
 
     class Meta:
