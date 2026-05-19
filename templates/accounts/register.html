@@ -34,4 +34,17 @@
   </div>
 </section>
 
+{% block extra_js %}
+<script>
+  (function () {
+    const sel = document.getElementById('id_referral_source');
+    const row = document.getElementById('div_id_referral_other');
+    function toggle() {
+      if (!row) return;
+      row.style.display = sel && sel.value === 'Other' ? '' : 'none';
+    }
+    if (sel) { sel.addEventListener('change', toggle); toggle(); }
+  })();
+</script>
+{% endblock %}
 {% endblock %}

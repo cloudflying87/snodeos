@@ -392,6 +392,9 @@ def member_import(request):
                 skipped += 1
                 continue
             try:
+                accepts_raw = (row.get('accepts_texts') or '').strip().lower()
+                accepts_texts = True if accepts_raw in ('yes', 'y', '1', 'true') else (False if accepts_raw in ('no', 'n', '0', 'false') else None)
+                num_sleds_raw = (row.get('num_snowmobiles') or '').strip()
                 Member.objects.create_user(
                     email=email,
                     password=None,
@@ -402,6 +405,9 @@ def member_import(request):
                     state=(row.get('state') or row.get('State') or 'MN').strip(),
                     zip_code=(row.get('zip_code') or row.get('Zip') or '').strip(),
                     snowmobile_brand=(row.get('snowmobile_brand') or row.get('Sled') or '').strip().lower(),
+                    num_snowmobiles=int(num_sleds_raw) if num_sleds_raw.isdigit() else None,
+                    accepts_texts=accepts_texts,
+                    referral_source=(row.get('referral_source') or '').strip(),
                     membership_status=(row.get('membership_status') or row.get('Status') or 'active').strip().lower(),
                     membership_year=int(row['membership_year']) if (row.get('membership_year') or '').strip().isdigit() else None,
                 )

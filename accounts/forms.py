@@ -12,6 +12,28 @@ class MembershipApplicationForm(forms.ModelForm):
     password1 = forms.CharField(label='Password', widget=forms.PasswordInput)
     password2 = forms.CharField(label='Confirm Password', widget=forms.PasswordInput)
 
+    REFERRAL_CHOICES = [
+        ('', '— Select one —'),
+        ('Facebook', 'Facebook'),
+        ('Friend or Family', 'Friend or Family'),
+        ('Snowmobile Trail', 'Snowmobile Trail / Out Riding'),
+        ('Local Business', 'Local Business'),
+        ('MnUSA / State Club', 'MnUSA / State Snowmobile Association'),
+        ('Google / Internet Search', 'Google / Internet Search'),
+        ('Event or Show', 'Event or Show'),
+        ('Other', 'Other (please describe below)'),
+    ]
+    referral_source = forms.ChoiceField(
+        label='How did you find our club?',
+        choices=REFERRAL_CHOICES,
+        required=True,
+    )
+    referral_other = forms.CharField(
+        label='Please describe',
+        required=False,
+        widget=forms.TextInput(attrs={'placeholder': 'Tell us more...'}),
+    )
+
     ACCEPTS_TEXTS_CHOICES = [
         ('', '— Select —'),
         (True, 'Yes'),
@@ -34,12 +56,10 @@ class MembershipApplicationForm(forms.ModelForm):
         ]
         widgets = {
             'state': forms.TextInput(attrs={'placeholder': 'MN'}),
-            'referral_source': forms.Textarea(attrs={'rows': 3}),
             'num_snowmobiles': forms.NumberInput(attrs={'min': 0, 'max': 20}),
         }
         labels = {
             'num_snowmobiles': 'Number of Snowmobiles (MnUSA)',
-            'referral_source': 'How did you find our club?',
         }
 
     def __init__(self, *args, **kwargs):
@@ -92,6 +112,9 @@ class MembershipApplicationForm(forms.ModelForm):
                 Column('num_snowmobiles', css_class='col-md-4'),
                 Column('referral_source', css_class='col-md-8'),
             ),
+            Row(
+                Column('referral_other', css_class='col-12', id='referral_other_row'),
+            ),
         ))
         layout_items.append(Fieldset('Account Setup',
             Row(Column('password1', css_class='col-md-6'), Column('password2', css_class='col-md-6')),
@@ -107,6 +130,13 @@ class MembershipApplicationForm(forms.ModelForm):
         if p1 and p2 and p1 != p2:
             raise forms.ValidationError('Passwords do not match.')
         return p2
+
+    def clean_referral_source(self):
+        choice = self.cleaned_data.get('referral_source', '')
+        other = self.data.get('referral_other', '').strip()
+        if choice == 'Other':
+            return f'Other: {other}' if other else 'Other'
+        return choice
 
     def clean_accepts_texts(self):
         val = self.cleaned_data.get('accepts_texts')
