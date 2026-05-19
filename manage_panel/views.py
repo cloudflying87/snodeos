@@ -662,6 +662,7 @@ def email_blast(request):
     return render(request, 'manage_panel/email_blast.html', {
         'recipient_count': recipients.count(),
         'templates': templates,
+        'default_tmpl': EmailTemplate.get_default(),
     })
 
 

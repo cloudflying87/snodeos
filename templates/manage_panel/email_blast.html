@@ -99,9 +99,9 @@
       <div class="card-body p-0">
         <div style="background:#f0f4f8;padding:16px;">
           <div style="max-width:100%;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.08);">
-            <div id="preview-header" style="background:{% if templates %}{{ templates|first.header_color }}{% else %}#1363A2{% endif %};padding:18px;text-align:center;">
+            <div id="preview-header" style="background:{{ default_tmpl.header_color|default:'#1363A2' }};padding:18px;text-align:center;">
               <div style="font-size:1.3rem;">❄</div>
-              <div style="color:#fff;font-weight:700;font-size:0.85rem;" id="preview-from-name">{% if templates %}{{ templates|first.from_name }}{% else %}Brainerd Snodeos{% endif %}</div>
+              <div style="color:#fff;font-weight:700;font-size:0.85rem;" id="preview-from-name">{{ default_tmpl.from_name|default:'Brainerd Snodeos' }}</div>
             </div>
             <div style="padding:18px;">
               <div style="font-size:0.7rem;color:#7a96b0;font-weight:700;text-transform:uppercase;margin-bottom:8px;">Subject preview</div>
@@ -109,7 +109,7 @@
               <div id="preview-body" style="font-size:0.78rem;color:#4a5568;line-height:1.6;min-height:60px;color:#9ab0c8;font-style:italic;">Your message will appear here...</div>
             </div>
             <div style="background:#f8fbff;border-top:1px solid #e2eaf2;padding:12px;text-align:center;">
-              <div style="font-size:0.65rem;color:#9ab0c8;" id="preview-footer">{% if templates %}{{ templates|first.footer_text|truncatechars:80 }}{% else %}Brainerd Snodeos &bull; Unsubscribe{% endif %}</div>
+              <div style="font-size:0.65rem;color:#9ab0c8;" id="preview-footer">{{ default_tmpl.footer_text|default:'Brainerd Snodeos'|truncatechars:80 }}</div>
             </div>
           </div>
         </div>

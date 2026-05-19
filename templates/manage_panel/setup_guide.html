@@ -19,10 +19,18 @@
     <div class="row g-2">
       {% for item in checklist %}
       <div class="col-md-6">
+        {% if item.url %}
+        <a href="{{ item.url }}" class="d-flex align-items-start gap-2 p-2 rounded text-decoration-none" style="background:#f8f9fa;" onmouseover="this.style.background='#e9ecef'" onmouseout="this.style.background='#f8f9fa'">
+          <i class="bi bi-square text-muted mt-1 flex-shrink-0"></i>
+          <span class="small text-body">{{ item.text }}</span>
+          <i class="bi bi-arrow-right ms-auto text-muted mt-1 flex-shrink-0"></i>
+        </a>
+        {% else %}
         <div class="d-flex align-items-start gap-2 p-2 rounded" style="background:#f8f9fa;">
           <i class="bi bi-square text-muted mt-1 flex-shrink-0"></i>
-          <span class="small">{{ item }}</span>
+          <span class="small text-muted">{{ item.text }}</span>
         </div>
+        {% endif %}
       </div>
       {% endfor %}
     </div>
