@@ -23,7 +23,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-snodeos}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-snodeos_password}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-snodeos}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-snodeos} -d ${POSTGRES_DB:-snodeos}"]
       interval: 5s
       timeout: 5s
       retries: 5
