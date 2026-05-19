@@ -65,7 +65,7 @@
           <td class="ps-4 py-3">
             <div class="d-flex align-items-center gap-2">
               {% if member.photo %}
-                <img src="{{ member.photo.url }}" class="rounded-circle" style="width:36px;height:36px;object-fit:cover;">
+                <img src="{{ member.photo.url }}" class="rounded-circle" style="width:36px;height:36px;object-fit:cover;" alt="">
               {% else %}
                 <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:36px;height:36px;">
                   <i class="bi bi-person-fill text-white small"></i>
@@ -118,7 +118,7 @@
          data-view-url="{% url 'members:member_detail' member.pk %}">
       <div class="position-relative flex-shrink-0">
         {% if member.photo %}
-          <img src="{{ member.photo.url }}" class="rounded-circle" style="width:44px;height:44px;object-fit:cover;">
+          <img src="{{ member.photo.url }}" class="rounded-circle" style="width:44px;height:44px;object-fit:cover;" alt="">
         {% else %}
           <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width:44px;height:44px;">
             <i class="bi bi-person-fill text-white"></i>
@@ -182,7 +182,7 @@ document.getElementById('memberModal').addEventListener('show.bs.modal', e => {
   const badgeClass = statusClasses[d.status] || 'bg-danger';
 
   document.getElementById('mmPhoto').innerHTML = d.photo
-    ? `<div class="position-relative d-inline-block"><img src="${d.photo}" class="rounded-circle" style="width:72px;height:72px;object-fit:cover;"><span class="position-absolute bottom-0 end-0 rounded-circle border border-2 border-white" style="width:14px;height:14px;background:${dotColor};"></span></div>`
+    ? `<div class="position-relative d-inline-block"><img src="${d.photo}" class="rounded-circle" style="width:72px;height:72px;object-fit:cover;" alt=""><span class="position-absolute bottom-0 end-0 rounded-circle border border-2 border-white" style="width:14px;height:14px;background:${dotColor};"></span></div>`
     : `<div class="position-relative d-inline-block"><div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width:72px;height:72px;"><i class="bi bi-person-fill text-white fs-3"></i></div><span class="position-absolute bottom-0 end-0 rounded-circle border border-2 border-white" style="width:14px;height:14px;background:${dotColor};"></span></div>`;
 
   document.getElementById('mmName').textContent = d.name;

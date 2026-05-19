@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.conf import settings
-from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, AnnouncementImage, TrailCondition, TrailConditionImage, TrailWorkLog, TrailWorkImage, ContactMessage, SiteSettings, EmailTemplate
+from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, AnnouncementImage, TrailCondition, TrailConditionImage, TrailWorkLog, TrailWorkImage, ContactMessage, SiteSettings, EmailTemplate, AuditLog
 from accounts.models import Member, RegistrationField
 from core.email import send_test_email
 from accounts.models import Member
@@ -282,6 +282,11 @@ def announcement_add(request):
                     if send_sms(sms_body, m.phone):
                         text_sent += 1
 
+            if email_sent or text_sent:
+                from core.audit import log_action
+                log_action(request.user, 'announcement_send',
+                           target=ann.title,
+                           detail=f'Emails: {email_sent}, Texts: {text_sent}')
             parts = ['Announcement posted.']
             if email_sent:  parts.append(f'Emailed {email_sent} members.')
             if text_sent:   parts.append(f'Texted {text_sent} members.')
@@ -423,6 +428,11 @@ def trail_condition_add(request):
                     if send_sms(sms_body, m.phone):
                         text_sent += 1
 
+            if email_sent or text_sent:
+                from core.audit import log_action
+                log_action(request.user, 'trail_condition_send',
+                           target=condition.title,
+                           detail=f'Status: {condition.get_status_display()}, Emails: {email_sent}, Texts: {text_sent}')
             parts = ['Trail condition posted.']
             if email_sent:  parts.append(f'Emailed {email_sent} members.')
             if text_sent:   parts.append(f'Texted {text_sent} members.')
@@ -773,12 +783,18 @@ def facebook_settings(request):
 @officer_required
 def email_blast(request):
     from core.email import send_email as _send_email
+    from core.throttle import throttle
     import re
     recipients = Member.objects.filter(membership_status='active')
 
     templates = EmailTemplate.objects.all()
 
     if request.method == 'POST':
+        # 5 blasts per officer per hour — guards against double-clicks and spam
+        if not throttle(f'email_blast:{request.user.pk}', max_count=5, window_seconds=3600):
+            messages.error(request, "You've sent several blasts recently. Wait a bit before sending another.")
+            return redirect('manage_panel:email_blast')
+
         subject   = request.POST.get('subject', '').strip()
         blast_html = request.POST.get('body_html', '').strip()
         if not subject or not blast_html:
@@ -814,6 +830,10 @@ def email_blast(request):
                     sent += 1
                 except Exception:
                     failed += 1
+            from core.audit import log_action
+            log_action(request.user, 'email_blast',
+                       target=subject,
+                       detail=f'Sent: {sent}, Failed: {failed}, Template: {tmpl.name if tmpl else "default"}')
             if failed:
                 messages.warning(request, f'Sent to {sent} members. {failed} failed.')
             else:
@@ -961,10 +981,16 @@ def setup_guide(request):
 @officer_required
 def text_members(request):
     from core.email import send_sms
+    from core.throttle import throttle
     cfg = SiteSettings.get()
     sms_configured = cfg.sms_configured
 
     if request.method == 'POST' and sms_configured:
+        # 3 SMS blasts per officer per hour — SMS costs real money, be conservative
+        if not throttle(f'sms_blast:{request.user.pk}', max_count=3, window_seconds=3600):
+            messages.error(request, "You've sent several texts recently. Wait a bit before sending another.")
+            return redirect('manage_panel:text_members')
+
         message = request.POST.get('message', '').strip()
         if message:
             recipients = Member.objects.filter(membership_status='active', accepts_texts=True).exclude(phone='')
@@ -974,6 +1000,10 @@ def text_members(request):
                     sent += 1
                 else:
                     failed += 1
+            from core.audit import log_action
+            log_action(request.user, 'sms_blast',
+                       target=message[:80],
+                       detail=f'Sent: {sent}, Failed: {failed}')
             if failed:
                 messages.warning(request, f'Sent to {sent} members. {failed} failed.')
             else:
@@ -1084,3 +1114,46 @@ def email_template_api(request, pk):
         'accent_color': tmpl.accent_color,
         'footer_text':  tmpl.footer_text,
     })
+
+
+@site_admin_required
+@require_POST
+def email_template_test(request, pk):
+    """Send a sample email rendered with this template's branding to the current user."""
+    from core.email import send_email as _send_email
+    tmpl = get_object_or_404(EmailTemplate, pk=pk)
+    recipient = request.POST.get('test_recipient', '').strip() or request.user.email
+    cfg = SiteSettings.get()
+    if not cfg.email_configured:
+        messages.error(request, 'Email is not configured — set up Brevo or Resend first.')
+        return redirect('manage_panel:email_template_edit', pk=pk)
+    try:
+        _send_email(
+            subject=f'[Template preview] {tmpl.name}',
+            to=recipient,
+            template='blast',
+            context={
+                'blast_body': '<p>This is a sample email so you can preview how the <strong>'
+                              f'{tmpl.name}</strong> template will look in your inbox.</p>'
+                              '<p>Replace this with real announcement content when you send a real blast.</p>',
+                'blast_plain': f'Sample email previewing the "{tmpl.name}" template.',
+                'email_from_name':        tmpl.from_name,
+                'email_header_color':     tmpl.header_color,
+                'email_accent_color':     tmpl.accent_color,
+                'email_header_image_url': tmpl.header_image_url,
+                'email_footer_text':      tmpl.footer_text,
+            },
+        )
+        messages.success(request, f'Preview email sent to {recipient}.')
+    except Exception as exc:
+        messages.error(request, f'Failed to send: {exc}')
+    return redirect('manage_panel:email_template_edit', pk=pk)
+
+
+# ── Audit Log ──────────────────────────────────────────────────────────────────
+
+@site_admin_required
+def audit_log(request):
+    """View recent admin actions. Site-admin only since it can reveal officer activity."""
+    logs = AuditLog.objects.select_related('actor').all()[:200]
+    return render(request, 'manage_panel/audit_log.html', {'logs': logs})

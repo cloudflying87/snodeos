@@ -31,7 +31,7 @@
           {% for officer in contact_officers %}
           <div class="d-flex gap-3 {% if not forloop.last %}mb-4 pb-4 border-bottom{% endif %}">
             {% if officer.photo %}
-              <img src="{{ officer.photo.url }}" class="rounded-circle flex-shrink-0" style="width:48px;height:48px;object-fit:cover;">
+              <img src="{{ officer.photo.url }}" class="rounded-circle flex-shrink-0" style="width:48px;height:48px;object-fit:cover;" alt="">
             {% else %}
               <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:48px;height:48px;">
                 <i class="bi bi-person-fill text-white"></i>

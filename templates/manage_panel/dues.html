@@ -94,7 +94,7 @@
                onclick="event.stopPropagation()">
         <div class="position-relative flex-shrink-0">
           {% if member.photo %}
-            <img src="{{ member.photo.url }}" class="rounded-circle" style="width:44px;height:44px;object-fit:cover;">
+            <img src="{{ member.photo.url }}" class="rounded-circle" style="width:44px;height:44px;object-fit:cover;" alt="">
           {% else %}
             <div class="panel-avatar-placeholder rounded-circle" style="width:44px;height:44px;">{{ member.first_name|first|upper }}</div>
           {% endif %}

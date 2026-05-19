@@ -66,7 +66,7 @@
           <td>
             <div class="d-flex align-items-center gap-2">
               {% if member.photo %}
-                <img src="{{ member.photo.url }}" width="32" height="32" class="rounded-circle" style="object-fit:cover;">
+                <img src="{{ member.photo.url }}" width="32" height="32" class="rounded-circle" style="object-fit:cover;" alt="">
               {% else %}
                 <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width:32px;height:32px;">
                   <span class="text-white small fw-bold">{{ member.first_name.0 }}</span>
@@ -134,7 +134,7 @@
     <div class="mob-row flex-wrap" style="gap:10px;">
       <div class="position-relative flex-shrink-0">
         {% if member.photo %}
-          <img src="{{ member.photo.url }}" class="rounded-circle" style="width:44px;height:44px;object-fit:cover;">
+          <img src="{{ member.photo.url }}" class="rounded-circle" style="width:44px;height:44px;object-fit:cover;" alt="">
         {% else %}
           <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width:44px;height:44px;">
             <span class="text-white fw-bold">{{ member.first_name.0 }}</span>

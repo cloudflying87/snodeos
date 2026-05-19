@@ -4,6 +4,7 @@ from django.db import models
 from .models import ClubStats, Officer, Sponsor, TrailWorkLog, Announcement, TrailCondition
 from .forms import ContactForm
 from .email import notify_contact_message
+from .throttle import throttle, get_client_ip
 
 
 def home(request):
@@ -30,6 +31,10 @@ def about(request):
 
 def contact(request):
     if request.method == 'POST':
+        # 5 submissions per IP per hour
+        if not throttle(f'contact:{get_client_ip(request)}', max_count=5, window_seconds=3600):
+            messages.error(request, "You've submitted several messages recently. Please wait a bit before sending another.")
+            return redirect('core:contact')
         form = ContactForm(request.POST)
         if form.is_valid():
             contact_msg = form.save()

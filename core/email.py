@@ -131,7 +131,6 @@ def send_plain(subject, to, body):
         if cfg.resend_api_key:
             _send_via_resend(cfg.resend_api_key, from_email, to_list, subject, body, f'<pre>{body}</pre>')
         elif cfg.brevo_smtp_key:
-            from django.core.mail import send_mail
             conn = _get_smtp_connection(cfg)
             msg = EmailMultiAlternatives(subject=subject, body=body,
                                          from_email=from_email, to=to_list,
@@ -146,66 +145,67 @@ def send_plain(subject, to, body):
         return False
 
 
-def send_sms(body, phone):
-    """Send an SMS. Uses Brevo API or Twilio, preferring Brevo."""
-    cfg = _cfg()
+BREVO_SMS_URL = 'https://api.brevo.com/v3/transactionalSMS/sms'
+BREVO_SMS_SENDER = 'Snodeos'
+
+
+def _normalize_phone(phone):
     phone = phone.strip().replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
     if not phone.startswith('+'):
         phone = '+1' + phone
+    return phone
+
+
+def _send_brevo_sms(api_key, phone, body):
+    payload = json.dumps({
+        'type': 'transactional', 'unicodeEnabled': True,
+        'sender': BREVO_SMS_SENDER, 'recipient': phone, 'content': body,
+    }).encode()
+    req = urllib.request.Request(
+        BREVO_SMS_URL, data=payload,
+        headers={'api-key': api_key, 'Content-Type': 'application/json'},
+    )
+    try:
+        urllib.request.urlopen(req, timeout=10)
+        return True
+    except Exception as exc:
+        logger.error('Brevo SMS failed to %s: %s', phone, exc)
+        return False
+
+
+def _send_twilio_sms(sid, token, from_number, phone, body):
+    try:
+        from twilio.rest import Client
+        Client(sid, token).messages.create(body=body, from_=from_number, to=phone)
+        return True
+    except Exception as exc:
+        logger.error('Twilio SMS failed to %s: %s', phone, exc)
+        return False
+
+
+def send_sms(body, phone):
+    """Send an SMS. Tries DB-stored credentials first, then env-var fallback. Prefers Brevo over Twilio."""
+    cfg = _cfg()
+    phone = _normalize_phone(phone)
 
     if cfg.brevo_api_key:
-        payload = json.dumps({
-            'type': 'transactional', 'unicodeEnabled': True,
-            'sender': 'Snodeos', 'recipient': phone, 'content': body,
-        }).encode()
-        req = urllib.request.Request(
-            'https://api.brevo.com/v3/transactionalSMS/sms',
-            data=payload,
-            headers={'api-key': cfg.brevo_api_key, 'Content-Type': 'application/json'},
-        )
-        try:
-            urllib.request.urlopen(req, timeout=10)
-            return True
-        except Exception as exc:
-            logger.error('Brevo SMS failed to %s: %s', phone, exc)
-            return False
+        return _send_brevo_sms(cfg.brevo_api_key, phone, body)
+    if cfg.twilio_account_sid:
+        return _send_twilio_sms(cfg.twilio_account_sid, cfg.twilio_auth_token, cfg.twilio_from_number, phone, body)
 
-    elif cfg.twilio_account_sid:
-        try:
-            from twilio.rest import Client
-            client = Client(cfg.twilio_account_sid, cfg.twilio_auth_token)
-            client.messages.create(body=body, from_=cfg.twilio_from_number, to=phone)
-            return True
-        except Exception as exc:
-            logger.error('Twilio SMS failed to %s: %s', phone, exc)
-            return False
-
-    # Fall back to env vars
     brevo_key = getattr(settings, 'BREVO_API_KEY', '')
-    twilio_sid = getattr(settings, 'TWILIO_ACCOUNT_SID', '')
     if brevo_key:
-        payload = json.dumps({
-            'type': 'transactional', 'unicodeEnabled': True,
-            'sender': 'Snodeos', 'recipient': phone, 'content': body,
-        }).encode()
-        req = urllib.request.Request(
-            'https://api.brevo.com/v3/transactionalSMS/sms',
-            data=payload,
-            headers={'api-key': brevo_key, 'Content-Type': 'application/json'},
+        return _send_brevo_sms(brevo_key, phone, body)
+    twilio_sid = getattr(settings, 'TWILIO_ACCOUNT_SID', '')
+    if twilio_sid:
+        return _send_twilio_sms(
+            twilio_sid,
+            getattr(settings, 'TWILIO_AUTH_TOKEN', ''),
+            getattr(settings, 'TWILIO_FROM_NUMBER', ''),
+            phone, body,
         )
-        try:
-            urllib.request.urlopen(req, timeout=10)
-            return True
-        except Exception:
-            return False
-    elif twilio_sid:
-        try:
-            from twilio.rest import Client
-            client = Client(twilio_sid, getattr(settings, 'TWILIO_AUTH_TOKEN', ''))
-            client.messages.create(body=body, from_=getattr(settings, 'TWILIO_FROM_NUMBER', ''), to=phone)
-            return True
-        except Exception:
-            return False
+
+    logger.warning('No SMS provider configured — message to %s dropped', phone)
     return False
 
 

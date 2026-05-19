@@ -335,3 +335,32 @@ class ContactMessage(models.Model):
 
     def __str__(self):
         return f'{self.name} — {self.subject}'
+
+
+class AuditLog(models.Model):
+    """Record of significant officer actions for accountability."""
+    ACTION_CHOICES = [
+        ('member_approve',     'Approved member'),
+        ('member_deactivate',  'Deactivated member'),
+        ('member_delete',      'Deleted member'),
+        ('email_blast',        'Sent email blast'),
+        ('sms_blast',          'Sent text blast'),
+        ('announcement_send',  'Sent announcement notification'),
+        ('trail_condition_send', 'Sent trail condition notification'),
+        ('settings_change',    'Changed settings'),
+    ]
+    actor       = models.ForeignKey('accounts.Member', null=True, blank=True,
+                                    on_delete=models.SET_NULL, related_name='audit_actions',
+                                    help_text='Officer who performed the action')
+    action      = models.CharField(max_length=40, choices=ACTION_CHOICES)
+    target      = models.CharField(max_length=200, blank=True,
+                                   help_text='What was acted on (member name, blast subject, etc.)')
+    detail      = models.TextField(blank=True, help_text='Additional context (recipient count, etc.)')
+    created_at  = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        actor = self.actor.get_full_name() if self.actor else 'system'
+        return f'{actor} {self.get_action_display()} — {self.target or ""}'

@@ -135,6 +135,11 @@
         <a href="{% url 'manage_panel:setup_guide' %}" class="panel-nav-link {% block active_setup_guide %}{% endblock %}">
           <i class="bi bi-book"></i> Setup Guide
         </a>
+        {% if user.is_site_admin or user.is_staff %}
+        <a href="{% url 'manage_panel:audit_log' %}" class="panel-nav-link {% block active_audit_log %}{% endblock %}">
+          <i class="bi bi-clock-history"></i> Audit Log
+        </a>
+        {% endif %}
       </div>
 
     </nav>

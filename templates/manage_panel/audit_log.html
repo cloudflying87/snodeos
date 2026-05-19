@@ -1,0 +1,67 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}Audit Log{% endblock %}
+{% block active_audit_log %}active{% endblock %}
+
+{% block content %}
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">Audit Log</h1>
+    <p class="panel-breadcrumb mb-0">
+      <a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> / Audit Log
+    </p>
+  </div>
+</div>
+
+<div class="panel-card">
+{% if logs %}
+
+  {# Desktop table #}
+  <div class="d-none d-md-block">
+    <table class="panel-table">
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>Who</th>
+          <th>Action</th>
+          <th>Target</th>
+          <th>Detail</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td class="text-muted small text-nowrap">{{ log.created_at|date:"M j, Y" }}<br><span style="font-size:0.75rem;">{{ log.created_at|date:"g:i A" }}</span></td>
+          <td class="small">{{ log.actor.get_full_name|default:"—" }}</td>
+          <td><span class="badge bg-secondary-subtle text-secondary">{{ log.get_action_display }}</span></td>
+          <td class="small">{{ log.target|default:"—" }}</td>
+          <td class="text-muted small">{{ log.detail|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {# Mobile cards #}
+  <div class="d-md-none">
+    {% for log in logs %}
+    <div class="px-3 py-3 border-bottom">
+      <div class="d-flex align-items-center justify-content-between mb-1">
+        <span class="badge bg-secondary-subtle text-secondary">{{ log.get_action_display }}</span>
+        <small class="text-muted">{{ log.created_at|date:"M j" }} &middot; {{ log.created_at|date:"g:i A" }}</small>
+      </div>
+      <div class="fw-semibold small">{{ log.target|default:"—" }}</div>
+      <div class="text-muted small">by {{ log.actor.get_full_name|default:"system" }}</div>
+      {% if log.detail %}<div class="text-muted" style="font-size:0.78rem;">{{ log.detail }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+{% else %}
+  <div class="panel-card-body text-center py-5">
+    <i class="bi bi-clock-history display-4 text-muted mb-3 d-block" aria-hidden="true"></i>
+    <p class="text-muted mb-0">No audit entries yet. Significant officer actions (approvals, blasts, etc.) will be recorded here.</p>
+  </div>
+{% endif %}
+</div>
+
+{% endblock %}

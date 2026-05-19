@@ -82,21 +82,25 @@ def member_edit(request, pk):
 
 @officer_required
 def approve_member(request, pk):
+    from core.audit import log_action
     member = get_object_or_404(Member, pk=pk)
     member.membership_status = 'active'
     member.date_approved = timezone.now().date()
     member.membership_year = timezone.now().year
     member.save()
     notify_application_approved(member)
+    log_action(request.user, 'member_approve', target=member.get_full_name(), detail=f'Email: {member.email}')
     messages.success(request, f'{member.get_full_name()} has been approved as an active member.')
     return redirect('members:member_list')
 
 
 @officer_required
 def deactivate_member(request, pk):
+    from core.audit import log_action
     member = get_object_or_404(Member, pk=pk)
     member.membership_status = 'inactive'
     member.save()
+    log_action(request.user, 'member_deactivate', target=member.get_full_name(), detail=f'Email: {member.email}')
     messages.warning(request, f'{member.get_full_name()} has been deactivated.')
     return redirect('members:member_list')
 

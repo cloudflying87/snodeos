@@ -114,7 +114,7 @@
 
   <!-- Live preview -->
   <div class="col-lg-5">
-    <div class="panel-card" style="position:sticky;top:80px;">
+    <div class="panel-card mb-3" style="position:sticky;top:80px;">
       <div class="panel-card-header">
         <h6 class="panel-card-title"><i class="bi bi-eye me-2 text-primary"></i>Live Preview</h6>
       </div>
@@ -148,6 +148,31 @@
         </div>
       </div>
     </div>
+
+    {% if tmpl.pk %}
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h6 class="panel-card-title"><i class="bi bi-send-check me-2 text-primary" aria-hidden="true"></i>Send Test Email</h6>
+      </div>
+      <div class="panel-card-body">
+        <p class="text-muted small mb-3">Send a sample to your inbox to see how the saved template renders in a real email client.</p>
+        <form method="post" action="{% url 'manage_panel:email_template_test' tmpl.pk %}" class="row g-2 align-items-end">
+          {% csrf_token %}
+          <div class="col-12">
+            <label for="test_recipient" class="form-label small fw-semibold mb-1">Send to</label>
+            <input id="test_recipient" type="email" name="test_recipient" class="form-control form-control-sm"
+                   value="{{ user.email }}" placeholder="you@example.com">
+          </div>
+          <div class="col-12">
+            <button type="submit" class="btn btn-primary btn-sm w-100">
+              <i class="bi bi-send me-1" aria-hidden="true"></i>Send Test
+            </button>
+          </div>
+          <p class="form-text mb-0">Save your changes first if you've edited the template — only the last-saved version is sent.</p>
+        </form>
+      </div>
+    </div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

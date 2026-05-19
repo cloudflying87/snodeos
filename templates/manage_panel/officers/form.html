@@ -28,7 +28,7 @@
       <div class="panel-card-body">
         {% if object and object.photo %}
           <div class="mb-4 d-flex align-items-center gap-3">
-            <img src="{{ object.photo.url }}" class="rounded-circle" style="width:64px;height:64px;object-fit:cover;">
+            <img src="{{ object.photo.url }}" class="rounded-circle" style="width:64px;height:64px;object-fit:cover;" alt="Current photo of {{ object.name }}">
             <div class="text-muted small">Current photo. Upload a new one to replace it.</div>
           </div>
         {% endif %}
