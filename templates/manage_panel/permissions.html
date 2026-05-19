@@ -132,38 +132,40 @@
   <div class="d-md-none mob-list">
     {% for member in members %}
     <div class="mob-row flex-wrap" style="gap:10px;">
-      <div class="d-flex align-items-center gap-2 flex-shrink-0">
+      <div class="position-relative flex-shrink-0">
         {% if member.photo %}
-          <img src="{{ member.photo.url }}" class="rounded-circle" style="width:40px;height:40px;object-fit:cover;">
+          <img src="{{ member.photo.url }}" class="rounded-circle" style="width:44px;height:44px;object-fit:cover;">
         {% else %}
-          <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width:40px;height:40px;">
+          <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width:44px;height:44px;">
             <span class="text-white fw-bold">{{ member.first_name.0 }}</span>
           </div>
         {% endif %}
+        <span class="position-absolute bottom-0 end-0 rounded-circle border border-2 border-white"
+              style="width:12px;height:12px;background:{% if member.is_staff %}#212529{% elif member.is_site_admin %}#0d6efd{% elif member.is_officer %}#198754{% else %}#6c757d{% endif %};"></span>
       </div>
       <div class="mob-info">
         <div class="mob-title">{{ member.get_full_name }}{% if member == request.user %} <span class="badge bg-secondary" style="font-size:0.6rem;">You</span>{% endif %}</div>
         <div class="mob-sub">
-          {% if member.is_staff %}<span class="badge bg-dark" style="font-size:0.65rem;">Superuser</span>
-          {% elif member.is_site_admin %}<span class="badge" style="background:var(--sn-blue);font-size:0.65rem;">Site Admin</span>
-          {% elif member.is_officer %}<span class="badge bg-success" style="font-size:0.65rem;">Officer</span>
-          {% else %}<span class="text-muted">No access</span>{% endif %}
+          {% if member.is_staff %}Superuser
+          {% elif member.is_site_admin %}Site Admin
+          {% elif member.is_officer %}Officer
+          {% else %}No access{% endif %}
         </div>
       </div>
       {% if not member.is_staff and member != request.user %}
-      <div style="width:100%;display:flex;gap:6px;flex-wrap:wrap;padding-top:4px;">
+      <div class="d-flex gap-2 flex-wrap" style="width:100%;padding-top:4px;">
         {% if not member.is_officer %}
         <form method="post">{% csrf_token %}
           <input type="hidden" name="member_id" value="{{ member.pk }}">
           <input type="hidden" name="action" value="grant_officer">
-          <button type="submit" class="btn btn-sm btn-outline-success" style="min-height:38px;">Officer</button>
+          <button type="submit" class="btn btn-sm btn-outline-success" style="min-height:38px;">Grant Officer</button>
         </form>
         {% endif %}
         {% if not member.is_site_admin %}
         <form method="post">{% csrf_token %}
           <input type="hidden" name="member_id" value="{{ member.pk }}">
           <input type="hidden" name="action" value="grant_admin">
-          <button type="submit" class="btn btn-sm btn-outline-primary" style="min-height:38px;">Admin</button>
+          <button type="submit" class="btn btn-sm btn-outline-primary" style="min-height:38px;">Grant Admin</button>
         </form>
         {% endif %}
         {% if member.is_officer or member.is_site_admin %}
