@@ -108,22 +108,13 @@ body {
 .stats-section { position: relative; z-index: 1; }
 
 /* ── Page Hero (inner pages: about, trail work, contact) ──────── */
-/* Change --sn-blue to change ALL inner page heroes at once */
 .page-hero {
-  background-image: url('../images/navbar-bg.jpg');
-  background-size: cover;
-  background-position: center center;
-  padding: 4rem 0;
-  position: relative;
+  background: var(--sn-blue);
+  padding: 3rem 0;
+  color: #fff;
 }
-.page-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--sn-blue-overlay);
-  z-index: 0;
-}
-.page-hero > .container { position: relative; z-index: 1; }
+.page-hero h1, .page-hero h2, .page-hero h3 { color: #fff; }
+.page-hero .text-muted { color: rgba(255,255,255,0.75) !important; }
 
 /* ── Blue wave sections ───────────────────────────────────────── */
 .sn-blue-section {

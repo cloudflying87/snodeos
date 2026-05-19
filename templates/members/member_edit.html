@@ -1,29 +1,26 @@
-{% extends 'base.html' %}
+{% extends 'manage_panel/base.html' %}
 {% load crispy_forms_tags %}
-
-{% block title %}Edit {{ member.get_full_name }} — Brainerd Snodeos{% endblock %}
+{% block title %}Edit {{ member.get_full_name }}{% endblock %}
+{% block active_members %}active{% endblock %}
 
 {% block content %}
 
-<section class="page-hero py-4">
-  <div class="container d-flex justify-content-between align-items-center">
-    <h2 class="fw-bold font-oswald mb-0">Edit: {{ member.get_full_name }}</h2>
-    <a href="{% url 'members:member_detail' member.pk %}" class="btn btn-outline-light btn-sm">
-      <i class="bi bi-arrow-left me-1"></i>Cancel
-    </a>
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="h3 fw-bold mb-1">Edit Member</h1>
+    <p class="text-muted mb-0">{{ member.get_full_name }}</p>
   </div>
-</section>
+  <a href="{% url 'members:member_detail' member.pk %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i>Cancel
+  </a>
+</div>
 
-<section class="py-5">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-lg-9">
-        <div class="card border-0 shadow-sm p-4 p-lg-5">
-          {% crispy form %}
-        </div>
-      </div>
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <div class="card border-0 shadow-sm p-4 p-lg-5">
+      {% crispy form %}
     </div>
   </div>
-</section>
+</div>
 
 {% endblock %}
