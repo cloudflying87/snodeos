@@ -65,6 +65,13 @@
           </div>
 
           <div class="mb-3">
+            <label class="form-label fw-semibold">Header Image URL <span class="text-muted fw-normal small">(optional)</span></label>
+            <input type="url" name="header_image_url" id="headerImageUrl" class="form-control"
+                   value="{{ tmpl.header_image_url|default:'' }}" placeholder="https://yoursite.com/logo.png">
+            <div class="form-text">A publicly accessible image URL shown at the top of the email (replaces the snowflake). Must be HTTPS. Dimensions around 200×60px work best.</div>
+          </div>
+
+          <div class="mb-3">
             <label class="form-label fw-semibold">Footer Text</label>
             <textarea name="footer_text" id="footerText" class="form-control" rows="2"
                       placeholder="You're receiving this as a member of the Brainerd Snodeos.">{{ tmpl.footer_text|default:'' }}</textarea>
@@ -104,7 +111,10 @@
           <div style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.08);">
             <!-- Header -->
             <div id="prev-header" style="background:#1363A2;padding:20px;text-align:center;">
-              <div style="font-size:1.4rem;">❄</div>
+              <div id="prev-snowflake" style="font-size:1.4rem;">❄</div>
+              <div id="prev-header-img" style="display:none;margin-bottom:4px;">
+                <img id="prev-img-tag" src="" alt="" style="max-height:60px;max-width:180px;object-fit:contain;">
+              </div>
               <div id="prev-from-name" style="color:#fff;font-weight:700;font-size:0.85rem;margin-top:4px;">Brainerd Snodeos</div>
             </div>
             <!-- Body -->
@@ -132,10 +142,11 @@
 
 {% block extra_js %}
 <script>
-const headerColor = document.getElementById('headerColor');
-const accentColor = document.getElementById('accentColor');
-const fromName    = document.getElementById('fromName');
-const footerText  = document.getElementById('footerText');
+const headerColor    = document.getElementById('headerColor');
+const accentColor    = document.getElementById('accentColor');
+const fromName       = document.getElementById('fromName');
+const footerText     = document.getElementById('footerText');
+const headerImageUrl = document.getElementById('headerImageUrl');
 
 function update() {
   const hc = headerColor.value;
@@ -146,11 +157,25 @@ function update() {
   document.getElementById('prev-footer').textContent      = footerText.value || '';
   document.getElementById('headerHex').textContent = hc;
   document.getElementById('accentHex').textContent = ac;
+
+  const url = headerImageUrl.value.trim();
+  if (url) {
+    document.getElementById('prev-snowflake').style.display = 'none';
+    document.getElementById('prev-header-img').style.display = 'block';
+    document.getElementById('prev-img-tag').src = url;
+  } else {
+    document.getElementById('prev-snowflake').style.display = 'block';
+    document.getElementById('prev-header-img').style.display = 'none';
+  }
 }
 
 headerColor.addEventListener('input', update);
 accentColor.addEventListener('input', update);
 fromName.addEventListener('input', update);
 footerText.addEventListener('input', update);
+headerImageUrl.addEventListener('input', update);
+
+// Set initial state for header image if already populated
+update();
 </script>
 {% endblock %}

@@ -135,3 +135,24 @@ SITE_URL = os.environ.get('SITE_URL', 'https://snodeos.flyhomemnlab.com')
 CSRF_TRUSTED_ORIGINS = [
     o for o in os.environ.get('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',') if o
 ]
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+}

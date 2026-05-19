@@ -636,10 +636,11 @@ def email_blast(request):
             extra_ctx = {}
             if tmpl:
                 extra_ctx = {
-                    'email_from_name':    tmpl.from_name,
-                    'email_header_color': tmpl.header_color,
-                    'email_accent_color': tmpl.accent_color,
-                    'email_footer_text':  tmpl.footer_text,
+                    'email_from_name':        tmpl.from_name,
+                    'email_header_color':     tmpl.header_color,
+                    'email_accent_color':     tmpl.accent_color,
+                    'email_header_image_url': tmpl.header_image_url,
+                    'email_footer_text':      tmpl.footer_text,
                 }
             sent = failed = 0
             for member in recipients:
@@ -836,6 +837,7 @@ def email_template_add(request):
                 from_name=request.POST.get('from_name', 'Brainerd Snodeos').strip(),
                 header_color=request.POST.get('header_color', '#1363A2').strip(),
                 accent_color=request.POST.get('accent_color', '#1363A2').strip(),
+                header_image_url=request.POST.get('header_image_url', '').strip(),
                 footer_text=request.POST.get('footer_text', '').strip(),
                 is_default='is_default' in request.POST,
             )
@@ -850,13 +852,14 @@ def email_template_add(request):
 def email_template_edit(request, pk):
     tmpl = get_object_or_404(EmailTemplate, pk=pk)
     if request.method == 'POST':
-        tmpl.name        = request.POST.get('name', '').strip() or tmpl.name
-        tmpl.description = request.POST.get('description', '').strip()
-        tmpl.from_name   = request.POST.get('from_name', '').strip()
-        tmpl.header_color = request.POST.get('header_color', '#1363A2').strip()
-        tmpl.accent_color = request.POST.get('accent_color', '#1363A2').strip()
-        tmpl.footer_text  = request.POST.get('footer_text', '').strip()
-        tmpl.is_default   = 'is_default' in request.POST
+        tmpl.name             = request.POST.get('name', '').strip() or tmpl.name
+        tmpl.description      = request.POST.get('description', '').strip()
+        tmpl.from_name        = request.POST.get('from_name', '').strip()
+        tmpl.header_color     = request.POST.get('header_color', '#1363A2').strip()
+        tmpl.accent_color     = request.POST.get('accent_color', '#1363A2').strip()
+        tmpl.header_image_url = request.POST.get('header_image_url', '').strip()
+        tmpl.footer_text      = request.POST.get('footer_text', '').strip()
+        tmpl.is_default       = 'is_default' in request.POST
         tmpl.save()
         messages.success(request, f'Template "{tmpl.name}" updated.')
         return redirect('manage_panel:email_template_list')

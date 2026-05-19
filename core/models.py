@@ -120,14 +120,15 @@ class Announcement(models.Model):
 
 class EmailTemplate(models.Model):
     """Reusable branded email templates officers can select when composing blasts."""
-    name         = models.CharField(max_length=100, unique=True)
-    description  = models.CharField(max_length=200, blank=True, help_text='Short description shown in the selector')
-    from_name    = models.CharField(max_length=100, default='Brainerd Snodeos')
-    header_color = models.CharField(max_length=7, default='#1363A2')
-    accent_color = models.CharField(max_length=7, default='#1363A2')
-    footer_text  = models.TextField(blank=True, default="You're receiving this as a member of the Brainerd Snodeos Snowmobile Club.")
-    is_default   = models.BooleanField(default=False, help_text='Default template used when none is specified')
-    created_at   = models.DateTimeField(auto_now_add=True)
+    name             = models.CharField(max_length=100, unique=True)
+    description      = models.CharField(max_length=200, blank=True, help_text='Short description shown in the selector')
+    from_name        = models.CharField(max_length=100, default='Brainerd Snodeos')
+    header_color     = models.CharField(max_length=7, default='#1363A2')
+    accent_color     = models.CharField(max_length=7, default='#1363A2')
+    header_image_url = models.URLField(blank=True, help_text='Publicly accessible image URL shown in the email header (replaces the ❄ snowflake)')
+    footer_text      = models.TextField(blank=True, default="You're receiving this as a member of the Brainerd Snodeos Snowmobile Club.")
+    is_default       = models.BooleanField(default=False, help_text='Default template used when none is specified')
+    created_at       = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-is_default', 'name']

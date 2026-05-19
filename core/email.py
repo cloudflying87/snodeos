@@ -71,10 +71,11 @@ def _tmpl_override(cfg_attr):
     if not tmpl:
         return {}
     return {
-        'email_from_name':    tmpl.from_name,
-        'email_header_color': tmpl.header_color,
-        'email_accent_color': tmpl.accent_color,
-        'email_footer_text':  tmpl.footer_text,
+        'email_from_name':         tmpl.from_name,
+        'email_header_color':      tmpl.header_color,
+        'email_accent_color':      tmpl.accent_color,
+        'email_header_image_url':  tmpl.header_image_url,
+        'email_footer_text':       tmpl.footer_text,
     }
 
 

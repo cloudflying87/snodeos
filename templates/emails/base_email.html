@@ -44,7 +44,12 @@
 <body>
   <div class="wrapper">
     <div class="header">
+      {% if email_header_image_url %}
+      <img src="{{ email_header_image_url }}" alt="{{ email_from_name|default:'Brainerd Snodeos' }}"
+           style="max-height:70px;max-width:260px;width:auto;object-fit:contain;margin-bottom:8px;">
+      {% else %}
       <span class="header-snowflake">❄</span>
+      {% endif %}
       <h1>{{ email_from_name|default:"Brainerd Snodeos" }}</h1>
       <div class="header-sub">Brainerd Lakes Area, Minnesota &bull; Est. 1975</div>
     </div>
