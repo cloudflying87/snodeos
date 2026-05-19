@@ -128,8 +128,6 @@ until docker compose exec db pg_isready -U "${POSTGRES_USER:-snodeos}" > /dev/nu
 done
 echo "✅ Database ready"
 
-echo "Creating migrations..."
-docker compose run --rm web python3 manage.py makemigrations --noinput
 echo "Running migrations..."
 docker compose run --rm web python3 manage.py migrate --noinput
 echo "✅ Migrations complete"
