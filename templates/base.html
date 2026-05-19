@@ -11,7 +11,7 @@
   <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
   <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicon-32.png' %}">
   <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/apple-touch-icon.png' %}">
-  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=7">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=8">
   {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -28,10 +28,12 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarMain">
         <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
-          <li class="nav-item"><a class="nav-link site-nav-link" href="{% url 'core:home' %}">Home</a></li>
-          <li class="nav-item"><a class="nav-link site-nav-link" href="{% url 'core:about' %}">About Us</a></li>
-          <li class="nav-item"><a class="nav-link site-nav-link" href="{% url 'core:trail_work' %}">Trail Work</a></li>
-          <li class="nav-item"><a class="nav-link site-nav-link" href="{% url 'core:contact' %}">Contact Us / Join</a></li>
+          {% with vn=request.resolver_match.view_name %}
+          <li class="nav-item"><a class="nav-link site-nav-link{% if vn == 'core:home' %} nav-active{% endif %}" href="{% url 'core:home' %}">Home</a></li>
+          <li class="nav-item"><a class="nav-link site-nav-link{% if vn == 'core:about' %} nav-active{% endif %}" href="{% url 'core:about' %}">About Us</a></li>
+          <li class="nav-item"><a class="nav-link site-nav-link{% if vn == 'core:trail_work' %} nav-active{% endif %}" href="{% url 'core:trail_work' %}">Trail Work</a></li>
+          <li class="nav-item"><a class="nav-link site-nav-link{% if vn == 'core:contact' or vn == 'accounts:register' %} nav-active{% endif %}" href="{% url 'core:contact' %}">Contact Us / Join</a></li>
+          {% endwith %}
           {% if user.is_authenticated %}
             <li class="nav-item ms-lg-2">
               <a class="nav-link site-nav-link" href="{% url 'members:dashboard' %}">

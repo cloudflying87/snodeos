@@ -67,13 +67,18 @@ body {
   padding: 0.5rem 1rem !important;
   transition: color 0.2s;
 }
-.site-nav-link:hover { color: #fff !important; text-decoration: underline; }
+.site-nav-link:hover { color: #fff !important; }
+.site-nav-link.nav-active {
+  color: #fff !important;
+  border-bottom: 2px solid rgba(255,255,255,0.8);
+  padding-bottom: calc(0.5rem - 2px) !important;
+}
 
 .site-header-wave { line-height: 0; overflow: hidden; }
 .site-header-wave svg {
   display: block;
-  width: calc(100% + 1.3px);
-  height: 25px;
+  width: calc(175% + 1.3px);
+  height: 60px;
   position: relative;
   left: 50%;
   transform: translateX(-50%);
