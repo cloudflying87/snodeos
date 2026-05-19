@@ -1,0 +1,140 @@
+{% extends "manage_panel/base.html" %}
+{% block title %}Registration Form{% endblock %}
+{% block active_reg %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="h3 fw-bold mb-1">Registration Form</h1>
+    <p class="text-muted mb-0">Control which fields appear on the membership application form.</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white border-bottom py-3">
+        <h6 class="fw-semibold mb-0"><i class="bi bi-ui-checks me-2 text-primary"></i>Optional Fields</h6>
+      </div>
+      <div class="card-body p-0">
+        <form method="post">
+          {% csrf_token %}
+          <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4 py-3">Field</th>
+                <th class="text-center py-3" style="width:100px;">Enabled</th>
+                <th class="text-center py-3" style="width:100px;">Required</th>
+                <th class="py-3" style="width:220px;">Custom Label</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for field in fields %}
+              <tr>
+                <td class="ps-4 py-3">
+                  <div class="fw-semibold small">{{ field.get_field_name_display }}</div>
+                  <div class="text-muted" style="font-size:0.75rem;">{{ field.field_name }}</div>
+                </td>
+                <td class="text-center py-3">
+                  <div class="form-check d-flex justify-content-center">
+                    <input class="form-check-input" type="checkbox" name="enabled_{{ field.field_name }}"
+                      id="enabled_{{ field.field_name }}" {% if field.is_enabled %}checked{% endif %}
+                      onchange="handleEnabled(this)">
+                  </div>
+                </td>
+                <td class="text-center py-3">
+                  <div class="form-check d-flex justify-content-center">
+                    <input class="form-check-input" type="checkbox" name="required_{{ field.field_name }}"
+                      id="required_{{ field.field_name }}" {% if field.is_required %}checked{% endif %}
+                      {% if not field.is_enabled %}disabled{% endif %}>
+                  </div>
+                </td>
+                <td class="py-3 pe-4">
+                  <input type="text" class="form-control form-control-sm" name="label_{{ field.field_name }}"
+                    value="{{ field.label }}" placeholder="{{ field.get_field_name_display }}"
+                    {% if not field.is_enabled %}disabled{% endif %}>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <div class="px-4 py-3 border-top bg-light d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check2 me-1"></i> Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white border-bottom py-3">
+        <h6 class="fw-semibold mb-0"><i class="bi bi-eye me-2 text-primary"></i>Active Fields Preview</h6>
+      </div>
+      <div class="card-body">
+        <p class="text-muted small mb-3">Fields that will appear on the registration form:</p>
+        <ul class="list-unstyled mb-0">
+          <li class="mb-2">
+            <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle me-2">Always on</span>
+            First Name
+          </li>
+          <li class="mb-2">
+            <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle me-2">Always on</span>
+            Last Name
+          </li>
+          <li class="mb-2">
+            <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle me-2">Always on</span>
+            Email Address
+          </li>
+          <li class="mb-2">
+            <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle me-2">Always on</span>
+            Password
+          </li>
+          <hr class="my-2">
+          {% for field in fields %}
+          {% if field.is_enabled %}
+          <li class="mb-2" id="preview_{{ field.field_name }}">
+            <span class="badge {% if field.is_required %}bg-primary-subtle text-primary-emphasis border border-primary-subtle{% else %}bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle{% endif %} me-2">
+              {% if field.is_required %}Required{% else %}Optional{% endif %}
+            </span>
+            {% if field.label %}{{ field.label }}{% else %}{{ field.get_field_name_display }}{% endif %}
+          </li>
+          {% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mt-4">
+      <div class="card-header bg-white border-bottom py-3">
+        <h6 class="fw-semibold mb-0"><i class="bi bi-info-circle me-2 text-primary"></i>Notes</h6>
+      </div>
+      <div class="card-body">
+        <ul class="small text-muted mb-0 ps-3">
+          <li class="mb-2">First Name, Last Name, Email, and Password always appear and cannot be removed.</li>
+          <li class="mb-2">Disabling a field removes it from the form entirely.</li>
+          <li class="mb-2">Marking a field Required means applicants must fill it in before submitting.</li>
+          <li>Custom Labels let you rename fields (e.g. "Cell Phone" instead of "Phone Number").</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function handleEnabled(checkbox) {
+  const fieldName = checkbox.name.replace('enabled_', '');
+  const requiredCb = document.getElementById('required_' + fieldName);
+  const labelInput = document.querySelector(`input[name="label_${fieldName}"]`);
+  if (!checkbox.checked) {
+    if (requiredCb) { requiredCb.checked = false; requiredCb.disabled = true; }
+    if (labelInput) { labelInput.disabled = true; }
+  } else {
+    if (requiredCb) { requiredCb.disabled = false; }
+    if (labelInput) { labelInput.disabled = false; }
+  }
+}
+</script>
+{% endblock %}

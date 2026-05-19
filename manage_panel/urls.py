@@ -40,9 +40,12 @@ urlpatterns = [
     path('messages/<int:pk>/', views.message_detail, name='message_detail'),
     path('messages/<int:pk>/delete/', views.message_delete, name='message_delete'),
 
+    path('registration-form/', views.registration_form_settings, name='registration_form_settings'),
     path('dues/', views.dues, name='dues'),
     path('permissions/', views.permissions, name='permissions'),
     path('facebook/', views.facebook_settings, name='facebook_settings'),
     path('email/', views.email_settings, name='email_settings'),
     path('email/blast/', views.email_blast, name='email_blast'),
+
+    path('setup-guide/', views.setup_guide, name='setup_guide'),
 ]

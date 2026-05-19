@@ -1,0 +1,265 @@
+{% extends "manage_panel/base.html" %}
+{% block title %}Setup Guide{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="h3 fw-bold mb-1">Site Setup Guide</h1>
+    <p class="text-muted mb-0">Everything you need to get the site fully operational.</p>
+  </div>
+  <a href="{% url 'manage_panel:dashboard' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+  </a>
+</div>
+
+<!-- Quick-start checklist -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white border-bottom py-3">
+    <h5 class="fw-bold mb-0"><i class="bi bi-check2-square me-2 text-success"></i>Quick-Start Checklist</h5>
+  </div>
+  <div class="card-body">
+    <div class="row g-2">
+      {% for item in checklist %}
+      <div class="col-md-6">
+        <div class="d-flex align-items-start gap-2 p-2 rounded" style="background:#f8f9fa;">
+          <i class="bi bi-square text-muted mt-1 flex-shrink-0"></i>
+          <span class="small">{{ item }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- What's Built -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white border-bottom py-3">
+    <h5 class="fw-bold mb-0"><i class="bi bi-grid me-2 text-primary"></i>What's Already Built</h5>
+  </div>
+  <div class="card-body p-0">
+    <div class="row g-0">
+      <div class="col-md-6 border-end">
+        <div class="p-4">
+          <h6 class="fw-semibold text-uppercase text-muted small mb-3">Public Website</h6>
+          <ul class="list-unstyled mb-0">
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i><strong>Home page</strong> — hero, stats, announcements, Facebook feed</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i><strong>About</strong> — officers with photos, directors</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i><strong>Trail Work</strong> — logs with photos (members only)</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i><strong>Contact</strong> — form submissions go to your inbox</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i><strong>Join</strong> — configurable membership application</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i><strong>Member login &amp; password reset</strong></li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="p-4">
+          <h6 class="fw-semibold text-uppercase text-muted small mb-3">Management Panel</h6>
+          <ul class="list-unstyled mb-0">
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Announcements (visibility: public / members / both)</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Officers, titles, sponsors</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Trail work logs with photo uploads</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Member management, applications, CSV import</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Registration form builder</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Dues tracking &amp; email reminders</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Permissions (grant panel access to officers)</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Email blast to all active members</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Facebook integration settings</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Email Setup -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+    <h5 class="fw-bold mb-0"><i class="bi bi-envelope me-2 text-primary"></i>Step 1 — Configure Email <span class="badge bg-danger ms-2">Required</span></h5>
+    <a href="{% url 'manage_panel:email_settings' %}" class="btn btn-primary btn-sm">Go to Email Settings</a>
+  </div>
+  <div class="card-body">
+    <p class="text-muted mb-3">Email is used for password resets, application notifications, contact form alerts, dues reminders, and email blasts. It must be configured before any of those work.</p>
+
+    <div class="alert alert-warning d-flex gap-2 align-items-start">
+      <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1"></i>
+      <div><strong>Current state:</strong> Email is in "console" mode — nothing is actually sent. Follow the steps below to enable real email.</div>
+    </div>
+
+    <h6 class="fw-semibold mt-4 mb-3">Option A — Gmail (Easiest)</h6>
+    <p class="text-muted small mb-3">Use a Google account dedicated to the club (e.g. <code>brainerdsnodeos@gmail.com</code>).</p>
+    <ol class="small mb-4">
+      <li class="mb-2">Log into the club's Google account</li>
+      <li class="mb-2">Go to <strong>Google Account → Security → 2-Step Verification</strong> and turn it on</li>
+      <li class="mb-2">Go to <strong>Google Account → Security → App Passwords</strong></li>
+      <li class="mb-2">Create an App Password named "Snodeos Site" — save the 16-character password</li>
+      <li class="mb-2">Add these to the server's <code>.env</code> file:</li>
+    </ol>
+    <pre class="bg-light p-3 rounded small mb-4"><code>EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=brainerdsnodeos@gmail.com
+EMAIL_HOST_PASSWORD=xxxx xxxx xxxx xxxx
+DEFAULT_FROM_EMAIL=Brainerd Snodeos &lt;brainerdsnodeos@gmail.com&gt;
+NOTIFICATION_EMAIL=brainerdsnodeos@gmail.com</code></pre>
+    <p class="small text-muted">Gmail allows up to ~500 emails/day — plenty for club use.</p>
+
+    <hr>
+
+    <h6 class="fw-semibold mt-3 mb-3">Option B — SendGrid (Better deliverability, 100 free/day)</h6>
+    <ol class="small mb-3">
+      <li class="mb-2">Create a free account at <strong>sendgrid.com</strong></li>
+      <li class="mb-2">Verify your sender domain (follow their DNS instructions)</li>
+      <li class="mb-2">Create an API key under <strong>Settings → API Keys</strong></li>
+      <li class="mb-2">Add to <code>.env</code>:</li>
+    </ol>
+    <pre class="bg-light p-3 rounded small"><code>EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.sendgrid.net
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=apikey
+EMAIL_HOST_PASSWORD=SG.xxxxxxxxxxxxxxxxxx
+DEFAULT_FROM_EMAIL=Brainerd Snodeos &lt;noreply@yourdomain.com&gt;
+NOTIFICATION_EMAIL=officers@youremail.com</code></pre>
+  </div>
+</div>
+
+<!-- SMS Setup -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white border-bottom py-3">
+    <h5 class="fw-bold mb-0"><i class="bi bi-phone me-2 text-success"></i>Step 2 — Text Messages (SMS) <span class="badge bg-secondary ms-2">Optional</span></h5>
+  </div>
+  <div class="card-body">
+    <p class="text-muted mb-3">SMS is not yet built into the site but can be added. The most common service for this is <strong>Twilio</strong>. Once configured, it would enable text message dues reminders, meeting alerts, and trail condition notices.</p>
+
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="border rounded p-3 text-center h-100">
+          <div class="fs-4 mb-2">📱</div>
+          <div class="fw-semibold small">Phone Number</div>
+          <div class="text-muted small">~$1.15/month</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="border rounded p-3 text-center h-100">
+          <div class="fs-4 mb-2">✉️</div>
+          <div class="fw-semibold small">Per Text Sent</div>
+          <div class="text-muted small">~$0.008 each (about $0.80 per 100 texts)</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="border rounded p-3 text-center h-100">
+          <div class="fs-4 mb-2">🆓</div>
+          <div class="fw-semibold small">Account Setup</div>
+          <div class="text-muted small">Free</div>
+        </div>
+      </div>
+    </div>
+
+    <h6 class="fw-semibold mb-3">Steps to Get SMS Working</h6>
+    <ol class="small mb-4">
+      <li class="mb-2">Create an account at <strong>twilio.com</strong></li>
+      <li class="mb-2">Purchase a US phone number from the Twilio Console</li>
+      <li class="mb-2">Copy your <strong>Account SID</strong> and <strong>Auth Token</strong> from the dashboard</li>
+      <li class="mb-2">Add to <code>.env</code>:</li>
+    </ol>
+    <pre class="bg-light p-3 rounded small mb-4"><code>TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_FROM_NUMBER=+12185550100</code></pre>
+    <div class="alert alert-info d-flex gap-2 align-items-start">
+      <i class="bi bi-info-circle-fill flex-shrink-0 mt-1"></i>
+      <div>Once you have Twilio credentials, contact the developer. The dues reminder and blast pages can be updated to include a "Send as Text" option alongside the email option. The Member model already stores phone numbers when that field is enabled on the registration form.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Facebook -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+    <h5 class="fw-bold mb-0"><i class="bi bi-facebook me-2 text-primary"></i>Step 3 — Facebook Integration <span class="badge bg-secondary ms-2">Optional</span></h5>
+    <a href="{% url 'manage_panel:facebook_settings' %}" class="btn btn-primary btn-sm">Go to Facebook Settings</a>
+  </div>
+  <div class="card-body">
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="border rounded p-3 h-100">
+          <h6 class="fw-semibold mb-2"><i class="bi bi-display me-2"></i>Option 1 — Page Plugin</h6>
+          <p class="small text-muted mb-3">Embeds your Facebook page's recent posts on the home page — visitors can see your Facebook activity without leaving the site.</p>
+          <ol class="small mb-0">
+            <li class="mb-1">Make sure you have a <strong>Facebook Page</strong> for the club (not a personal profile)</li>
+            <li class="mb-1">Go to <strong>Settings → Facebook</strong> in this panel</li>
+            <li class="mb-1">Choose <strong>"Facebook Page Plugin"</strong></li>
+            <li class="mb-1">Paste your Facebook Page URL</li>
+            <li>Save — the feed appears on the home page</li>
+          </ol>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="border rounded p-3 h-100">
+          <h6 class="fw-semibold mb-2"><i class="bi bi-broadcast me-2"></i>Option 2 — Zapier Auto-Post</h6>
+          <p class="small text-muted mb-3">When you post a <strong>Public</strong> announcement on the site, it automatically gets posted to your Facebook page.</p>
+          <ol class="small mb-0">
+            <li class="mb-1">Create a free account at <strong>zapier.com</strong></li>
+            <li class="mb-1">New Zap: <em>Webhooks → Catch Hook</em> then <em>Facebook Pages → Create Page Post</em></li>
+            <li class="mb-1">Copy the webhook URL Zapier gives you</li>
+            <li class="mb-1">Go to <strong>Settings → Facebook</strong> in this panel</li>
+            <li class="mb-1">Choose <strong>"Zapier Auto-Post"</strong> and paste the URL</li>
+            <li>Free Zapier plan: 100 runs/month — plenty for announcements</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Domain & Environment -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white border-bottom py-3">
+    <h5 class="fw-bold mb-0"><i class="bi bi-globe me-2 text-primary"></i>Step 4 — Domain &amp; Go-Live Settings</h5>
+  </div>
+  <div class="card-body">
+    <p class="text-muted mb-3">When you're ready to point a real domain at the site, update the server's <code>.env</code> file with these values and rebuild:</p>
+    <pre class="bg-light p-3 rounded small mb-4"><code>DEBUG=False
+ALLOWED_HOSTS=snodeos.com,www.snodeos.com
+CSRF_TRUSTED_ORIGINS=https://snodeos.com,https://www.snodeos.com
+SITE_URL=https://snodeos.com
+DEFAULT_FROM_EMAIL=Brainerd Snodeos &lt;noreply@snodeos.com&gt;</code></pre>
+
+    <h6 class="fw-semibold mb-2">If Using a Cloudflare Tunnel (home/office server)</h6>
+    <ol class="small mb-0">
+      <li class="mb-1">Log into <strong>cloudflare.com</strong> and add your domain</li>
+      <li class="mb-1">Go to <strong>Zero Trust → Access → Tunnels</strong> and create a tunnel</li>
+      <li class="mb-1">Copy the tunnel token and add to <code>.env</code>: <code>CLOUDFLARE_TOKEN=eyJh...</code></li>
+      <li>Rebuild with <code>./build.sh</code></li>
+    </ol>
+  </div>
+</div>
+
+<!-- Env Var Reference -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white border-bottom py-3">
+    <h5 class="fw-bold mb-0"><i class="bi bi-gear me-2 text-primary"></i>Environment Variables Reference</h5>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0 small">
+      <thead class="table-light">
+        <tr>
+          <th class="ps-4 py-3">Variable</th>
+          <th class="py-3">Purpose</th>
+          <th class="pe-4 py-3">Example</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in env_vars %}
+        <tr>
+          <td class="ps-4 py-2"><code>{{ row.name }}</code></td>
+          <td class="py-2 text-muted">{{ row.purpose }}</td>
+          <td class="pe-4 py-2"><code class="text-muted">{{ row.example }}</code></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

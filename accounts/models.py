@@ -2,6 +2,35 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 
 
+class RegistrationField(models.Model):
+    """Controls which optional fields appear on the public membership application form."""
+
+    CONFIGURABLE_FIELDS = [
+        ('phone',            'Phone Number'),
+        ('address',          'Street Address'),
+        ('city',             'City'),
+        ('state',            'State'),
+        ('zip_code',         'Zip Code'),
+        ('snowmobile_brand', 'Snowmobile Brand / Sled'),
+    ]
+
+    field_name  = models.CharField(max_length=50, unique=True, choices=CONFIGURABLE_FIELDS)
+    label       = models.CharField(max_length=100, blank=True, help_text='Override the default label (leave blank to use default)')
+    is_enabled  = models.BooleanField(default=True,  help_text='Show this field on the registration form')
+    is_required = models.BooleanField(default=False, help_text='Make this field required')
+    order       = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return self.get_field_name_display()
+
+    @classmethod
+    def enabled_fields(cls):
+        return cls.objects.filter(is_enabled=True).order_by('order')
+
+
 class MemberManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:

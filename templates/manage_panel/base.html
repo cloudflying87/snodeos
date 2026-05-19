@@ -100,6 +100,9 @@
         <a href="{% url 'manage_panel:message_list' %}" class="panel-nav-link {% block active_messages %}{% endblock %}">
           <i class="bi bi-envelope"></i> Messages
         </a>
+        <a href="{% url 'manage_panel:registration_form_settings' %}" class="panel-nav-link {% block active_reg %}{% endblock %}">
+          <i class="bi bi-ui-checks"></i> Registration Form
+        </a>
         <a href="{% url 'manage_panel:dues' %}" class="panel-nav-link {% block active_dues %}{% endblock %}">
           <i class="bi bi-cash-coin"></i> Dues
         </a>
@@ -118,6 +121,9 @@
         </a>
         <a href="{% url 'manage_panel:email_settings' %}" class="panel-nav-link {% block active_email %}{% endblock %}">
           <i class="bi bi-send"></i> Email Settings
+        </a>
+        <a href="{% url 'manage_panel:setup_guide' %}" class="panel-nav-link {% block active_setup_guide %}{% endblock %}">
+          <i class="bi bi-book"></i> Setup Guide
         </a>
       </div>
 

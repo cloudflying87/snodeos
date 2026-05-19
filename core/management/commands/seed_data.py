@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 from django.core.files import File
 from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement
+from accounts.models import RegistrationField
 
 
 class Command(BaseCommand):
@@ -12,6 +13,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self._seed_stats()
         self._seed_titles()
+        self._seed_registration_fields()
         self._seed_officers()
         self._seed_sponsors()
         self._seed_announcements()
@@ -28,6 +30,22 @@ class Command(BaseCommand):
         for name, order in titles:
             OfficerTitle.objects.get_or_create(name=name, defaults={'order': order})
         self.stdout.write('  Officer titles seeded')
+
+    def _seed_registration_fields(self):
+        defaults = [
+            ('phone',            False, False, 1),
+            ('address',          False, False, 2),
+            ('city',             True,  False, 3),
+            ('state',            True,  False, 4),
+            ('zip_code',         False, False, 5),
+            ('snowmobile_brand', True,  False, 6),
+        ]
+        for field_name, enabled, required, order in defaults:
+            RegistrationField.objects.get_or_create(
+                field_name=field_name,
+                defaults={'is_enabled': enabled, 'is_required': required, 'order': order}
+            )
+        self.stdout.write('  Registration fields seeded')
 
     def _seed_stats(self):
         if not ClubStats.objects.exists():

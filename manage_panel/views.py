@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.conf import settings
 from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, TrailWorkLog, TrailWorkImage, ContactMessage, SiteSettings
+from accounts.models import Member, RegistrationField
 from core.email import send_test_email
 from accounts.models import Member
 from .forms import (
@@ -414,6 +415,24 @@ def member_import(request):
     return render(request, 'manage_panel/member_import.html', {'results': results})
 
 
+# ── Registration Form Builder ──────────────────────────────────────────────────
+
+@officer_required
+def registration_form_settings(request):
+    fields = RegistrationField.objects.all()
+
+    if request.method == 'POST':
+        for field in fields:
+            field.is_enabled  = f'enabled_{field.field_name}'  in request.POST
+            field.is_required = f'required_{field.field_name}' in request.POST
+            field.label = request.POST.get(f'label_{field.field_name}', '').strip()
+            field.save()
+        messages.success(request, 'Registration form updated.')
+        return redirect('manage_panel:registration_form_settings')
+
+    return render(request, 'manage_panel/registration_form.html', {'fields': fields})
+
+
 # ── Dues Management ────────────────────────────────────────────────────────────
 
 @officer_required
@@ -581,3 +600,47 @@ def email_settings(request):
         'is_smtp': 'smtp' in settings.EMAIL_BACKEND,
     }
     return render(request, 'manage_panel/email_settings.html', {'config': config})
+
+
+# ── Setup Guide ────────────────────────────────────────────────────────────────
+
+@officer_required
+def setup_guide(request):
+    checklist = [
+        'Configure email (Gmail app password is the easiest first step)',
+        'Send a test email from Settings → Email Settings',
+        'Add real officer names and photos in Club → Officers',
+        'Update club stats in Overview → Club Stats',
+        'Add current sponsors with logos in Club → Sponsors',
+        'Post a welcome announcement in Content → Announcements',
+        'Review registration form fields in People → Registration Form',
+        'Approve or import existing members in People → All Members',
+        'Optionally enable Facebook integration in Settings → Facebook',
+        'Update domain/DNS when pointing to a custom domain',
+        'Set DEBUG=False in .env when ready for public use',
+        'Contact developer when ready to add SMS/text reminders (Twilio)',
+    ]
+    env_vars = [
+        {'name': 'SECRET_KEY',            'purpose': 'Django security key (keep private)',              'example': '50-char random string'},
+        {'name': 'DEBUG',                 'purpose': 'Set to False in production',                      'example': 'False'},
+        {'name': 'ALLOWED_HOSTS',         'purpose': 'Comma-separated allowed domain names',            'example': 'snodeos.com,www.snodeos.com'},
+        {'name': 'DATABASE_URL',          'purpose': 'PostgreSQL connection string',                    'example': 'postgresql://user:pass@db/snodeos'},
+        {'name': 'CSRF_TRUSTED_ORIGINS',  'purpose': 'Domains allowed to submit forms',                 'example': 'https://snodeos.com'},
+        {'name': 'SITE_URL',              'purpose': 'Full public URL (used in emails)',                 'example': 'https://snodeos.com'},
+        {'name': 'EMAIL_BACKEND',         'purpose': 'Use smtp for real email',                         'example': 'django.core.mail.backends.smtp.EmailBackend'},
+        {'name': 'EMAIL_HOST',            'purpose': 'SMTP server hostname',                            'example': 'smtp.gmail.com'},
+        {'name': 'EMAIL_PORT',            'purpose': 'SMTP port',                                       'example': '587'},
+        {'name': 'EMAIL_USE_TLS',         'purpose': 'TLS encryption',                                  'example': 'True'},
+        {'name': 'EMAIL_HOST_USER',       'purpose': 'SMTP login email',                                'example': 'club@gmail.com'},
+        {'name': 'EMAIL_HOST_PASSWORD',   'purpose': 'SMTP password or app password',                   'example': 'xxxx xxxx xxxx xxxx'},
+        {'name': 'DEFAULT_FROM_EMAIL',    'purpose': '"From" name on outgoing emails',                  'example': 'Brainerd Snodeos <club@gmail.com>'},
+        {'name': 'NOTIFICATION_EMAIL',    'purpose': 'Officer alert destination (apps, messages)',       'example': 'officers@gmail.com'},
+        {'name': 'CLOUDFLARE_TOKEN',      'purpose': 'Cloudflare tunnel token (if using tunnel)',        'example': 'eyJh...'},
+        {'name': 'TWILIO_ACCOUNT_SID',    'purpose': 'Twilio account ID (when SMS is added)',           'example': 'ACxx...'},
+        {'name': 'TWILIO_AUTH_TOKEN',     'purpose': 'Twilio auth token (when SMS is added)',           'example': 'xxxx...'},
+        {'name': 'TWILIO_FROM_NUMBER',    'purpose': 'Twilio outbound phone number (when SMS is added)','example': '+12185550100'},
+    ]
+    return render(request, 'manage_panel/setup_guide.html', {
+        'checklist': checklist,
+        'env_vars': env_vars,
+    })
