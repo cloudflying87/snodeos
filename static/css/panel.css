@@ -287,6 +287,52 @@
   }
 }
 
+/* ── Mobile list rows (shared across panel list pages) ── */
+.mob-list { overflow: hidden; }
+.mob-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  border-bottom: 1px solid #f0f4f8;
+  min-height: 60px;
+  background: #fff;
+}
+.mob-row:last-child { border-bottom: none; }
+.mob-row:active { background: #f8fbff; }
+.mob-info { flex: 1; min-width: 0; }
+.mob-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #1a2b3c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mob-sub {
+  font-size: 0.78rem;
+  color: #7a96b0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+.mob-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  align-items: center;
+}
+.mob-actions .btn {
+  min-width: 40px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.mob-tap-row { cursor: pointer; }
+
 /* ── Quick action button ── */
 .panel-quick-btn {
   display: flex;

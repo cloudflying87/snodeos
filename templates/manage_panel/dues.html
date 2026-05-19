@@ -17,7 +17,7 @@
       <input type="hidden" name="action" value="send_reminder">
       <button type="submit" class="btn btn-warning btn-sm"
               onclick="return confirm('Send dues reminder email to all {{ unpaid_count }} unpaid members?')">
-        <i class="bi bi-envelope me-1"></i>Email Reminder to Unpaid ({{ unpaid_count }})
+        <i class="bi bi-envelope me-1"></i><span class="d-none d-sm-inline">Email Reminder</span> ({{ unpaid_count }} unpaid)
       </button>
     </form>
     <form method="post">
@@ -25,7 +25,7 @@
       <input type="hidden" name="action" value="reset_all">
       <button type="submit" class="btn btn-outline-secondary btn-sm"
               onclick="return confirm('Reset ALL members to unpaid? Use this at the start of a new dues year.')">
-        <i class="bi bi-arrow-counterclockwise me-1"></i>New Year Reset
+        <i class="bi bi-arrow-counterclockwise me-1"></i><span class="d-none d-sm-inline">New Year Reset</span>
       </button>
     </form>
   </div>
@@ -33,25 +33,29 @@
 
 <form method="post" id="duesForm">
   {% csrf_token %}
-  <div class="panel-card">
-    <div class="panel-card-header d-flex align-items-center justify-content-between">
-      <h5 class="panel-card-title mb-0">Active Members</h5>
-      <div class="d-flex gap-2">
-        <button type="submit" name="action" value="mark_paid" class="btn btn-success btn-sm">
-          <i class="bi bi-check-lg me-1"></i>Mark Selected Paid
-        </button>
-        <button type="submit" name="action" value="mark_unpaid" class="btn btn-outline-danger btn-sm">
-          <i class="bi bi-x-lg me-1"></i>Mark Selected Unpaid
-        </button>
-      </div>
+
+  <!-- Bulk action bar -->
+  <div class="d-flex gap-2 mb-3 flex-wrap">
+    <div class="form-check me-2 d-flex align-items-center" style="min-height:38px;">
+      <input type="checkbox" id="selectAll" class="form-check-input me-2" style="width:20px;height:20px;">
+      <label for="selectAll" class="form-check-label small fw-semibold">Select All</label>
     </div>
-    <div class="panel-card-body p-0">
+    <button type="submit" name="action" value="mark_paid" class="btn btn-success btn-sm">
+      <i class="bi bi-check-lg me-1"></i>Mark Paid
+    </button>
+    <button type="submit" name="action" value="mark_unpaid" class="btn btn-outline-danger btn-sm">
+      <i class="bi bi-x-lg me-1"></i>Mark Unpaid
+    </button>
+  </div>
+
+  <div class="panel-card">
+
+    <!-- Desktop table -->
+    <div class="d-none d-md-block">
       <table class="table panel-table mb-0">
         <thead>
           <tr>
-            <th style="width:40px;">
-              <input type="checkbox" id="selectAll" class="form-check-input">
-            </th>
+            <th style="width:40px;"></th>
             <th>Member</th>
             <th>Email</th>
             <th class="text-center">Dues Status</th>
@@ -61,10 +65,7 @@
         <tbody>
           {% for member in members %}
           <tr class="{% if not member.dues_paid %}table-warning{% endif %}">
-            <td>
-              <input type="checkbox" name="member_ids" value="{{ member.pk }}"
-                     class="form-check-input member-check">
-            </td>
+            <td><input type="checkbox" name="member_ids" value="{{ member.pk }}" class="form-check-input member-check" style="width:18px;height:18px;"></td>
             <td class="fw-semibold">{{ member.get_full_name }}</td>
             <td class="text-muted small">{{ member.email }}</td>
             <td class="text-center">
@@ -74,9 +75,7 @@
                 <span class="badge bg-danger">Unpaid</span>
               {% endif %}
             </td>
-            <td class="text-center text-muted small">
-              {{ member.dues_paid_date|date:"M j, Y"|default:"—" }}
-            </td>
+            <td class="text-center text-muted small">{{ member.dues_paid_date|date:"M j, Y"|default:"—" }}</td>
           </tr>
           {% empty %}
           <tr><td colspan="5" class="text-center text-muted py-4">No active members.</td></tr>
@@ -84,12 +83,49 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Mobile list — tap row to toggle checkbox -->
+    <div class="d-md-none mob-list">
+      {% for member in members %}
+      <div class="mob-row mob-tap-row {% if not member.dues_paid %}dues-unpaid{% endif %}"
+           onclick="this.querySelector('.member-check').click()" style="cursor:pointer;">
+        <input type="checkbox" name="member_ids" value="{{ member.pk }}"
+               class="member-check flex-shrink-0"
+               style="width:22px;height:22px;accent-color:#0d6efd;pointer-events:none;"
+               onclick="event.stopPropagation()">
+        <div class="mob-info">
+          <div class="mob-title">{{ member.get_full_name }}</div>
+          {% if member.dues_paid and member.dues_paid_date %}
+            <div class="mob-sub">Paid {{ member.dues_paid_date|date:"M j, Y" }}</div>
+          {% else %}
+            <div class="mob-sub">{{ member.email }}</div>
+          {% endif %}
+        </div>
+        <div class="flex-shrink-0">
+          {% if member.dues_paid %}
+            <span class="badge bg-success"><i class="bi bi-check-lg"></i></span>
+          {% else %}
+            <span class="badge bg-danger">Unpaid</span>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <div class="text-center text-muted py-4">No active members.</div>
+      {% endfor %}
+    </div>
+
   </div>
 </form>
 
+{% block extra_js %}
+<style>
+.dues-unpaid { background: #fffbeb; }
+</style>
 <script>
 document.getElementById('selectAll').addEventListener('change', function() {
   document.querySelectorAll('.member-check').forEach(cb => cb.checked = this.checked);
 });
 </script>
+{% endblock %}
+
 {% endblock %}
