@@ -150,8 +150,11 @@ body {
 .sponsor-placeholder { min-height: 60px; display: flex; align-items: center; justify-content: center; }
 
 /* ── Footer ───────────────────────────────────────────────────── */
-.site-footer { background: var(--sn-blue); }
-.footer-link { transition: color 0.15s; }
+.site-footer { background: var(--sn-blue); color: rgba(255,255,255,0.85); }
+.site-footer h6 { color: rgba(255,255,255,0.6) !important; }
+.site-footer .text-muted { color: rgba(255,255,255,0.6) !important; }
+.site-footer p, .site-footer li { color: rgba(255,255,255,0.85); }
+.footer-link { color: rgba(255,255,255,0.85) !important; transition: color 0.15s; }
 .footer-link:hover { color: #fff !important; }
 
 /* ── Dashboard ────────────────────────────────────────────────── */

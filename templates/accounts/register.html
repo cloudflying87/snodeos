@@ -6,9 +6,9 @@
 {% block content %}
 
 <section class="page-hero py-5">
-  <div class="container text-center">
+  <div class="container text-center sn-on-blue">
     <h1 class="display-4 fw-bold font-oswald">Join the Club</h1>
-    <p class="lead text-muted">Fill out the form below to apply for membership. An officer will review your application.</p>
+    <p class="lead sn-muted-on-blue">Fill out the form below to apply for membership. An officer will review your application.</p>
   </div>
 </section>
 
@@ -25,7 +25,7 @@
           {% crispy form %}
         </div>
 
-        <div class="card border-0 bg-primary text-white p-4 mt-4 rounded-3 text-center">
+        <div class="card border-0 text-white p-4 mt-4 rounded-3 text-center" style="background:var(--sn-blue);">
           <i class="bi bi-info-circle fs-3 mb-2"></i>
           <p class="mb-0">After submitting, a club officer will review your application. You'll be able to log in once your membership is approved.</p>
         </div>
