@@ -35,12 +35,12 @@ def contact(request):
             contact_msg = form.save()
             notify_contact_message(contact_msg)
             # Auto-reply to the person who submitted
-            from core.email import send_email as _send_email
+            from core.email import send_email as _send_email, _tmpl_override
             _send_email(
                 subject='We received your message — Brainerd Snodeos',
                 to=contact_msg.email,
                 template='contact_reply',
-                context={'msg': contact_msg},
+                context={'msg': contact_msg, **_tmpl_override('template_contact_reply')},
             )
             messages.success(request, 'Your message has been sent! We will get back to you soon.')
             return redirect('core:contact')

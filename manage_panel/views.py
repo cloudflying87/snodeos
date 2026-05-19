@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.conf import settings
-from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, TrailWorkLog, TrailWorkImage, ContactMessage, SiteSettings
+from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, TrailWorkLog, TrailWorkImage, ContactMessage, SiteSettings, EmailTemplate
 from accounts.models import Member, RegistrationField
 from core.email import send_test_email
 from accounts.models import Member
@@ -252,8 +253,9 @@ def announcement_add(request):
             send_text  = 'send_text'  in request.POST
             email_sent = text_sent = 0
 
-            from core.email import send_email as _send_email, send_sms
+            from core.email import send_email as _send_email, send_sms, _tmpl_override
             ann_url = f"{getattr(settings, 'SITE_URL', '').rstrip('/')}/announcements/{ann.pk}/"
+            ann_tmpl_ctx = _tmpl_override('template_announcement')
 
             if send_email:
                 active_members = Member.objects.filter(membership_status='active')
@@ -263,7 +265,7 @@ def announcement_add(request):
                             subject=f'Brainerd Snodeos: {ann.title}',
                             to=member.email,
                             template='announcement',
-                            context={'announcement': ann, 'ann_url': ann_url},
+                            context={'announcement': ann, 'ann_url': ann_url, **ann_tmpl_ctx},
                         )
                         email_sent += 1
                     except Exception:
@@ -614,14 +616,31 @@ def email_blast(request):
     import re
     recipients = Member.objects.filter(membership_status='active')
 
+    templates = EmailTemplate.objects.all()
+
     if request.method == 'POST':
         subject   = request.POST.get('subject', '').strip()
         blast_html = request.POST.get('body_html', '').strip()
         if not subject or not blast_html:
             messages.error(request, 'Subject and body are required.')
         else:
-            # Strip tags for the plain-text fallback
+            # Resolve selected template for branding overrides
+            tmpl_id = request.POST.get('template_id')
+            tmpl = None
+            if tmpl_id:
+                tmpl = EmailTemplate.objects.filter(pk=tmpl_id).first()
+            if not tmpl:
+                tmpl = EmailTemplate.get_default()
+
             blast_plain = re.sub(r'<[^>]+>', '', blast_html).strip()
+            extra_ctx = {}
+            if tmpl:
+                extra_ctx = {
+                    'email_from_name':    tmpl.from_name,
+                    'email_header_color': tmpl.header_color,
+                    'email_accent_color': tmpl.accent_color,
+                    'email_footer_text':  tmpl.footer_text,
+                }
             sent = failed = 0
             for member in recipients:
                 try:
@@ -629,7 +648,7 @@ def email_blast(request):
                         subject=subject,
                         to=member.email,
                         template='blast',
-                        context={'blast_body': blast_html, 'blast_plain': blast_plain},
+                        context={'blast_body': blast_html, 'blast_plain': blast_plain, **extra_ctx},
                     )
                     sent += 1
                 except Exception:
@@ -642,6 +661,7 @@ def email_blast(request):
 
     return render(request, 'manage_panel/email_blast.html', {
         'recipient_count': recipients.count(),
+        'templates': templates,
     })
 
 
@@ -684,6 +704,16 @@ def communications(request):
             cfg.save()
             messages.success(request, 'Email appearance saved.')
 
+        elif action == 'save_templates':
+            def _get_tmpl(key):
+                val = request.POST.get(key, '').strip()
+                return EmailTemplate.objects.filter(pk=val).first() if val else None
+            cfg.template_contact_reply  = _get_tmpl('template_contact_reply')
+            cfg.template_member         = _get_tmpl('template_member')
+            cfg.template_announcement   = _get_tmpl('template_announcement')
+            cfg.save()
+            messages.success(request, 'Template assignments saved.')
+
         elif action == 'test_email':
             recipient = request.POST.get('test_recipient', '').strip() or request.user.email
             try:
@@ -694,7 +724,11 @@ def communications(request):
 
         return redirect('manage_panel:communications')
 
-    return render(request, 'manage_panel/communications.html', {'cfg': cfg})
+    email_templates = EmailTemplate.objects.all()
+    return render(request, 'manage_panel/communications.html', {
+        'cfg': cfg,
+        'email_templates': email_templates,
+    })
 
 
 # ── Setup Guide ────────────────────────────────────────────────────────────────
@@ -702,17 +736,17 @@ def communications(request):
 @officer_required
 def setup_guide(request):
     checklist = [
-        'Configure email & SMS in Settings → Communications',
-        'Send a test email from the Communications page',
-        'Add real officer names, photos, phone & email in Club → Officers',
-        'Update club stats in Overview → Club Stats',
-        'Add current sponsors with logos in Club → Sponsors',
-        'Post a welcome announcement in Content → Announcements',
-        'Review registration form fields in People → Registration Form',
-        'Approve or import existing members in People → All Members',
-        'Configure Facebook integration in Settings → Facebook (Zapier recommended)',
-        'Update domain/DNS when pointing to a custom domain',
-        'Set DEBUG=False in .env when ready for public use',
+        {'text': 'Configure email & SMS in Settings → Communications',          'url': reverse('manage_panel:communications')},
+        {'text': 'Send a test email from the Communications page',               'url': reverse('manage_panel:communications')},
+        {'text': 'Add real officer names, photos, phone & email in Officers',    'url': reverse('manage_panel:officer_list')},
+        {'text': 'Update club stats in Overview → Club Stats',                   'url': reverse('manage_panel:stats_edit')},
+        {'text': 'Add current sponsors with logos in Club → Sponsors',           'url': reverse('manage_panel:sponsor_list')},
+        {'text': 'Post a welcome announcement in Content → Announcements',       'url': reverse('manage_panel:announcement_list')},
+        {'text': 'Review registration form fields in People → Registration Form','url': reverse('manage_panel:registration_form_settings')},
+        {'text': 'Approve or import existing members in People → All Members',   'url': reverse('members:member_list')},
+        {'text': 'Configure Facebook integration in Settings → Facebook',        'url': reverse('manage_panel:facebook_settings')},
+        {'text': 'Update domain/DNS when pointing to a custom domain',           'url': None},
+        {'text': 'Set DEBUG=False in .env when ready for public use',            'url': None},
     ]
     env_vars = [
         {'name': 'SECRET_KEY',              'purpose': 'Django security key — keep private, never share', 'example': '50-char random string'},
@@ -766,3 +800,88 @@ def text_members(request):
 @officer_required
 def sms_settings(request):
     return redirect('manage_panel:communications')
+
+
+# ── Email Templates ────────────────────────────────────────────────────────────
+
+@site_admin_required
+def email_template_list(request):
+    """List all email templates; seed a default one from SiteSettings if none exist."""
+    if not EmailTemplate.objects.exists():
+        cfg = SiteSettings.get()
+        EmailTemplate.objects.create(
+            name='Default',
+            description='Standard Brainerd Snodeos branded email',
+            from_name=cfg.email_from_name or 'Brainerd Snodeos',
+            header_color=cfg.email_header_color or '#1363A2',
+            accent_color=cfg.email_accent_color or '#1363A2',
+            footer_text=cfg.email_footer_text or "You're receiving this as a member of the Brainerd Snodeos.",
+            is_default=True,
+        )
+    templates = EmailTemplate.objects.all()
+    return render(request, 'manage_panel/email_templates/list.html', {'templates': templates})
+
+
+@site_admin_required
+def email_template_add(request):
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        if not name:
+            messages.error(request, 'Template name is required.')
+        else:
+            tmpl = EmailTemplate.objects.create(
+                name=name,
+                description=request.POST.get('description', '').strip(),
+                from_name=request.POST.get('from_name', 'Brainerd Snodeos').strip(),
+                header_color=request.POST.get('header_color', '#1363A2').strip(),
+                accent_color=request.POST.get('accent_color', '#1363A2').strip(),
+                footer_text=request.POST.get('footer_text', '').strip(),
+                is_default='is_default' in request.POST,
+            )
+            messages.success(request, f'Template "{tmpl.name}" created.')
+            return redirect('manage_panel:email_template_list')
+    # Pre-fill from default if available
+    default = EmailTemplate.get_default()
+    return render(request, 'manage_panel/email_templates/form.html', {'action': 'New', 'tmpl': default})
+
+
+@site_admin_required
+def email_template_edit(request, pk):
+    tmpl = get_object_or_404(EmailTemplate, pk=pk)
+    if request.method == 'POST':
+        tmpl.name        = request.POST.get('name', '').strip() or tmpl.name
+        tmpl.description = request.POST.get('description', '').strip()
+        tmpl.from_name   = request.POST.get('from_name', '').strip()
+        tmpl.header_color = request.POST.get('header_color', '#1363A2').strip()
+        tmpl.accent_color = request.POST.get('accent_color', '#1363A2').strip()
+        tmpl.footer_text  = request.POST.get('footer_text', '').strip()
+        tmpl.is_default   = 'is_default' in request.POST
+        tmpl.save()
+        messages.success(request, f'Template "{tmpl.name}" updated.')
+        return redirect('manage_panel:email_template_list')
+    return render(request, 'manage_panel/email_templates/form.html', {'action': 'Edit', 'tmpl': tmpl})
+
+
+@site_admin_required
+@require_POST
+def email_template_delete(request, pk):
+    tmpl = get_object_or_404(EmailTemplate, pk=pk)
+    if tmpl.is_default and EmailTemplate.objects.count() > 1:
+        messages.error(request, 'Cannot delete the default template. Set another template as default first.')
+    else:
+        tmpl.delete()
+        messages.success(request, 'Template deleted.')
+    return redirect('manage_panel:email_template_list')
+
+
+@site_admin_required
+def email_template_api(request, pk):
+    """JSON endpoint — returns template fields for the blast form's JS selector."""
+    tmpl = get_object_or_404(EmailTemplate, pk=pk)
+    from django.http import JsonResponse
+    return JsonResponse({
+        'from_name':    tmpl.from_name,
+        'header_color': tmpl.header_color,
+        'accent_color': tmpl.accent_color,
+        'footer_text':  tmpl.footer_text,
+    })

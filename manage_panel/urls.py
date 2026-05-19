@@ -48,6 +48,11 @@ urlpatterns = [
     path('email/blast/', views.email_blast, name='email_blast'),
 
     path('communications/', views.communications, name='communications'),
+    path('email-templates/', views.email_template_list, name='email_template_list'),
+    path('email-templates/add/', views.email_template_add, name='email_template_add'),
+    path('email-templates/<int:pk>/edit/', views.email_template_edit, name='email_template_edit'),
+    path('email-templates/<int:pk>/delete/', views.email_template_delete, name='email_template_delete'),
+    path('email-templates/<int:pk>/api/', views.email_template_api, name='email_template_api'),
     path('setup-guide/', views.setup_guide, name='setup_guide'),
     path('text-members/', views.text_members, name='text_members'),
     path('sms-settings/', views.sms_settings, name='sms_settings'),

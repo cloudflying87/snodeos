@@ -22,6 +22,25 @@
       <div class="card-body p-4">
         <form method="post" id="blastForm">
           {% csrf_token %}
+
+          {% if templates %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Email Template</label>
+            <select name="template_id" id="templateSelect" class="form-select">
+              {% for t in templates %}
+              <option value="{{ t.pk }}"
+                      data-from-name="{{ t.from_name }}"
+                      data-header-color="{{ t.header_color }}"
+                      data-accent-color="{{ t.accent_color }}"
+                      data-footer-text="{{ t.footer_text }}"
+                      {% if t.is_default %}selected{% endif %}>
+                {{ t.name }}{% if t.is_default %} (Default){% endif %}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endif %}
+
           <div class="mb-3">
             <label class="form-label fw-semibold">Subject</label>
             <input type="text" name="subject" class="form-control" placeholder="e.g. Trail Update — December 2025" required>
@@ -80,9 +99,9 @@
       <div class="card-body p-0">
         <div style="background:#f0f4f8;padding:16px;">
           <div style="max-width:100%;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.08);">
-            <div id="preview-header" style="background:#1363A2;padding:18px;text-align:center;">
+            <div id="preview-header" style="background:{% if templates %}{{ templates|first.header_color }}{% else %}#1363A2{% endif %};padding:18px;text-align:center;">
               <div style="font-size:1.3rem;">❄</div>
-              <div style="color:#fff;font-weight:700;font-size:0.85rem;" id="preview-from-name">Brainerd Snodeos</div>
+              <div style="color:#fff;font-weight:700;font-size:0.85rem;" id="preview-from-name">{% if templates %}{{ templates|first.from_name }}{% else %}Brainerd Snodeos{% endif %}</div>
             </div>
             <div style="padding:18px;">
               <div style="font-size:0.7rem;color:#7a96b0;font-weight:700;text-transform:uppercase;margin-bottom:8px;">Subject preview</div>
@@ -90,7 +109,7 @@
               <div id="preview-body" style="font-size:0.78rem;color:#4a5568;line-height:1.6;min-height:60px;color:#9ab0c8;font-style:italic;">Your message will appear here...</div>
             </div>
             <div style="background:#f8fbff;border-top:1px solid #e2eaf2;padding:12px;text-align:center;">
-              <div style="font-size:0.65rem;color:#9ab0c8;" id="preview-footer">Brainerd Snodeos &bull; Unsubscribe</div>
+              <div style="font-size:0.65rem;color:#9ab0c8;" id="preview-footer">{% if templates %}{{ templates|first.footer_text|truncatechars:80 }}{% else %}Brainerd Snodeos &bull; Unsubscribe{% endif %}</div>
             </div>
           </div>
         </div>
@@ -129,6 +148,23 @@ const quill = new Quill('#quill-editor', {
   theme: 'snow',
   placeholder: 'Write your message here...',
 });
+
+// Template selector — update preview colors/text instantly from data attributes
+const templateSelect = document.getElementById('templateSelect');
+if (templateSelect) {
+  function applyTemplate(opt) {
+    const hc = opt.dataset.headerColor || '#1363A2';
+    const ac = opt.dataset.accentColor || '#1363A2';
+    document.getElementById('preview-header').style.background = hc;
+    document.getElementById('preview-from-name').textContent   = opt.dataset.fromName || '';
+    document.getElementById('preview-footer').textContent      = opt.dataset.footerText || '';
+  }
+  templateSelect.addEventListener('change', () => {
+    applyTemplate(templateSelect.options[templateSelect.selectedIndex]);
+  });
+  // Apply initial selection on load
+  applyTemplate(templateSelect.options[templateSelect.selectedIndex]);
+}
 
 // Live preview
 const subjectInput = document.querySelector('input[name="subject"]');

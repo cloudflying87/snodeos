@@ -118,6 +118,34 @@ class Announcement(models.Model):
         return self.visibility in ('members', 'both')
 
 
+class EmailTemplate(models.Model):
+    """Reusable branded email templates officers can select when composing blasts."""
+    name         = models.CharField(max_length=100, unique=True)
+    description  = models.CharField(max_length=200, blank=True, help_text='Short description shown in the selector')
+    from_name    = models.CharField(max_length=100, default='Brainerd Snodeos')
+    header_color = models.CharField(max_length=7, default='#1363A2')
+    accent_color = models.CharField(max_length=7, default='#1363A2')
+    footer_text  = models.TextField(blank=True, default="You're receiving this as a member of the Brainerd Snodeos Snowmobile Club.")
+    is_default   = models.BooleanField(default=False, help_text='Default template used when none is specified')
+    created_at   = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-is_default', 'name']
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        # Only one template can be default at a time
+        if self.is_default:
+            EmailTemplate.objects.exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get_default(cls):
+        return cls.objects.filter(is_default=True).first() or cls.objects.first()
+
+
 class SiteSettings(models.Model):
     FACEBOOK_CHOICES = [
         ('none',   'Disabled'),
@@ -145,6 +173,23 @@ class SiteSettings(models.Model):
     twilio_account_sid = models.CharField(max_length=50, blank=True)
     twilio_auth_token  = models.CharField(max_length=50, blank=True)
     twilio_from_number = models.CharField(max_length=20, blank=True)
+
+    # Per-email-type template assignments
+    template_contact_reply = models.ForeignKey(
+        'EmailTemplate', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='+',
+        help_text='Template for auto-replies to contact form submitters',
+    )
+    template_member = models.ForeignKey(
+        'EmailTemplate', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='+',
+        help_text='Template for member-facing transactional emails (application approved, etc.)',
+    )
+    template_announcement = models.ForeignKey(
+        'EmailTemplate', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='+',
+        help_text='Template for announcement email blasts',
+    )
 
     class Meta:
         verbose_name = 'Site Settings'

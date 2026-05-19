@@ -64,6 +64,20 @@ def _email_brand_ctx():
     }
 
 
+def _tmpl_override(cfg_attr):
+    """Return branding context dict from a SiteSettings template FK (e.g. 'template_member'), or {} if unset."""
+    cfg = _cfg()
+    tmpl = getattr(cfg, cfg_attr, None)
+    if not tmpl:
+        return {}
+    return {
+        'email_from_name':    tmpl.from_name,
+        'email_header_color': tmpl.header_color,
+        'email_accent_color': tmpl.accent_color,
+        'email_footer_text':  tmpl.footer_text,
+    }
+
+
 def send_email(subject, to, template, context=None):
     """
     Render an HTML email template and send it.
@@ -213,7 +227,11 @@ def notify_application_approved(member):
     send_email(
         subject='Your Brainerd Snodeos Membership Has Been Approved!',
         to=member.email, template='application_approved',
-        context={'member': member, 'login_url': f'{_site_url()}/accounts/login/'},
+        context={
+            'member': member,
+            'login_url': f'{_site_url()}/accounts/login/',
+            **_tmpl_override('template_member'),
+        },
     )
 
 

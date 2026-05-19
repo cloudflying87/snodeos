@@ -272,6 +272,62 @@
   </div>
 </div>
 
+<!-- Template Assignments -->
+{% if email_templates %}
+<div class="card border-0 shadow-sm mt-4">
+  <div class="card-header bg-white border-bottom py-3">
+    <h5 class="fw-bold mb-0"><i class="bi bi-envelope-paper me-2 text-primary"></i>Email Template Assignments</h5>
+    <p class="text-muted small mb-0 mt-1">Choose which branded template to use for each type of outgoing email. Leave blank to use the default template.</p>
+  </div>
+  <div class="card-body p-4">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="save_templates">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label fw-semibold small">Contact Auto-Reply</label>
+          <select name="template_contact_reply" class="form-select form-select-sm">
+            <option value="">— Use Default —</option>
+            {% for t in email_templates %}
+            <option value="{{ t.pk }}" {% if cfg.template_contact_reply_id == t.pk %}selected{% endif %}>{{ t.name }}</option>
+            {% endfor %}
+          </select>
+          <div class="form-text">Sent to people who fill out the Contact Us form.</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold small">Member Emails</label>
+          <select name="template_member" class="form-select form-select-sm">
+            <option value="">— Use Default —</option>
+            {% for t in email_templates %}
+            <option value="{{ t.pk }}" {% if cfg.template_member_id == t.pk %}selected{% endif %}>{{ t.name }}</option>
+            {% endfor %}
+          </select>
+          <div class="form-text">Application approved, welcome emails, etc.</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold small">Announcement Blasts</label>
+          <select name="template_announcement" class="form-select form-select-sm">
+            <option value="">— Use Default —</option>
+            {% for t in email_templates %}
+            <option value="{{ t.pk }}" {% if cfg.template_announcement_id == t.pk %}selected{% endif %}>{{ t.name }}</option>
+            {% endfor %}
+          </select>
+          <div class="form-text">Sent when you email members from Content → Announcements.</div>
+        </div>
+      </div>
+      <p class="text-muted small mt-3 mb-3">
+        <i class="bi bi-info-circle me-1"></i>
+        The <strong>Email Members</strong> blast page lets you pick a template per-send.
+        These assignments cover automated and transactional emails.
+      </p>
+      <button type="submit" class="btn btn-primary btn-sm">
+        <i class="bi bi-save me-1"></i>Save Template Assignments
+      </button>
+    </form>
+  </div>
+</div>
+{% endif %}
+
 <!-- Email Branding -->
 <div class="card border-0 shadow-sm mt-4">
   <div class="card-header bg-white border-bottom py-3">

@@ -1,0 +1,156 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}{{ action }} Template{% endblock %}
+{% block active_email_templates %}active{% endblock %}
+
+{% block content %}
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">{{ action }} Email Template</h1>
+    <p class="panel-breadcrumb mb-0">
+      <a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> /
+      <a href="{% url 'manage_panel:email_template_list' %}">Email Templates</a> /
+      {{ action }}
+    </p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Form -->
+  <div class="col-lg-7">
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h6 class="panel-card-title"><i class="bi bi-envelope-paper me-2 text-primary"></i>Template Settings</h6>
+      </div>
+      <div class="panel-card-body">
+        <form method="post" id="tmplForm">
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Template Name <span class="text-danger">*</span></label>
+            <input type="text" name="name" class="form-control"
+                   value="{{ tmpl.name|default:'' }}" placeholder="e.g. Club Newsletter" required>
+            <div class="form-text">A short internal label — members never see this.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Description</label>
+            <input type="text" name="description" class="form-control"
+                   value="{{ tmpl.description|default:'' }}" placeholder="e.g. Used for monthly newsletters">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">From Name</label>
+            <input type="text" name="from_name" id="fromName" class="form-control"
+                   value="{{ tmpl.from_name|default:'Brainerd Snodeos' }}" placeholder="Brainerd Snodeos">
+            <div class="form-text">Appears as the sender name in members' inboxes.</div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label fw-semibold">Header Color</label>
+              <div class="d-flex align-items-center gap-2">
+                <input type="color" name="header_color" id="headerColor" class="form-control form-control-color"
+                       value="{{ tmpl.header_color|default:'#1363A2' }}">
+                <code id="headerHex" class="small text-muted">{{ tmpl.header_color|default:'#1363A2' }}</code>
+              </div>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold">Accent / Button Color</label>
+              <div class="d-flex align-items-center gap-2">
+                <input type="color" name="accent_color" id="accentColor" class="form-control form-control-color"
+                       value="{{ tmpl.accent_color|default:'#1363A2' }}">
+                <code id="accentHex" class="small text-muted">{{ tmpl.accent_color|default:'#1363A2' }}</code>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Footer Text</label>
+            <textarea name="footer_text" id="footerText" class="form-control" rows="2"
+                      placeholder="You're receiving this as a member of the Brainerd Snodeos.">{{ tmpl.footer_text|default:'' }}</textarea>
+            <div class="form-text">Shown at the bottom of every email using this template.</div>
+          </div>
+
+          <div class="mb-4">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="is_default" id="isDefault"
+                     {% if tmpl.is_default %}checked{% endif %}>
+              <label class="form-check-label fw-semibold" for="isDefault">
+                Set as default template
+              </label>
+              <div class="form-text">The default template is used for all emails that don't specify a different one.</div>
+            </div>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary px-4">
+              <i class="bi bi-check-lg me-1"></i>Save Template
+            </button>
+            <a href="{% url 'manage_panel:email_template_list' %}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live preview -->
+  <div class="col-lg-5">
+    <div class="panel-card" style="position:sticky;top:80px;">
+      <div class="panel-card-header">
+        <h6 class="panel-card-title"><i class="bi bi-eye me-2 text-primary"></i>Live Preview</h6>
+      </div>
+      <div class="panel-card-body p-0">
+        <div style="background:#f0f4f8;padding:16px;">
+          <div style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.08);">
+            <!-- Header -->
+            <div id="prev-header" style="background:#1363A2;padding:20px;text-align:center;">
+              <div style="font-size:1.4rem;">❄</div>
+              <div id="prev-from-name" style="color:#fff;font-weight:700;font-size:0.85rem;margin-top:4px;">Brainerd Snodeos</div>
+            </div>
+            <!-- Body -->
+            <div style="padding:18px;">
+              <div style="font-size:0.7rem;color:#7a96b0;font-weight:700;text-transform:uppercase;margin-bottom:8px;">Subject line preview</div>
+              <div style="font-weight:700;font-size:0.9rem;color:#1a2b3c;margin-bottom:10px;">Trail Conditions Update</div>
+              <div style="font-size:0.8rem;color:#4a5568;line-height:1.6;margin-bottom:14px;">
+                Great news — the trails around Brainerd are in excellent shape. Groom reported fresh powder on all main routes.
+              </div>
+              <div style="text-align:center;margin-bottom:4px;">
+                <span id="prev-btn" style="display:inline-block;background:#1363A2;color:#fff;padding:8px 20px;border-radius:5px;font-size:0.78rem;font-weight:700;">View Full Announcement →</span>
+              </div>
+            </div>
+            <!-- Footer -->
+            <div style="background:#f8fbff;border-top:1px solid #e2eaf2;padding:12px 16px;text-align:center;">
+              <div id="prev-footer" style="font-size:0.62rem;color:#9ab0c8;">You're receiving this as a member of the Brainerd Snodeos.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const headerColor = document.getElementById('headerColor');
+const accentColor = document.getElementById('accentColor');
+const fromName    = document.getElementById('fromName');
+const footerText  = document.getElementById('footerText');
+
+function update() {
+  const hc = headerColor.value;
+  const ac = accentColor.value;
+  document.getElementById('prev-header').style.background = hc;
+  document.getElementById('prev-btn').style.background    = ac;
+  document.getElementById('prev-from-name').textContent   = fromName.value || 'Club Name';
+  document.getElementById('prev-footer').textContent      = footerText.value || '';
+  document.getElementById('headerHex').textContent = hc;
+  document.getElementById('accentHex').textContent = ac;
+}
+
+headerColor.addEventListener('input', update);
+accentColor.addEventListener('input', update);
+fromName.addEventListener('input', update);
+footerText.addEventListener('input', update);
+</script>
+{% endblock %}
