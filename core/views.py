@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .models import ClubStats, Officer, Sponsor, TrailWorkLog
+from .models import ClubStats, Officer, Sponsor, TrailWorkLog, Announcement
 from .forms import ContactForm
 
 
@@ -8,7 +8,13 @@ def home(request):
     stats = ClubStats.objects.first()
     officers = Officer.objects.all()
     sponsors = Sponsor.objects.filter(is_active=True)
-    context = {'stats': stats, 'officers': officers, 'sponsors': sponsors}
+    announcements = Announcement.objects.all()[:5]
+    context = {
+        'stats': stats,
+        'officers': officers,
+        'sponsors': sponsors,
+        'announcements': announcements,
+    }
     return render(request, 'core/home.html', context)
 
 

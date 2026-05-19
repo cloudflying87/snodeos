@@ -53,6 +53,39 @@ class MemberEditForm(forms.ModelForm):
         )
 
 
+class ProfileEditForm(forms.ModelForm):
+    """Self-service form — members can only edit their own safe fields."""
+    class Meta:
+        model = Member
+        fields = ['first_name', 'last_name', 'phone', 'address', 'city', 'state', 'zip_code', 'snowmobile_brand', 'photo']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            Fieldset('Personal Info',
+                Row(
+                    Column('first_name', css_class='col-md-6'),
+                    Column('last_name', css_class='col-md-6'),
+                ),
+                Row(
+                    Column('phone', css_class='col-md-6'),
+                    Column('snowmobile_brand', css_class='col-md-6'),
+                ),
+                'photo',
+            ),
+            Fieldset('Address',
+                'address',
+                Row(
+                    Column('city', css_class='col-md-5'),
+                    Column('state', css_class='col-md-3'),
+                    Column('zip_code', css_class='col-md-4'),
+                ),
+            ),
+            Submit('submit', 'Save Profile', css_class='btn btn-primary mt-3'),
+        )
+
+
 class MemberFilterForm(forms.Form):
     search = forms.CharField(required=False, widget=forms.TextInput(attrs={'placeholder': 'Search name or email...'}))
     status = forms.ChoiceField(

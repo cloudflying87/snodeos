@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q
 from accounts.models import Member
-from .forms import MemberEditForm, MemberFilterForm
+from .forms import MemberEditForm, MemberFilterForm, ProfileEditForm
 
 
 def officer_required(view_func):
@@ -84,6 +84,19 @@ def deactivate_member(request, pk):
     member.save()
     messages.warning(request, f'{member.get_full_name()} has been deactivated.')
     return redirect('members:member_list')
+
+
+@login_required
+def profile_edit(request):
+    if request.method == 'POST':
+        form = ProfileEditForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your profile has been updated.')
+            return redirect('members:dashboard')
+    else:
+        form = ProfileEditForm(instance=request.user)
+    return render(request, 'members/profile_edit.html', {'form': form})
 
 
 @officer_required

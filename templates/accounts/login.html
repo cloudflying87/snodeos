@@ -17,6 +17,9 @@
           </div>
           {% crispy form %}
           <div class="text-center mt-3">
+            <p class="text-muted small mb-1">
+              <a href="{% url 'accounts:password_reset' %}">Forgot your password?</a>
+            </p>
             <p class="text-muted small mb-0">Not a member yet? <a href="{% url 'accounts:register' %}">Apply to join.</a></p>
           </div>
         </div>

@@ -5,6 +5,7 @@ app_name = 'members'
 
 urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('profile/edit/', views.profile_edit, name='profile_edit'),
     path('list/', views.member_list, name='member_list'),
     path('pending/', views.pending_applications, name='pending'),
     path('<int:pk>/', views.member_detail, name='member_detail'),

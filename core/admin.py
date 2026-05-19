@@ -1,5 +1,11 @@
 from django.contrib import admin
-from .models import ClubStats, Officer, Sponsor, TrailWorkLog, ContactMessage
+from .models import ClubStats, Officer, Sponsor, TrailWorkLog, ContactMessage, Announcement
+
+
+@admin.register(Announcement)
+class AnnouncementAdmin(admin.ModelAdmin):
+    list_display = ('title', 'is_pinned', 'created_at')
+    list_editable = ('is_pinned',)
 
 
 @admin.register(ClubStats)
