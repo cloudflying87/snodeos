@@ -87,26 +87,26 @@
     <!-- Mobile list — tap row to toggle checkbox -->
     <div class="d-md-none mob-list">
       {% for member in members %}
-      <div class="mob-row mob-tap-row {% if not member.dues_paid %}dues-unpaid{% endif %}"
-           onclick="this.querySelector('.member-check').click()" style="cursor:pointer;">
+      <div class="mob-row mob-tap-row" onclick="this.querySelector('.member-check').click()" style="cursor:pointer;">
         <input type="checkbox" name="member_ids" value="{{ member.pk }}"
                class="member-check flex-shrink-0"
                style="width:22px;height:22px;accent-color:#0d6efd;pointer-events:none;"
                onclick="event.stopPropagation()">
+        <div class="position-relative flex-shrink-0">
+          {% if member.photo %}
+            <img src="{{ member.photo.url }}" class="rounded-circle" style="width:44px;height:44px;object-fit:cover;">
+          {% else %}
+            <div class="panel-avatar-placeholder rounded-circle" style="width:44px;height:44px;">{{ member.first_name|first|upper }}</div>
+          {% endif %}
+          <span class="position-absolute bottom-0 end-0 rounded-circle border border-2 border-white"
+                style="width:12px;height:12px;background:{% if member.dues_paid %}#198754{% else %}#dc3545{% endif %};"></span>
+        </div>
         <div class="mob-info">
           <div class="mob-title">{{ member.get_full_name }}</div>
-          {% if member.dues_paid and member.dues_paid_date %}
-            <div class="mob-sub">Paid {{ member.dues_paid_date|date:"M j, Y" }}</div>
-          {% else %}
-            <div class="mob-sub">{{ member.email }}</div>
-          {% endif %}
-        </div>
-        <div class="flex-shrink-0">
-          {% if member.dues_paid %}
-            <span class="badge bg-success"><i class="bi bi-check-lg"></i></span>
-          {% else %}
-            <span class="badge bg-danger">Unpaid</span>
-          {% endif %}
+          <div class="mob-sub">
+            {% if member.dues_paid and member.dues_paid_date %}Paid {{ member.dues_paid_date|date:"M j, Y" }}
+            {% else %}{{ member.email }}{% endif %}
+          </div>
         </div>
       </div>
       {% empty %}
@@ -118,9 +118,6 @@
 </form>
 
 {% block extra_js %}
-<style>
-.dues-unpaid { background: #fffbeb; }
-</style>
 <script>
 document.getElementById('selectAll').addEventListener('change', function() {
   document.querySelectorAll('.member-check').forEach(cb => cb.checked = this.checked);
