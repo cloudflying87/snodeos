@@ -101,20 +101,23 @@ class MembershipApplicationForm(forms.ModelForm):
         layout_items = [Fieldset('Personal Information', *personal_fields)]
         if address_fields:
             layout_items.append(Fieldset('Address', *address_fields))
+
         if 'snowmobile_brand' in self.fields:
-            layout_items.append(Fieldset('Snowmobile Info', 'snowmobile_brand'))
+            layout_items.append(Fieldset('Snowmobile Info',
+                Row(
+                    Column('snowmobile_brand', css_class='col-md-8'),
+                    Column('num_snowmobiles', css_class='col-md-4'),
+                ),
+            ))
+        else:
+            layout_items.append(Fieldset('Snowmobile Info', 'num_snowmobiles'))
 
         layout_items.append(Fieldset('Communication',
             'accepts_texts',
         ))
         layout_items.append(Fieldset('Additional Info',
-            Row(
-                Column('num_snowmobiles', css_class='col-md-4'),
-                Column('referral_source', css_class='col-md-8'),
-            ),
-            Row(
-                Column('referral_other', css_class='col-12', id='referral_other_row'),
-            ),
+            'referral_source',
+            'referral_other',
         ))
         layout_items.append(Fieldset('Account Setup',
             Row(Column('password1', css_class='col-md-6'), Column('password2', css_class='col-md-6')),
