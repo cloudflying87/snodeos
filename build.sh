@@ -1,185 +1,196 @@
 #!/usr/bin/env bash
-# build.sh — Brainerd Snodeos setup script
+# build.sh — Brainerd Snodeos deployment script
 #
 # Usage:
-#   ./build.sh            # local dev: install, migrate, seed, run server
-#   ./build.sh --docker   # Docker: build + start all services
-#   ./build.sh --seed     # just (re)seed the database
-#   ./build.sh --check    # run Django system checks only
+#   ./build.sh        # Pull, rebuild images, migrate, seed, start all services
+#   ./build.sh -n     # Quick restart — skip rebuild (no code changes)
+#   ./build.sh -g     # Deploy local changes — skip git pull, rebuild images
+#   ./build.sh -s     # Re-seed database only (containers must be running)
+#   ./build.sh -c     # Run Django system checks only
 
 set -e
 
-BLUE='\033[0;34m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
+REBUILD=true
+SKIP_GIT_PULL=false
+SEED_ONLY=false
+CHECK_ONLY=false
 
-info()    { echo -e "${BLUE}[snodeos]${NC} $1"; }
-success() { echo -e "${GREEN}[snodeos]${NC} $1"; }
-warn()    { echo -e "${YELLOW}[snodeos]${NC} $1"; }
-error()   { echo -e "${RED}[snodeos]${NC} $1"; exit 1; }
+while getopts "ngsc" opt; do
+  case $opt in
+    n) REBUILD=false ;;
+    g) SKIP_GIT_PULL=true ;;
+    s) SEED_ONLY=true ;;
+    c) CHECK_ONLY=true ;;
+    *)
+      echo "Usage: $0 [-n] [-g] [-s] [-c]"
+      echo "  -n  No rebuild (skip image rebuild — just restart containers)"
+      echo "  -g  Skip git pull (deploy local changes)"
+      echo "  -s  Seed database only (containers must already be running)"
+      echo "  -c  Run Django system checks only"
+      echo ""
+      echo "Examples:"
+      echo "  $0        # Full deploy: pull code, rebuild, migrate, seed, start"
+      echo "  $0 -n     # Quick restart with no code changes"
+      echo "  $0 -g     # Deploy local uncommitted changes"
+      exit 1
+      ;;
+  esac
+done
 
-MODE="${1:-}"
+echo "╔════════════════════════════════════════════════════════════╗"
+echo "║           Brainerd Snodeos — Build & Deploy                ║"
+echo "╚════════════════════════════════════════════════════════════╝"
+echo ""
 
-# ── Helpers ────────────────────────────────────────────────────────────────────
-
-find_python() {
-  if [ -f "venv/bin/python3" ]; then
-    echo "venv/bin/python3"
-  elif command -v python3 >/dev/null 2>&1; then
-    echo "python3"
-  else
-    error "Python 3 not found. Install it and try again."
-  fi
-}
-
-git_pull() {
-  if git rev-parse --git-dir > /dev/null 2>&1; then
-    info "Pulling latest code from git..."
-    git pull --ff-only || warn "git pull failed — continuing with local code."
-    success "Code up to date."
-  else
-    warn "Not a git repository — skipping git pull."
-  fi
-}
-
-# ── Docker mode ────────────────────────────────────────────────────────────────
-if [ "$MODE" = "--docker" ]; then
-  command -v docker >/dev/null 2>&1 || error "Docker not found. Install Docker Desktop and try again."
-
-  git_pull
-
-  info "Building Docker images..."
-  docker compose build
-
-  info "Starting services (web + db + nginx)..."
-  docker compose up -d
-
-  info "Waiting for database to be ready..."
-  sleep 5
-
-  info "Running migrations..."
-  docker compose exec web python3 manage.py migrate --noinput
-
-  info "Seeding initial data..."
-  docker compose exec web python3 manage.py seed_data
-
-  info "Collecting static files..."
-  docker compose exec web python3 manage.py collectstatic --noinput
-
-  echo ""
-  success "Docker stack is up!"
-  echo ""
-  echo "  Site:              http://snodeos.flyhomemnlab.com  (or http://localhost)"
-  echo "  Management panel:  http://localhost/manage/"
-  echo "  Django admin:      http://localhost/admin/"
-  echo ""
-  warn "To create a superuser (officer/admin account):"
-  echo "  docker compose exec web python3 manage.py createsuperuser"
-  echo ""
-  warn "To view logs:"
-  echo "  docker compose logs -f web"
-  echo ""
-  warn "To stop:"
-  echo "  docker compose down"
-  exit 0
-fi
+command -v docker >/dev/null 2>&1 || { echo "❌ Docker not found. Install Docker and try again."; exit 1; }
 
 # ── Seed-only mode ─────────────────────────────────────────────────────────────
-if [ "$MODE" = "--seed" ]; then
-  PYTHON=$(find_python)
-  info "Seeding database..."
-  $PYTHON manage.py seed_data
-  success "Seed data applied."
+if [ "$SEED_ONLY" = true ]; then
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "Seeding database..."
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  docker compose exec web python3 manage.py seed_data
+  echo "✅ Seed data applied."
   exit 0
 fi
 
-# ── Check mode ─────────────────────────────────────────────────────────────────
-if [ "$MODE" = "--check" ]; then
-  PYTHON=$(find_python)
-  info "Running Django system checks..."
-  $PYTHON manage.py check
-  success "All checks passed."
+# ── Check-only mode ────────────────────────────────────────────────────────────
+if [ "$CHECK_ONLY" = true ]; then
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "Running Django system checks..."
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  docker compose exec web python3 manage.py check
+  echo "✅ All checks passed."
   exit 0
 fi
 
-# ── Local dev mode (default) ───────────────────────────────────────────────────
+# ── PHASE 0: .env ──────────────────────────────────────────────────────────────
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "PHASE 0: Environment"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
 
-# 0. Git pull
-git_pull
-
-# System dependencies (Debian/Ubuntu only)
-if command -v apt-get >/dev/null 2>&1; then
-  info "Installing system dependencies (git, python3-venv)..."
-  sudo apt-get install -y -q git python3-venv
-  success "System dependencies installed."
-fi
-
-PYTHON=$(find_python)
-
-# 1. Virtual environment
-if [ ! -d "venv" ]; then
-  info "Creating virtual environment..."
-  python3 -m venv venv
-  success "Virtual environment created."
-else
-  info "Virtual environment already exists."
-fi
-
-PYTHON="venv/bin/python3"
-PIP="venv/bin/pip"
-
-# 2. Dependencies
-info "Installing dependencies..."
-$PIP install --quiet --upgrade pip
-$PIP install --quiet -r requirements.txt
-success "Dependencies installed."
-
-# 3. .env file
 if [ ! -f ".env" ]; then
-  warn ".env not found — copying from .env.example"
   cp .env.example .env
-  warn "Please review and update .env before going to production!"
+  echo "⚠️  .env not found — copied from .env.example."
+  echo "   Edit .env with real values before continuing."
+  exit 1
+fi
+echo "✅ .env found"
+echo ""
+
+# ── PHASE 1: Git pull ──────────────────────────────────────────────────────────
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "PHASE 1: $([ "$SKIP_GIT_PULL" = true ] && echo "Using Current Code (Skipping Git Pull)" || echo "Pulling Latest Code")"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+if [ "$SKIP_GIT_PULL" = false ]; then
+  CURRENT_BRANCH=$(git branch --show-current)
+  echo "Branch: $CURRENT_BRANCH"
+  git pull origin "$CURRENT_BRANCH"
+  echo "✅ Code updated"
 else
-  info ".env file found."
+  echo "⚠️  Skipping git pull — using local code"
+fi
+echo ""
+
+# ── PHASE 2: Build images ──────────────────────────────────────────────────────
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "PHASE 2: $([ "$REBUILD" = true ] && echo "Rebuilding Docker Images" || echo "Using Existing Images (No Rebuild)")"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+if [ "$REBUILD" = true ]; then
+  echo "Build options:"
+  echo "  Git pull:       $([ "$SKIP_GIT_PULL" = false ] && echo "YES" || echo "SKIPPED")"
+  echo "  Rebuild images: YES"
+  echo ""
+  docker compose build --no-cache web nginx
+  echo "✅ Images rebuilt"
+else
+  echo "⚠️  Using existing images — code changes not included"
+  echo "   Run without -n to deploy code changes"
+fi
+echo ""
+
+# ── PHASE 3: Database ──────────────────────────────────────────────────────────
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "PHASE 3: Database"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+echo "Starting database..."
+docker compose up -d db
+echo "Waiting for database to be ready..."
+until docker compose exec db pg_isready -U "${POSTGRES_USER:-snodeos}" > /dev/null 2>&1; do
+  sleep 1
+done
+echo "✅ Database ready"
+
+echo "Checking for unmigrated model changes..."
+if ! docker compose run --rm web python3 manage.py makemigrations --check --dry-run > /dev/null 2>&1; then
+  echo "❌ Unmigrated model changes detected!"
+  echo "   Run 'python manage.py makemigrations' locally, commit, and push first."
+  exit 1
 fi
 
-# 4. Migrations
-info "Running database migrations..."
-$PYTHON manage.py migrate --noinput
-success "Migrations applied."
-
-# 5. Static files
-info "Collecting static files..."
-$PYTHON manage.py collectstatic --noinput --quiet
-success "Static files collected."
-
-# 6. Seed data
-info "Seeding initial data (officers, stats, sponsors, announcements)..."
-$PYTHON manage.py seed_data
-success "Seed data applied."
-
-# 7. System check
-info "Running Django system checks..."
-$PYTHON manage.py check --quiet
-success "All checks passed."
-
-# 8. Superuser prompt
+echo "Running migrations..."
+docker compose run --rm web python3 manage.py migrate --noinput
+echo "✅ Migrations complete"
 echo ""
-warn "Do you want to create a superuser (admin/officer account)? [y/N]"
-read -r CREATE_SUPER
-if [[ "$CREATE_SUPER" =~ ^[Yy]$ ]]; then
-  $PYTHON manage.py createsuperuser
+
+# ── PHASE 4: Static files ──────────────────────────────────────────────────────
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "PHASE 4: Static Files"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+docker compose run --rm web python3 manage.py collectstatic --noinput --verbosity 1
+echo "✅ Static files collected"
+echo ""
+
+# ── PHASE 5: Seed data ─────────────────────────────────────────────────────────
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "PHASE 5: Seed Data"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+docker compose run --rm web python3 manage.py seed_data
+echo "✅ Seed data applied"
+echo ""
+
+# ── PHASE 6: Start services ────────────────────────────────────────────────────
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "PHASE 6: Starting Services"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+docker compose up -d
+echo "Waiting for services to be healthy..."
+sleep 8
+
+if docker compose ps | grep -q "healthy"; then
+  echo "✅ Services are healthy"
+else
+  echo "⚠️  Services may still be starting — check with: docker compose ps"
 fi
+echo ""
 
-# 9. Start dev server
+# ── Summary ────────────────────────────────────────────────────────────────────
+echo "╔════════════════════════════════════════════════════════════╗"
+echo "║                  DEPLOYMENT COMPLETE!                      ║"
+echo "╚════════════════════════════════════════════════════════════╝"
 echo ""
-success "Build complete! Starting development server..."
+echo "  Site:              https://snodeos.flyhomemnlab.com"
+echo "  Management panel:  https://snodeos.flyhomemnlab.com/manage/"
+echo "  Django admin:      https://snodeos.flyhomemnlab.com/admin/"
 echo ""
-echo "  Site:              http://127.0.0.1:8000"
-echo "  Management panel:  http://127.0.0.1:8000/manage/"
-echo "  Django admin:      http://127.0.0.1:8000/admin/"
-echo "  Join form:         http://127.0.0.1:8000/accounts/register/"
+echo "  To create a superuser:"
+echo "    docker compose exec web python3 manage.py createsuperuser"
 echo ""
-$PYTHON manage.py runserver
+echo "  To view logs:  docker compose logs -f web"
+echo "  To stop:       docker compose down"
+echo ""
+echo "Build completed: $(date '+%Y-%m-%d %H:%M:%S %Z')"
+echo ""
