@@ -12,24 +12,27 @@
     </svg>
   </div>
 
-  <div class="container py-5 text-center sn-on-blue">
-    <h1 class="display-5 fw-bold font-oswald mb-2">Officers and Directors</h1>
-    <p class="lead sn-muted-on-blue mb-5">The Brainerd Snodeos is comprised of four officers and ten total directors</p>
+  <div class="container py-5 sn-on-blue text-center">
 
-    <!-- Officers with photos -->
-    <div class="row g-4 justify-content-center mb-5">
+    <h1 class="display-5 fw-bold font-oswald mb-2">Officers and Directors</h1>
+    <p class="sn-muted-on-blue lead mb-5">The Brainerd Snodeos is comprised of four officers and ten total directors</p>
+
+    <!-- Officers with photos — on cards -->
+    {% if officers %}
+    <div class="row g-4 justify-content-center mb-4">
       {% for officer in officers %}
       <div class="col-6 col-md-3">
-        <div class="text-center">
+        <div class="sn-card-on-blue p-3 h-100 rounded-3 text-center">
           {% if officer.photo %}
-            <img src="{{ officer.photo.url }}" alt="{{ officer.name }}" class="officer-photo mb-3">
+            <img src="{{ officer.photo.url }}" alt="{{ officer.name }}"
+                 class="officer-photo mb-3" style="border-radius:6px;">
           {% else %}
             <div class="officer-avatar d-flex align-items-center justify-content-center mx-auto mb-3">
               <i class="bi bi-person-fill fs-1 text-white"></i>
             </div>
           {% endif %}
           <h5 class="fw-bold mb-0">{{ officer.name }}</h5>
-          <p class="fw-semibold mb-0 small sn-muted-on-blue">{{ officer.title }}</p>
+          <p class="small mb-0 sn-muted-on-blue">{{ officer.title }}</p>
           {% if officer.snowmobile_brand %}
             <p class="small mb-0 sn-muted-on-blue">{{ officer.snowmobile_brand }}</p>
           {% endif %}
@@ -37,15 +40,17 @@
       </div>
       {% endfor %}
     </div>
+    {% endif %}
 
-    <!-- Directors (no photos) -->
+    <!-- Divider between officers and directors -->
     {% if directors %}
+    <hr style="border-color:rgba(255,255,255,0.3); margin: 2rem 0;">
+    <h5 class="fw-semibold mb-4 sn-muted-on-blue text-uppercase" style="letter-spacing:.08em;">Directors</h5>
     <div class="row g-3 justify-content-center">
       {% for director in directors %}
       <div class="col-6 col-md-4 col-lg-2">
-        <div class="sn-card-on-blue p-3">
+        <div class="sn-card-on-blue p-3 rounded-3 text-center">
           <h6 class="fw-bold mb-0">{{ director.name }}</h6>
-          <p class="small mb-0 sn-muted-on-blue">{{ director.title }}</p>
           {% if director.snowmobile_brand %}
             <p class="small mb-0 sn-muted-on-blue">{{ director.snowmobile_brand }}</p>
           {% endif %}
@@ -54,6 +59,7 @@
       {% endfor %}
     </div>
     {% endif %}
+
   </div>
 
   <div class="wave-shape wave-shape-bottom" aria-hidden="true">

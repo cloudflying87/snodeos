@@ -1,0 +1,63 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}Officer Titles{% endblock %}
+{% block active_officers %}active{% endblock %}
+
+{% block content %}
+<div class="panel-page-header d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="panel-page-title">Officer Titles</h1>
+    <p class="text-muted mb-0">These titles appear in the dropdown when adding or editing officers.</p>
+  </div>
+  <a href="{% url 'manage_panel:officer_list' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i>Back to Officers
+  </a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h5 class="panel-card-title mb-0">Add a Title</h5>
+      </div>
+      <div class="panel-card-body">
+        <form method="post" class="d-flex gap-2">
+          {% csrf_token %}
+          <input type="text" name="name" class="form-control" placeholder="e.g. At-Large Director" required>
+          <button type="submit" class="btn btn-primary flex-shrink-0">Add</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h5 class="panel-card-title mb-0">Current Titles</h5>
+      </div>
+      <div class="panel-card-body p-0">
+        <table class="table panel-table mb-0">
+          <thead><tr><th>Title</th><th class="text-end">Action</th></tr></thead>
+          <tbody>
+            {% for title in titles %}
+            <tr>
+              <td class="fw-semibold">{{ title.name }}</td>
+              <td class="text-end">
+                <form method="post" action="{% url 'manage_panel:officer_title_delete' title.pk %}" class="d-inline">
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-outline-danger"
+                          onclick="return confirm('Delete &quot;{{ title.name }}&quot;?')">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="2" class="text-muted text-center py-3">No titles yet — add one above.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

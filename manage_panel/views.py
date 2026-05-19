@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.conf import settings
-from core.models import ClubStats, Officer, Sponsor, Announcement, TrailWorkLog, TrailWorkImage, ContactMessage, SiteSettings
+from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, TrailWorkLog, TrailWorkImage, ContactMessage, SiteSettings
 from core.email import send_test_email
 from accounts.models import Member
 from .forms import (
@@ -55,6 +55,38 @@ def stats_edit(request):
     else:
         form = ClubStatsForm(instance=stats)
     return render(request, 'manage_panel/stats_edit.html', {'form': form, 'stats': stats})
+
+
+# ── Officer Titles ─────────────────────────────────────────────────────────────
+
+@officer_required
+def officer_title_list(request):
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        if name:
+            _, created = OfficerTitle.objects.get_or_create(
+                name=name,
+                defaults={'order': OfficerTitle.objects.count() + 1}
+            )
+            if created:
+                messages.success(request, f'Title "{name}" added.')
+            else:
+                messages.warning(request, f'Title "{name}" already exists.')
+        return redirect('manage_panel:officer_title_list')
+    titles = OfficerTitle.objects.all()
+    return render(request, 'manage_panel/officer_titles.html', {'titles': titles})
+
+
+@officer_required
+@require_POST
+def officer_title_delete(request, pk):
+    title = get_object_or_404(OfficerTitle, pk=pk)
+    if Officer.objects.filter(title=title.name).exists():
+        messages.error(request, f'Cannot delete "{title.name}" — officers are using it.')
+    else:
+        title.delete()
+        messages.success(request, f'Title "{title.name}" deleted.')
+    return redirect('manage_panel:officer_title_list')
 
 
 # ── Officers ───────────────────────────────────────────────────────────────────

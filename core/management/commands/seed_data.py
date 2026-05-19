@@ -3,7 +3,7 @@ import shutil
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from django.core.files import File
-from core.models import ClubStats, Officer, Sponsor, Announcement
+from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement
 
 
 class Command(BaseCommand):
@@ -11,10 +11,23 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self._seed_stats()
+        self._seed_titles()
         self._seed_officers()
         self._seed_sponsors()
         self._seed_announcements()
         self.stdout.write(self.style.SUCCESS('Seed data loaded successfully.'))
+
+    def _seed_titles(self):
+        titles = [
+            ('President',      1),
+            ('Vice President', 2),
+            ('Secretary',      3),
+            ('Treasurer',      4),
+            ('Director',       5),
+        ]
+        for name, order in titles:
+            OfficerTitle.objects.get_or_create(name=name, defaults={'order': order})
+        self.stdout.write('  Officer titles seeded')
 
     def _seed_stats(self):
         if not ClubStats.objects.exists():

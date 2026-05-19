@@ -16,19 +16,34 @@ class ClubStats(models.Model):
         return f'Club Stats (updated {self.updated_at:%Y-%m-%d})'
 
 
-class Officer(models.Model):
-    name = models.CharField(max_length=100)
-    title = models.CharField(max_length=100)
-    snowmobile_brand = models.CharField(max_length=50, blank=True)
-    photo = models.ImageField(upload_to='officers/', blank=True, null=True)
-    email = models.EmailField(blank=True)
+class OfficerTitle(models.Model):
+    name  = models.CharField(max_length=100, unique=True)
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
         ordering = ['order', 'name']
 
     def __str__(self):
+        return self.name
+
+
+class Officer(models.Model):
+    name             = models.CharField(max_length=100)
+    title            = models.CharField(max_length=100)
+    snowmobile_brand = models.CharField(max_length=50, blank=True)
+    photo            = models.ImageField(upload_to='officers/', blank=True, null=True)
+    email            = models.EmailField(blank=True)
+    order            = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'name']
+
+    def __str__(self):
         return f'{self.name} — {self.title}'
+
+    @property
+    def is_director(self):
+        return self.title == 'Director'
 
 
 class Sponsor(models.Model):

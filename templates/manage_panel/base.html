@@ -78,6 +78,9 @@
         <a href="{% url 'manage_panel:officer_list' %}" class="panel-nav-link {% block active_officers %}{% endblock %}">
           <i class="bi bi-person-badge"></i> Officers
         </a>
+        <a href="{% url 'manage_panel:officer_title_list' %}" class="panel-nav-link {% block active_titles %}{% endblock %}" style="padding-left:2rem;font-size:0.82rem;">
+          <i class="bi bi-tag"></i> Officer Titles
+        </a>
         <a href="{% url 'manage_panel:sponsor_list' %}" class="panel-nav-link {% block active_sponsors %}{% endblock %}">
           <i class="bi bi-building"></i> Sponsors
         </a>

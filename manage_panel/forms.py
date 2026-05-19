@@ -1,7 +1,7 @@
 from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Submit, Field
-from core.models import ClubStats, Officer, Sponsor, Announcement, TrailWorkLog
+from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, TrailWorkLog
 
 
 class ClubStatsForm(forms.ModelForm):
@@ -38,6 +38,11 @@ class OfficerForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Populate title choices dynamically from OfficerTitle model
+        title_choices = [('', '— Select a title —')] + [
+            (t.name, t.name) for t in OfficerTitle.objects.all()
+        ]
+        self.fields['title'] = forms.ChoiceField(choices=title_choices)
         self.helper = FormHelper()
         self.helper.layout = Layout(
             Row(
