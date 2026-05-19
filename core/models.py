@@ -125,7 +125,7 @@ class EmailTemplate(models.Model):
     from_name        = models.CharField(max_length=100, default='Brainerd Snodeos')
     header_color     = models.CharField(max_length=7, default='#1363A2')
     accent_color     = models.CharField(max_length=7, default='#1363A2')
-    header_image_url = models.URLField(blank=True, help_text='Publicly accessible image URL shown in the email header (replaces the ❄ snowflake)')
+    header_image     = models.ImageField(upload_to='email_headers/', blank=True, null=True)
     footer_text      = models.TextField(blank=True, default="You're receiving this as a member of the Brainerd Snodeos Snowmobile Club.")
     is_default       = models.BooleanField(default=False, help_text='Default template used when none is specified')
     created_at       = models.DateTimeField(auto_now_add=True)
@@ -141,6 +141,15 @@ class EmailTemplate(models.Model):
         if self.is_default:
             EmailTemplate.objects.exclude(pk=self.pk).update(is_default=False)
         super().save(*args, **kwargs)
+
+    @property
+    def header_image_url(self):
+        """Absolute URL for use in emails (requires SITE_URL in settings)."""
+        if not self.header_image:
+            return ''
+        from django.conf import settings as _settings
+        site_url = getattr(_settings, 'SITE_URL', '').rstrip('/')
+        return f"{site_url}{self.header_image.url}"
 
     @classmethod
     def get_default(cls):

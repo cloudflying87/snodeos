@@ -831,19 +831,20 @@ def email_template_add(request):
         if not name:
             messages.error(request, 'Template name is required.')
         else:
-            tmpl = EmailTemplate.objects.create(
+            tmpl = EmailTemplate(
                 name=name,
                 description=request.POST.get('description', '').strip(),
                 from_name=request.POST.get('from_name', 'Brainerd Snodeos').strip(),
                 header_color=request.POST.get('header_color', '#1363A2').strip(),
                 accent_color=request.POST.get('accent_color', '#1363A2').strip(),
-                header_image_url=request.POST.get('header_image_url', '').strip(),
                 footer_text=request.POST.get('footer_text', '').strip(),
                 is_default='is_default' in request.POST,
             )
+            if 'header_image' in request.FILES:
+                tmpl.header_image = request.FILES['header_image']
+            tmpl.save()
             messages.success(request, f'Template "{tmpl.name}" created.')
             return redirect('manage_panel:email_template_list')
-    # Pre-fill from default if available
     default = EmailTemplate.get_default()
     return render(request, 'manage_panel/email_templates/form.html', {'action': 'New', 'tmpl': default})
 
@@ -852,14 +853,18 @@ def email_template_add(request):
 def email_template_edit(request, pk):
     tmpl = get_object_or_404(EmailTemplate, pk=pk)
     if request.method == 'POST':
-        tmpl.name             = request.POST.get('name', '').strip() or tmpl.name
-        tmpl.description      = request.POST.get('description', '').strip()
-        tmpl.from_name        = request.POST.get('from_name', '').strip()
-        tmpl.header_color     = request.POST.get('header_color', '#1363A2').strip()
-        tmpl.accent_color     = request.POST.get('accent_color', '#1363A2').strip()
-        tmpl.header_image_url = request.POST.get('header_image_url', '').strip()
-        tmpl.footer_text      = request.POST.get('footer_text', '').strip()
-        tmpl.is_default       = 'is_default' in request.POST
+        tmpl.name         = request.POST.get('name', '').strip() or tmpl.name
+        tmpl.description  = request.POST.get('description', '').strip()
+        tmpl.from_name    = request.POST.get('from_name', '').strip()
+        tmpl.header_color = request.POST.get('header_color', '#1363A2').strip()
+        tmpl.accent_color = request.POST.get('accent_color', '#1363A2').strip()
+        tmpl.footer_text  = request.POST.get('footer_text', '').strip()
+        tmpl.is_default   = 'is_default' in request.POST
+        if 'header_image' in request.FILES:
+            tmpl.header_image = request.FILES['header_image']
+        elif 'clear_header_image' in request.POST:
+            tmpl.header_image.delete(save=False)
+            tmpl.header_image = None
         tmpl.save()
         messages.success(request, f'Template "{tmpl.name}" updated.')
         return redirect('manage_panel:email_template_list')

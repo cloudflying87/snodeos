@@ -22,7 +22,7 @@
         <h6 class="panel-card-title"><i class="bi bi-envelope-paper me-2 text-primary"></i>Template Settings</h6>
       </div>
       <div class="panel-card-body">
-        <form method="post" id="tmplForm">
+        <form method="post" enctype="multipart/form-data" id="tmplForm">
           {% csrf_token %}
 
           <div class="mb-3">
@@ -65,10 +65,22 @@
           </div>
 
           <div class="mb-3">
-            <label class="form-label fw-semibold">Header Image URL <span class="text-muted fw-normal small">(optional)</span></label>
-            <input type="url" name="header_image_url" id="headerImageUrl" class="form-control"
-                   value="{{ tmpl.header_image_url|default:'' }}" placeholder="https://yoursite.com/logo.png">
-            <div class="form-text">A publicly accessible image URL used as the full-width email header banner (replaces the colored bar entirely). Must be HTTPS. Recommended size: 600×200px or similar wide banner ratio.</div>
+            <label class="form-label fw-semibold">Header Banner Image <span class="text-muted fw-normal small">(optional)</span></label>
+
+            {% if tmpl.header_image %}
+            <div class="mb-2 position-relative d-inline-block">
+              <img src="{{ tmpl.header_image.url }}" alt="Current header"
+                   style="max-width:100%;max-height:120px;border-radius:6px;border:1px solid #e2eaf2;display:block;">
+              <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" name="clear_header_image" id="clearHeaderImage">
+                <label class="form-check-label small text-danger" for="clearHeaderImage">Remove current image</label>
+              </div>
+            </div>
+            {% endif %}
+
+            <input type="file" name="header_image" id="headerImageFile" class="form-control"
+                   accept="image/*">
+            <div class="form-text">Replaces the entire colored header bar with your banner. Recommended size: <strong>600×150–250px</strong> wide. PNG or JPG. Upload once and we host it for you.</div>
           </div>
 
           <div class="mb-3">
@@ -142,11 +154,25 @@
 
 {% block extra_js %}
 <script>
-const headerColor    = document.getElementById('headerColor');
-const accentColor    = document.getElementById('accentColor');
-const fromName       = document.getElementById('fromName');
-const footerText     = document.getElementById('footerText');
-const headerImageUrl = document.getElementById('headerImageUrl');
+const headerColor = document.getElementById('headerColor');
+const accentColor = document.getElementById('accentColor');
+const fromName    = document.getElementById('fromName');
+const footerText  = document.getElementById('footerText');
+const fileInput   = document.getElementById('headerImageFile');
+
+// True if there's already a saved image on this template
+const hasExistingImage = {% if tmpl.header_image %}true{% else %}false{% endif %};
+
+function showImagePreview(src) {
+  document.getElementById('prev-header').style.display    = 'none';
+  document.getElementById('prev-header-img').style.display = 'block';
+  document.getElementById('prev-img-tag').src = src;
+}
+
+function showColorPreview() {
+  document.getElementById('prev-header').style.display    = 'block';
+  document.getElementById('prev-header-img').style.display = 'none';
+}
 
 function update() {
   const hc = headerColor.value;
@@ -157,25 +183,35 @@ function update() {
   document.getElementById('prev-footer').textContent      = footerText.value || '';
   document.getElementById('headerHex').textContent = hc;
   document.getElementById('accentHex').textContent = ac;
-
-  const url = headerImageUrl.value.trim();
-  if (url) {
-    document.getElementById('prev-header').style.display = 'none';
-    document.getElementById('prev-header-img').style.display = 'block';
-    document.getElementById('prev-img-tag').src = url;
-  } else {
-    document.getElementById('prev-header').style.display = 'block';
-    document.getElementById('prev-header-img').style.display = 'none';
-  }
 }
 
 headerColor.addEventListener('input', update);
 accentColor.addEventListener('input', update);
 fromName.addEventListener('input', update);
 footerText.addEventListener('input', update);
-headerImageUrl.addEventListener('input', update);
 
-// Set initial state for header image if already populated
+// Preview selected file immediately using FileReader
+fileInput.addEventListener('change', () => {
+  const file = fileInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => showImagePreview(e.target.result);
+  reader.readAsDataURL(file);
+});
+
+// "Remove current image" checkbox hides the preview
+const clearCb = document.getElementById('clearHeaderImage');
+if (clearCb) {
+  clearCb.addEventListener('change', () => {
+    if (clearCb.checked) showColorPreview();
+    else showImagePreview(document.getElementById('prev-img-tag').src);
+  });
+}
+
+// Initial state
+if (hasExistingImage) {
+  showImagePreview('{% if tmpl.header_image %}{{ tmpl.header_image.url }}{% endif %}');
+}
 update();
 </script>
 {% endblock %}
