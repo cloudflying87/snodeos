@@ -23,29 +23,36 @@
       </div>
 
       <div class="col-lg-5">
-        <div class="card border-0 bg-dark text-white p-4 mb-4 rounded-3">
-          <h5 class="fw-bold mb-4"><i class="bi bi-info-circle me-2 text-primary"></i>Club Info</h5>
+        <div class="card border-0 sn-blue text-white p-4 mb-4 rounded-3">
+          <h5 class="fw-bold mb-4"><i class="bi bi-info-circle me-2"></i>Club Info</h5>
           <ul class="list-unstyled mb-0">
             <li class="mb-3 d-flex gap-3">
-              <i class="bi bi-geo-alt-fill text-primary mt-1 flex-shrink-0"></i>
+              <i class="bi bi-geo-alt-fill mt-1 flex-shrink-0"></i>
               <div>
                 <strong>Location</strong><br>
-                <span class="text-muted">Brainerd Lakes Area, Minnesota</span>
+                <span class="sn-muted-on-blue">Brainerd Lakes Area, Minnesota</span>
               </div>
             </li>
             <li class="mb-3 d-flex gap-3">
-              <i class="bi bi-calendar-event text-primary mt-1 flex-shrink-0"></i>
+              <i class="bi bi-calendar-event mt-1 flex-shrink-0"></i>
               <div>
                 <strong>Monthly Meeting</strong><br>
-                <span class="text-muted">Every Third Monday at 7:00 PM</span>
+                <span class="sn-muted-on-blue">Every Third Monday at 7:00 PM</span>
+              </div>
+            </li>
+            <li class="d-flex gap-3">
+              <i class="bi bi-facebook mt-1 flex-shrink-0"></i>
+              <div>
+                <strong>Facebook</strong><br>
+                <a href="https://www.facebook.com/brainerdsnodeos" target="_blank" class="text-white">facebook.com/brainerdsnodeos</a>
               </div>
             </li>
           </ul>
         </div>
 
-        <div class="card border-0 bg-primary text-white p-4 rounded-3">
+        <div class="card border-0 sn-blue text-white p-4 rounded-3" style="opacity:0.85;">
           <h5 class="fw-bold mb-3"><i class="bi bi-person-plus me-2"></i>Become a Member</h5>
-          <p class="mb-3">Want to join the club? Fill out our online membership application and an officer will review your request.</p>
+          <p class="sn-muted-on-blue mb-3">Want to join the club? Fill out our online membership application and an officer will review your request.</p>
           <a href="{% url 'accounts:register' %}" class="btn btn-light fw-bold">Apply for Membership</a>
         </div>
       </div>
