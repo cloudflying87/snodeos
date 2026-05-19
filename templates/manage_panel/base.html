@@ -100,6 +100,9 @@
         <a href="{% url 'manage_panel:message_list' %}" class="panel-nav-link {% block active_messages %}{% endblock %}">
           <i class="bi bi-envelope"></i> Messages
         </a>
+        <a href="{% url 'manage_panel:permissions' %}" class="panel-nav-link {% block active_permissions %}{% endblock %}">
+          <i class="bi bi-shield-lock"></i> Permissions
+        </a>
       </div>
 
       <div class="panel-nav-section">

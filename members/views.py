@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q
 from accounts.models import Member
+from core.models import Announcement
 from core.email import notify_application_approved
 from .forms import MemberEditForm, MemberFilterForm, ProfileEditForm
 
@@ -22,7 +23,10 @@ def officer_required(view_func):
 @login_required
 def dashboard(request):
     member = request.user
-    context = {'member': member}
+    announcements = Announcement.objects.filter(
+        visibility__in=['members', 'both']
+    ).order_by('-is_pinned', '-created_at')[:10]
+    context = {'member': member, 'announcements': announcements}
     return render(request, 'members/dashboard.html', context)
 
 

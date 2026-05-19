@@ -90,9 +90,16 @@ class TrailWorkImage(models.Model):
 
 
 class Announcement(models.Model):
-    title = models.CharField(max_length=200)
-    body = models.TextField()
-    is_pinned = models.BooleanField(default=False)
+    VISIBILITY_CHOICES = [
+        ('members', 'Members Only — shown on member dashboard'),
+        ('public',  'Public — shown on home page & triggers Zapier'),
+        ('both',    'Both — home page, member dashboard & Zapier'),
+    ]
+
+    title      = models.CharField(max_length=200)
+    body       = models.TextField()
+    visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='members')
+    is_pinned  = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -100,6 +107,14 @@ class Announcement(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def is_public(self):
+        return self.visibility in ('public', 'both')
+
+    @property
+    def is_member_visible(self):
+        return self.visibility in ('members', 'both')
 
 
 class SiteSettings(models.Model):

@@ -9,7 +9,9 @@ def home(request):
     stats = ClubStats.objects.first()
     officers = Officer.objects.exclude(title='Director')
     sponsors = Sponsor.objects.filter(is_active=True)
-    announcements = Announcement.objects.all()[:5]
+    announcements = Announcement.objects.filter(
+        visibility__in=['public', 'both']
+    ).order_by('-is_pinned', '-created_at')[:5]
     context = {
         'stats': stats,
         'officers': officers,

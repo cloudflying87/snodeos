@@ -62,7 +62,11 @@ class ProfileEditForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
+        self.helper.attrs = {'enctype': 'multipart/form-data'}
         self.helper.layout = Layout(
+            Fieldset('Profile Photo',
+                'photo',
+            ),
             Fieldset('Personal Info',
                 Row(
                     Column('first_name', css_class='col-md-6'),
@@ -72,7 +76,6 @@ class ProfileEditForm(forms.ModelForm):
                     Column('phone', css_class='col-md-6'),
                     Column('snowmobile_brand', css_class='col-md-6'),
                 ),
-                'photo',
             ),
             Fieldset('Address',
                 'address',

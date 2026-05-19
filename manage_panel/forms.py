@@ -87,7 +87,7 @@ class SponsorForm(forms.ModelForm):
 class AnnouncementForm(forms.ModelForm):
     class Meta:
         model = Announcement
-        fields = ['title', 'body', 'is_pinned']
+        fields = ['title', 'body', 'visibility', 'is_pinned']
         widgets = {'body': forms.Textarea(attrs={'rows': 5})}
 
     def __init__(self, *args, **kwargs):
@@ -96,6 +96,7 @@ class AnnouncementForm(forms.ModelForm):
         self.helper.layout = Layout(
             'title',
             'body',
+            'visibility',
             Field('is_pinned'),
             Submit('submit', 'Save Announcement', css_class='btn btn-primary mt-3'),
         )

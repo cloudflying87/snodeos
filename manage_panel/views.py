@@ -208,10 +208,12 @@ def announcement_list(request):
 
 
 def _zapier_post(announcement):
-    import urllib.request, urllib.error, json
+    import urllib.request, json
     cfg = SiteSettings.get()
     if cfg.facebook_integration != 'zapier' or not cfg.zapier_webhook_url:
         return
+    if not announcement.is_public:
+        return  # members-only announcements don't go to Facebook
     payload = json.dumps({
         'title': announcement.title,
         'body': announcement.body,
@@ -410,6 +412,30 @@ def member_import(request):
         results = {'created': created, 'skipped': skipped, 'errors': errors, 'error_rows': error_rows}
 
     return render(request, 'manage_panel/member_import.html', {'results': results})
+
+
+# ── Permissions ────────────────────────────────────────────────────────────────
+
+@officer_required
+def permissions(request):
+    if request.method == 'POST':
+        member_id = request.POST.get('member_id')
+        action    = request.POST.get('action')
+        member = get_object_or_404(Member, pk=member_id)
+        if action == 'grant':
+            member.is_officer = True
+            member.save()
+            messages.success(request, f'{member.get_full_name()} granted management panel access.')
+        elif action == 'revoke':
+            if member == request.user:
+                messages.error(request, "You can't revoke your own access.")
+            else:
+                member.is_officer = False
+                member.save()
+                messages.success(request, f'{member.get_full_name()} access revoked.')
+        return redirect('manage_panel:permissions')
+    members = Member.objects.filter(membership_status='active').order_by('last_name', 'first_name')
+    return render(request, 'manage_panel/permissions.html', {'members': members})
 
 
 # ── Facebook Integration ───────────────────────────────────────────────────────
