@@ -5,13 +5,13 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.conf import settings
-from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, TrailWorkLog, TrailWorkImage, ContactMessage, SiteSettings, EmailTemplate
+from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, TrailCondition, TrailWorkLog, TrailWorkImage, ContactMessage, SiteSettings, EmailTemplate
 from accounts.models import Member, RegistrationField
 from core.email import send_test_email
 from accounts.models import Member
 from .forms import (
     ClubStatsForm, OfficerForm, SponsorForm,
-    AnnouncementForm, TrailWorkLogForm,
+    AnnouncementForm, TrailConditionForm, TrailWorkLogForm,
 )
 
 
@@ -329,6 +329,128 @@ def announcement_pin(request, pk):
     action = 'pinned' if announcement.is_pinned else 'unpinned'
     messages.success(request, f'Announcement {action}.')
     return redirect('manage_panel:announcement_list')
+
+
+# ── Trail Conditions ───────────────────────────────────────────────────────────
+
+@officer_required
+def trail_condition_list(request):
+    conditions = TrailCondition.objects.all()
+    return render(request, 'manage_panel/trail_conditions/list.html', {'conditions': conditions})
+
+
+def _zapier_post_trail(condition):
+    import urllib.request, json
+    cfg = SiteSettings.get()
+    if cfg.facebook_integration != 'zapier' or not cfg.zapier_webhook_url:
+        return
+    if not condition.is_public:
+        return
+    payload = json.dumps({
+        'title': f'Trail Update: {condition.title}',
+        'body': f'Status: {condition.get_status_display()}\n\n{condition.body}',
+        'site_url': settings.SITE_URL,
+    }).encode()
+    try:
+        req = urllib.request.Request(cfg.zapier_webhook_url, data=payload,
+                                     headers={'Content-Type': 'application/json'})
+        urllib.request.urlopen(req, timeout=5)
+    except Exception:
+        pass
+
+
+@officer_required
+def trail_condition_add(request):
+    if request.method == 'POST':
+        form = TrailConditionForm(request.POST)
+        if form.is_valid():
+            condition = form.save()
+            _zapier_post_trail(condition)
+
+            send_email = 'send_email' in request.POST
+            send_text  = 'send_text'  in request.POST
+            email_sent = text_sent = 0
+
+            from core.email import send_email as _send_email, send_sms, _tmpl_override
+            cond_url = f"{getattr(settings, 'SITE_URL', '').rstrip('/')}/trail-conditions/{condition.pk}/"
+            tmpl_ctx = _tmpl_override('template_trail_condition') or _tmpl_override('template_announcement')
+
+            if send_email:
+                active_members = Member.objects.filter(membership_status='active')
+                for member in active_members:
+                    try:
+                        _send_email(
+                            subject=f'Trail Update: {condition.title}',
+                            to=member.email,
+                            template='trail_condition',
+                            context={'condition': condition, 'cond_url': cond_url, **tmpl_ctx},
+                        )
+                        email_sent += 1
+                    except Exception:
+                        pass
+
+            if send_text:
+                status_label = condition.get_status_display()
+                snippet = condition.body[:100] + ('…' if len(condition.body) > 100 else '')
+                sms_body = f'Trail Update [{status_label}]: {condition.title}'
+                if snippet:
+                    sms_body += f'\n{snippet}'
+                sms_body += f'\n{cond_url}'
+                recipients = Member.objects.filter(membership_status='active', accepts_texts=True).exclude(phone='')
+                for m in recipients:
+                    if send_sms(sms_body, m.phone):
+                        text_sent += 1
+
+            parts = ['Trail condition posted.']
+            if email_sent:  parts.append(f'Emailed {email_sent} members.')
+            if text_sent:   parts.append(f'Texted {text_sent} members.')
+            messages.success(request, ' '.join(parts))
+            return redirect('manage_panel:trail_condition_list')
+    else:
+        form = TrailConditionForm()
+
+    cfg = SiteSettings.get()
+    return render(request, 'manage_panel/trail_conditions/form.html', {
+        'form': form,
+        'action': 'New',
+        'sms_configured': cfg.sms_configured,
+        'opted_in_count': Member.objects.filter(membership_status='active', accepts_texts=True).exclude(phone='').count(),
+        'active_count': Member.objects.filter(membership_status='active').count(),
+    })
+
+
+@officer_required
+def trail_condition_edit(request, pk):
+    condition = get_object_or_404(TrailCondition, pk=pk)
+    if request.method == 'POST':
+        form = TrailConditionForm(request.POST, instance=condition)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Trail condition updated.')
+            return redirect('manage_panel:trail_condition_list')
+    else:
+        form = TrailConditionForm(instance=condition)
+    return render(request, 'manage_panel/trail_conditions/form.html', {'form': form, 'action': 'Edit', 'object': condition})
+
+
+@officer_required
+@require_POST
+def trail_condition_delete(request, pk):
+    condition = get_object_or_404(TrailCondition, pk=pk)
+    condition.delete()
+    messages.success(request, 'Trail condition deleted.')
+    return redirect('manage_panel:trail_condition_list')
+
+
+@officer_required
+@require_POST
+def trail_condition_pin(request, pk):
+    condition = get_object_or_404(TrailCondition, pk=pk)
+    condition.is_pinned = not condition.is_pinned
+    condition.save()
+    action = 'pinned' if condition.is_pinned else 'unpinned'
+    messages.success(request, f'Trail condition {action}.')
+    return redirect('manage_panel:trail_condition_list')
 
 
 # ── Trail Work ─────────────────────────────────────────────────────────────────

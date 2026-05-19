@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}{{ condition.title }} — Trail Conditions — Brainerd Snodeos{% endblock %}
+
+{% block content %}
+<section class="page-hero text-center">
+  <div class="container sn-on-blue">
+    <p class="mb-2">
+      <span class="badge bg-light text-dark" style="font-size:0.9rem;padding:6px 16px;">
+        {{ condition.get_status_display }}
+      </span>
+    </p>
+    <h1 class="display-5 fw-bold font-oswald mb-2">{{ condition.title }}</h1>
+    <p class="sn-muted-on-blue mb-0">{{ condition.created_at|date:"F j, Y" }}</p>
+  </div>
+</section>
+
+<section class="py-6 bg-white">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm p-4 p-lg-5">
+          <div class="mb-3">
+            <span class="badge {{ condition.status_badge_class }}" style="font-size:0.9rem;padding:7px 16px;">
+              {{ condition.get_status_display }}
+            </span>
+          </div>
+          {% if condition.body %}
+          <div style="white-space:pre-wrap;line-height:1.8;font-size:1.05rem;color:#344055;">{{ condition.body }}</div>
+          {% else %}
+          <p class="text-muted fst-italic">No additional details provided.</p>
+          {% endif %}
+        </div>
+        <div class="text-center mt-4">
+          <a href="{% url 'core:trail_conditions' %}" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-arrow-left me-1"></i>All Trail Conditions
+          </a>
+          {% if user.is_authenticated and user.is_officer %}
+          <a href="{% url 'manage_panel:trail_condition_edit' condition.pk %}" class="btn btn-outline-primary">
+            <i class="bi bi-pencil me-1"></i>Edit
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

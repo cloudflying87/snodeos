@@ -1,0 +1,12 @@
+TRAIL UPDATE — {{ condition.title }}
+
+Status: {{ condition.get_status_display }}
+Posted: {{ condition.created_at|date:"F j, Y" }}
+
+{% if condition.body %}{{ condition.body }}{% endif %}
+
+{% if cond_url %}View full details: {{ cond_url }}{% endif %}
+
+--
+{{ email_footer_text }}
+{{ site_url }}

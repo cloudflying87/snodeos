@@ -1,7 +1,7 @@
 from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Submit, Field
-from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, TrailWorkLog
+from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, TrailCondition, TrailWorkLog
 
 
 class ClubStatsForm(forms.ModelForm):
@@ -100,6 +100,27 @@ class AnnouncementForm(forms.ModelForm):
             'visibility',
             Field('is_pinned'),
             Submit('submit', 'Save Announcement', css_class='btn btn-primary mt-3'),
+        )
+
+
+class TrailConditionForm(forms.ModelForm):
+    class Meta:
+        model = TrailCondition
+        fields = ['title', 'status', 'body', 'visibility', 'is_pinned']
+        widgets = {'body': forms.Textarea(attrs={'rows': 5})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            Row(
+                Column('title', css_class='col-md-8'),
+                Column('status', css_class='col-md-4'),
+            ),
+            'body',
+            'visibility',
+            Field('is_pinned'),
+            Submit('submit', 'Save Trail Condition', css_class='btn btn-primary mt-3'),
         )
 
 

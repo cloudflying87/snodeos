@@ -28,6 +28,12 @@ urlpatterns = [
     path('announcements/<int:pk>/delete/', views.announcement_delete, name='announcement_delete'),
     path('announcements/<int:pk>/pin/', views.announcement_pin, name='announcement_pin'),
 
+    path('trail-conditions/', views.trail_condition_list, name='trail_condition_list'),
+    path('trail-conditions/add/', views.trail_condition_add, name='trail_condition_add'),
+    path('trail-conditions/<int:pk>/edit/', views.trail_condition_edit, name='trail_condition_edit'),
+    path('trail-conditions/<int:pk>/delete/', views.trail_condition_delete, name='trail_condition_delete'),
+    path('trail-conditions/<int:pk>/pin/', views.trail_condition_pin, name='trail_condition_pin'),
+
     path('trail-work/', views.trail_work_list, name='trail_work_list'),
     path('trail-work/add/', views.trail_work_add, name='trail_work_add'),
     path('trail-work/<int:pk>/edit/', views.trail_work_edit, name='trail_work_edit'),

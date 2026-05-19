@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.db import models
-from .models import ClubStats, Officer, Sponsor, TrailWorkLog, Announcement
+from .models import ClubStats, Officer, Sponsor, TrailWorkLog, Announcement, TrailCondition
 from .forms import ContactForm
 from .email import notify_contact_message
 
@@ -59,6 +59,21 @@ from django.shortcuts import get_object_or_404
 def trail_work(request):
     logs = TrailWorkLog.objects.prefetch_related('images').all()
     return render(request, 'core/trail_work.html', {'logs': logs})
+
+
+def trail_conditions(request):
+    conditions = TrailCondition.objects.filter(
+        visibility__in=['public', 'both']
+    ).order_by('-is_pinned', '-created_at')[:20]
+    return render(request, 'core/trail_conditions.html', {'conditions': conditions})
+
+
+def trail_condition_detail(request, pk):
+    condition = get_object_or_404(TrailCondition, pk=pk)
+    if not condition.is_public and not request.user.is_authenticated:
+        from django.contrib.auth.views import redirect_to_login
+        return redirect_to_login(request.get_full_path())
+    return render(request, 'core/trail_condition_detail.html', {'condition': condition})
 
 
 def announcement_detail(request, pk):

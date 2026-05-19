@@ -1,0 +1,114 @@
+{% extends 'manage_panel/base.html' %}
+{% load crispy_forms_tags %}
+{% block title %}{{ action }} Trail Condition{% endblock %}
+{% block active_trail_conditions %}active{% endblock %}
+
+{% block content %}
+
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">{{ action }} Trail Condition</h1>
+    <p class="panel-breadcrumb mb-0">
+      <a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> /
+      <a href="{% url 'manage_panel:trail_condition_list' %}">Trail Conditions</a> / {{ action }}
+    </p>
+  </div>
+  <a href="{% url 'manage_panel:trail_condition_list' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i>Back
+  </a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+
+    <div class="panel-card mb-4">
+      <div class="panel-card-header">
+        <h2 class="panel-card-title">Condition Details</h2>
+      </div>
+      <div class="panel-card-body">
+        {% crispy form %}
+      </div>
+    </div>
+
+    {% if action == 'New' %}
+    <div class="panel-card" id="notifyCard">
+      <div class="panel-card-header">
+        <h2 class="panel-card-title"><i class="bi bi-send me-2 text-primary"></i>Also Notify Members</h2>
+      </div>
+      <div class="panel-card-body">
+        <p class="text-muted small mb-3">Optionally blast this trail update out by email and/or text when you save it.</p>
+
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="notifyEmail" name="notify_email">
+          <label class="form-check-label fw-semibold" for="notifyEmail">
+            <i class="bi bi-envelope-fill text-primary me-2"></i>
+            Email all active members
+            <span class="text-muted fw-normal">({{ active_count }} member{{ active_count|pluralize }})</span>
+          </label>
+        </div>
+
+        <div class="form-check {% if not sms_configured %}opacity-50{% endif %}">
+          <input class="form-check-input" type="checkbox" id="notifyText" name="notify_text"
+                 {% if not sms_configured %}disabled{% endif %}>
+          <label class="form-check-label fw-semibold" for="notifyText">
+            <i class="bi bi-chat-dots-fill text-success me-2"></i>
+            Text opted-in members
+            {% if sms_configured %}
+              <span class="text-muted fw-normal">({{ opted_in_count }} opted in)</span>
+            {% else %}
+              <span class="badge bg-secondary ms-1" style="font-size:0.7rem;">SMS not configured</span>
+            {% endif %}
+          </label>
+        </div>
+
+        {% if not sms_configured %}
+        <p class="text-muted small mt-2 mb-0">
+          <a href="{% url 'manage_panel:sms_settings' %}">Set up SMS</a> to enable text notifications.
+        </p>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <div class="col-lg-4">
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h2 class="panel-card-title">Tips</h2>
+      </div>
+      <div class="panel-card-body">
+        <p class="text-muted small mb-2"><strong>Status</strong> drives the colored badge shown to riders: Open, Closed, Use Caution, or Recently Groomed.</p>
+        <p class="text-muted small mb-2"><strong>Visibility:</strong> Public shows on the trail conditions page. Members Only is only visible after login. Both shows everywhere.</p>
+        <p class="text-muted small mb-2"><strong>Pinned</strong> conditions appear at the top of the list.</p>
+        <p class="text-muted small mb-0"><strong>Email/Text</strong> blasts go out once when you save — editing won't re-send.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{% if action == 'New' %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const crispyForm = document.querySelector('#notifyCard').closest('.row').querySelector('form');
+  if (!crispyForm) return;
+
+  crispyForm.addEventListener('submit', () => {
+    ['notifyEmail', 'notifyText'].forEach(id => {
+      const cb = document.getElementById(id);
+      if (cb && cb.checked && !cb.disabled) {
+        const hidden = document.createElement('input');
+        hidden.type  = 'hidden';
+        hidden.name  = id === 'notifyEmail' ? 'send_email' : 'send_text';
+        hidden.value = '1';
+        crispyForm.appendChild(hidden);
+      }
+    });
+  });
+});
+</script>
+{% endif %}
+{% endblock %}

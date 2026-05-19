@@ -118,6 +118,50 @@ class Announcement(models.Model):
         return self.visibility in ('members', 'both')
 
 
+class TrailCondition(models.Model):
+    STATUS_CHOICES = [
+        ('open',    'Open'),
+        ('closed',  'Closed'),
+        ('caution', 'Use Caution'),
+        ('groomed', 'Recently Groomed'),
+    ]
+    VISIBILITY_CHOICES = [
+        ('public',  'Public — shown on trail conditions page'),
+        ('members', 'Members Only — shown on member dashboard'),
+        ('both',    'Both — trail conditions page & member dashboard'),
+    ]
+
+    title      = models.CharField(max_length=200)
+    status     = models.CharField(max_length=10, choices=STATUS_CHOICES, default='open')
+    body       = models.TextField(blank=True)
+    visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='both')
+    is_pinned  = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-is_pinned', '-created_at']
+
+    def __str__(self):
+        return f'{self.get_status_display()} — {self.title}'
+
+    @property
+    def is_public(self):
+        return self.visibility in ('public', 'both')
+
+    @property
+    def is_member_visible(self):
+        return self.visibility in ('members', 'both')
+
+    @property
+    def status_badge_class(self):
+        return {
+            'open':    'bg-success',
+            'closed':  'bg-danger',
+            'caution': 'bg-warning text-dark',
+            'groomed': 'bg-info text-dark',
+        }.get(self.status, 'bg-secondary')
+
+
 class EmailTemplate(models.Model):
     """Reusable branded email templates officers can select when composing blasts."""
     name             = models.CharField(max_length=100, unique=True)
@@ -199,6 +243,11 @@ class SiteSettings(models.Model):
         'EmailTemplate', null=True, blank=True,
         on_delete=models.SET_NULL, related_name='+',
         help_text='Template for announcement email blasts',
+    )
+    template_trail_condition = models.ForeignKey(
+        'EmailTemplate', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='+',
+        help_text='Template for trail condition email blasts',
     )
 
     class Meta:

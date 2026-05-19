@@ -1,0 +1,106 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}Trail Conditions{% endblock %}
+{% block active_trail_conditions %}active{% endblock %}
+
+{% block content %}
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">Trail Conditions</h1>
+    <p class="panel-breadcrumb mb-0"><a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> / Trail Conditions</p>
+  </div>
+  <a href="{% url 'manage_panel:trail_condition_add' %}" class="btn btn-primary">
+    <i class="bi bi-plus me-1"></i>New Condition
+  </a>
+</div>
+
+<div class="panel-card">
+{% if conditions %}
+
+  <!-- Desktop table -->
+  <div class="d-none d-md-block">
+    <table class="panel-table">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Status</th>
+          <th>Posted</th>
+          <th>Visibility</th>
+          <th>Pinned</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for tc in conditions %}
+        <tr>
+          <td>
+            <div class="fw-semibold">{{ tc.title }}</div>
+            {% if tc.body %}<div class="text-muted small mt-1">{{ tc.body|truncatechars:80 }}</div>{% endif %}
+          </td>
+          <td><span class="badge {{ tc.status_badge_class }}">{{ tc.get_status_display }}</span></td>
+          <td class="text-muted small">{{ tc.created_at|date:"M j, Y" }}</td>
+          <td><span class="badge bg-secondary-subtle text-secondary">{{ tc.get_visibility_display }}</span></td>
+          <td>
+            <form method="post" action="{% url 'manage_panel:trail_condition_pin' tc.pk %}" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="border-0 bg-transparent p-0" title="Toggle pin">
+                {% if tc.is_pinned %}<i class="bi bi-pin-angle-fill text-primary fs-5"></i>
+                {% else %}<i class="bi bi-pin-angle text-muted fs-5"></i>{% endif %}
+              </button>
+            </form>
+          </td>
+          <td class="text-end">
+            <a href="{% url 'manage_panel:trail_condition_edit' tc.pk %}" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil"></i></a>
+            <button class="btn btn-sm btn-outline-danger"
+                    data-delete-url="{% url 'manage_panel:trail_condition_delete' tc.pk %}"
+                    data-delete-label="{{ tc.title }}"><i class="bi bi-trash"></i></button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile list -->
+  <div class="d-md-none mob-card-list">
+    {% for tc in conditions %}
+    <div class="mob-swipe-wrapper">
+      <div class="mob-swipe-row" data-href="{% url 'manage_panel:trail_condition_edit' tc.pk %}">
+        <div class="mob-info">
+          <div class="mob-title">
+            {% if tc.is_pinned %}<i class="bi bi-pin-angle-fill text-primary me-1" style="font-size:0.75rem;"></i>{% endif %}
+            {{ tc.title }}
+          </div>
+          <div class="mob-sub">
+            <span class="badge {{ tc.status_badge_class }}" style="font-size:0.7rem;">{{ tc.get_status_display }}</span>
+            &middot; {{ tc.created_at|date:"M j, Y" }}
+          </div>
+        </div>
+        <form method="post" action="{% url 'manage_panel:trail_condition_pin' tc.pk %}" onclick="event.stopPropagation()">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm {% if tc.is_pinned %}btn-primary{% else %}btn-outline-secondary{% endif %} border-0" style="min-width:36px;min-height:36px;" title="Toggle pin">
+            <i class="bi bi-pin-angle{% if tc.is_pinned %}-fill{% endif %}"></i>
+          </button>
+        </form>
+        <i class="bi bi-chevron-right text-muted" style="flex-shrink:0;font-size:0.8rem;"></i>
+      </div>
+      <div class="mob-swipe-delete">
+        <button class="btn btn-danger w-100 h-100 border-0 rounded-0"
+                data-delete-url="{% url 'manage_panel:trail_condition_delete' tc.pk %}"
+                data-delete-label="{{ tc.title }}">
+          <i class="bi bi-trash fs-5"></i>
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+{% else %}
+  <div class="panel-card-body text-center py-5">
+    <i class="bi bi-signpost-split display-4 text-muted mb-3 d-block"></i>
+    <p class="text-muted mb-3">No trail conditions posted yet.</p>
+    <a href="{% url 'manage_panel:trail_condition_add' %}" class="btn btn-primary">Post First Condition</a>
+  </div>
+{% endif %}
+</div>
+
+{% endblock %}

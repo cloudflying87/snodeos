@@ -1,0 +1,32 @@
+{% extends 'emails/base_email.html' %}
+{% block body %}
+<p style="margin:0 0 4px;font-size:0.78rem;color:#9ab0c8;text-transform:uppercase;letter-spacing:0.5px;">Trail Update</p>
+<h2>{{ condition.title }}</h2>
+<p style="font-size:0.82rem;color:#9ab0c8;margin-bottom:20px;">
+  {% if condition.is_pinned %}<span class="badge badge-blue">📌 Pinned</span>&nbsp;{% endif %}
+  Posted {{ condition.created_at|date:"F j, Y" }}
+</p>
+
+<div style="margin:0 0 20px;">
+  {% if condition.status == 'open' %}
+    <span class="badge badge-success" style="font-size:0.9rem;padding:6px 16px;">✓ Open</span>
+  {% elif condition.status == 'closed' %}
+    <span class="badge" style="background:#f8d7da;color:#58151c;font-size:0.9rem;padding:6px 16px;">✗ Closed</span>
+  {% elif condition.status == 'caution' %}
+    <span class="badge badge-warning" style="font-size:0.9rem;padding:6px 16px;">⚠ Use Caution</span>
+  {% elif condition.status == 'groomed' %}
+    <span class="badge badge-blue" style="font-size:0.9rem;padding:6px 16px;">❄ Recently Groomed</span>
+  {% endif %}
+</div>
+
+{% if condition.body %}
+<p>{{ condition.body|linebreaksbr }}</p>
+{% endif %}
+
+{% if cond_url %}
+<hr class="divider">
+<div class="btn-wrap">
+  <a href="{{ cond_url }}" class="btn">View Full Details →</a>
+</div>
+{% endif %}
+{% endblock %}
