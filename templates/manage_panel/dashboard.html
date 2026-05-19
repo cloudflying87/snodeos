@@ -1,0 +1,207 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block active_dashboard %}active{% endblock %}
+
+{% block content %}
+
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">Dashboard</h1>
+    <p class="panel-breadcrumb mb-0">Welcome back, {{ request.user.first_name }}.</p>
+  </div>
+  <a href="{% url 'core:home' %}" target="_blank" class="btn btn-outline-primary btn-sm">
+    <i class="bi bi-box-arrow-up-right me-1"></i>View Site
+  </a>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-4">
+    <a href="{% url 'members:member_list' %}?status=active" class="text-decoration-none">
+      <div class="panel-stat-card">
+        <div class="panel-stat-icon blue"><i class="bi bi-people-fill"></i></div>
+        <div>
+          <div class="panel-stat-value">{{ active_members }}</div>
+          <div class="panel-stat-label">Active Members</div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-sm-6 col-xl-4">
+    <a href="{% url 'members:pending' %}" class="text-decoration-none">
+      <div class="panel-stat-card">
+        <div class="panel-stat-icon yellow"><i class="bi bi-person-check"></i></div>
+        <div>
+          <div class="panel-stat-value">{{ pending_members }}</div>
+          <div class="panel-stat-label">Pending Applications</div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-sm-6 col-xl-4">
+    <a href="{% url 'manage_panel:message_list' %}" class="text-decoration-none">
+      <div class="panel-stat-card">
+        <div class="panel-stat-icon {% if unread_messages %}red{% else %}green{% endif %}">
+          <i class="bi bi-envelope{% if unread_messages %}-fill{% endif %}"></i>
+        </div>
+        <div>
+          <div class="panel-stat-value">{{ unread_messages }}</div>
+          <div class="panel-stat-label">Unread Messages</div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-sm-6 col-xl-4">
+    <a href="{% url 'manage_panel:officer_list' %}" class="text-decoration-none">
+      <div class="panel-stat-card">
+        <div class="panel-stat-icon purple"><i class="bi bi-person-badge"></i></div>
+        <div>
+          <div class="panel-stat-value">{{ officer_count }}</div>
+          <div class="panel-stat-label">Club Officers</div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-sm-6 col-xl-4">
+    <a href="{% url 'manage_panel:sponsor_list' %}" class="text-decoration-none">
+      <div class="panel-stat-card">
+        <div class="panel-stat-icon teal"><i class="bi bi-building"></i></div>
+        <div>
+          <div class="panel-stat-value">{{ sponsor_count }}</div>
+          <div class="panel-stat-label">Active Sponsors</div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-sm-6 col-xl-4">
+    <a href="{% url 'manage_panel:announcement_list' %}" class="text-decoration-none">
+      <div class="panel-stat-card">
+        <div class="panel-stat-icon blue"><i class="bi bi-pin-angle"></i></div>
+        <div>
+          <div class="panel-stat-value">{{ pinned_announcements }}</div>
+          <div class="panel-stat-label">Pinned Announcements</div>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<div class="row g-4">
+
+  <!-- Quick Actions -->
+  <div class="col-lg-4">
+    <div class="panel-card h-100">
+      <div class="panel-card-header">
+        <h2 class="panel-card-title"><i class="bi bi-lightning-charge me-2 text-primary"></i>Quick Actions</h2>
+      </div>
+      <div class="panel-card-body d-flex flex-column gap-2">
+        <a href="{% url 'manage_panel:announcement_add' %}" class="panel-quick-btn">
+          <i class="bi bi-megaphone text-primary"></i>Post Announcement
+        </a>
+        <a href="{% url 'manage_panel:trail_work_add' %}" class="panel-quick-btn">
+          <i class="bi bi-tools text-success"></i>Log Trail Work
+        </a>
+        <a href="{% url 'members:pending' %}" class="panel-quick-btn">
+          <i class="bi bi-person-check text-warning"></i>Review Applications
+        </a>
+        <a href="{% url 'manage_panel:officer_add' %}" class="panel-quick-btn">
+          <i class="bi bi-person-badge text-purple"></i>Add Officer
+        </a>
+        <a href="{% url 'manage_panel:sponsor_add' %}" class="panel-quick-btn">
+          <i class="bi bi-building text-teal"></i>Add Sponsor
+        </a>
+        <a href="{% url 'manage_panel:stats_edit' %}" class="panel-quick-btn">
+          <i class="bi bi-bar-chart text-info"></i>Update Club Stats
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Unread Messages -->
+  <div class="col-lg-8">
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h2 class="panel-card-title"><i class="bi bi-envelope me-2 text-primary"></i>Recent Unread Messages</h2>
+        <a href="{% url 'manage_panel:message_list' %}" class="btn btn-outline-primary btn-sm">View All</a>
+      </div>
+      {% if recent_messages %}
+        <table class="panel-table">
+          <thead>
+            <tr>
+              <th>From</th>
+              <th>Subject</th>
+              <th>Date</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for msg in recent_messages %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="panel-avatar-placeholder" style="width:32px;height:32px;font-size:0.75rem;">
+                    {{ msg.name|first|upper }}
+                  </div>
+                  <div>
+                    <div class="fw-semibold small">{{ msg.name }}</div>
+                    <div class="text-muted" style="font-size:0.75rem;">{{ msg.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="fw-semibold small">{{ msg.subject }}</td>
+              <td class="text-muted small">{{ msg.submitted_at|date:"M j" }}</td>
+              <td class="text-end">
+                <a href="{% url 'manage_panel:message_detail' msg.pk %}" class="btn btn-sm btn-primary">Read</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="panel-card-body text-center py-5">
+          <i class="bi bi-inbox display-4 text-muted mb-3 d-block"></i>
+          <p class="text-muted mb-0">No unread messages.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recent Trail Work -->
+  <div class="col-12">
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h2 class="panel-card-title"><i class="bi bi-tools me-2 text-success"></i>Recent Trail Work</h2>
+        <a href="{% url 'manage_panel:trail_work_add' %}" class="btn btn-success btn-sm">
+          <i class="bi bi-plus me-1"></i>Add Log
+        </a>
+      </div>
+      {% if recent_logs %}
+        <table class="panel-table">
+          <thead>
+            <tr><th>Date</th><th>Title</th><th>Volunteers</th><th>Hours</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for log in recent_logs %}
+            <tr>
+              <td class="text-muted small">{{ log.date|date:"M j, Y" }}</td>
+              <td class="fw-semibold">{{ log.title }}</td>
+              <td><span class="badge bg-primary-subtle text-primary fw-semibold">{{ log.volunteers }}</span></td>
+              <td><span class="badge bg-success-subtle text-success fw-semibold">{{ log.hours }} hrs</span></td>
+              <td class="text-end">
+                <a href="{% url 'manage_panel:trail_work_edit' log.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="panel-card-body text-center py-4">
+          <p class="text-muted mb-0">No trail work logs yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

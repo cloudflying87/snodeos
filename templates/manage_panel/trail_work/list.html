@@ -1,0 +1,72 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}Trail Work{% endblock %}
+{% block active_trail %}active{% endblock %}
+
+{% block content %}
+
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">Trail Work Logs</h1>
+    <p class="panel-breadcrumb mb-0"><a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> / Trail Work</p>
+  </div>
+  <a href="{% url 'manage_panel:trail_work_add' %}" class="btn btn-primary">
+    <i class="bi bi-plus me-1"></i>Add Log
+  </a>
+</div>
+
+<div class="panel-card">
+  {% if logs %}
+    <table class="panel-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Title</th>
+          <th>Volunteers</th>
+          <th>Hours</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td>
+            <span class="badge bg-primary-subtle text-primary fw-semibold">{{ log.date|date:"M j, Y" }}</span>
+          </td>
+          <td>
+            <div class="fw-semibold">{{ log.title }}</div>
+            <div class="text-muted small mt-1">{{ log.description|truncatechars:70 }}</div>
+          </td>
+          <td>
+            <span class="d-flex align-items-center gap-1 text-muted small">
+              <i class="bi bi-people"></i> {{ log.volunteers }}
+            </span>
+          </td>
+          <td>
+            <span class="d-flex align-items-center gap-1 text-muted small">
+              <i class="bi bi-clock"></i> {{ log.hours }} hrs
+            </span>
+          </td>
+          <td class="text-end">
+            <a href="{% url 'manage_panel:trail_work_edit' log.pk %}" class="btn btn-sm btn-outline-primary me-1">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <button class="btn btn-sm btn-outline-danger"
+                    data-delete-url="{% url 'manage_panel:trail_work_delete' log.pk %}"
+                    data-delete-label="{{ log.title }}">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="panel-card-body text-center py-5">
+      <i class="bi bi-tools display-4 text-muted mb-3 d-block"></i>
+      <p class="text-muted mb-3">No trail work logs yet.</p>
+      <a href="{% url 'manage_panel:trail_work_add' %}" class="btn btn-primary">Add First Log</a>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

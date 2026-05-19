@@ -1,0 +1,70 @@
+{% extends 'manage_panel/base.html' %}
+{% load crispy_forms_tags %}
+{% block title %}Club Stats{% endblock %}
+{% block active_stats %}active{% endblock %}
+
+{% block content %}
+
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">Club Stats</h1>
+    <p class="panel-breadcrumb mb-0">
+      <a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> / Stats
+    </p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h2 class="panel-card-title"><i class="bi bi-bar-chart me-2 text-primary"></i>Edit Homepage Stats</h2>
+      </div>
+      <div class="panel-card-body">
+        <p class="text-muted small mb-4">These numbers appear on the homepage stats bar. Keep them current to reflect the club accurately.</p>
+        {% crispy form %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h2 class="panel-card-title"><i class="bi bi-eye me-2 text-muted"></i>Current Values</h2>
+      </div>
+      <div class="panel-card-body">
+        <div class="row g-3">
+          <div class="col-6">
+            <div class="text-center p-3 bg-light rounded-3">
+              <div class="display-6 fw-bold text-primary font-oswald">{{ stats.members_count }}</div>
+              <div class="small text-muted text-uppercase fw-semibold">Members</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="text-center p-3 bg-light rounded-3">
+              <div class="display-6 fw-bold text-primary font-oswald">{{ stats.miles_maintained }}</div>
+              <div class="small text-muted text-uppercase fw-semibold">Miles</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="text-center p-3 bg-light rounded-3">
+              <div class="display-6 fw-bold text-primary font-oswald">${{ stats.annual_budget }}</div>
+              <div class="small text-muted text-uppercase fw-semibold">Budget</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="text-center p-3 bg-light rounded-3">
+              <div class="display-6 fw-bold text-primary font-oswald">{{ stats.supporting_landowners }}</div>
+              <div class="small text-muted text-uppercase fw-semibold">Landowners</div>
+            </div>
+          </div>
+        </div>
+        <p class="text-muted small mt-3 mb-0">
+          Last updated: {{ stats.updated_at|date:"M j, Y \a\t g:i A" }}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

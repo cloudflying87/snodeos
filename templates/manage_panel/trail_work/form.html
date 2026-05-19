@@ -1,0 +1,34 @@
+{% extends 'manage_panel/base.html' %}
+{% load crispy_forms_tags %}
+{% block title %}{{ action }} Trail Work Log{% endblock %}
+{% block active_trail %}active{% endblock %}
+
+{% block content %}
+
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">{{ action }} Trail Work Log</h1>
+    <p class="panel-breadcrumb mb-0">
+      <a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> /
+      <a href="{% url 'manage_panel:trail_work_list' %}">Trail Work</a> / {{ action }}
+    </p>
+  </div>
+  <a href="{% url 'manage_panel:trail_work_list' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i>Back
+  </a>
+</div>
+
+<div class="row">
+  <div class="col-lg-8">
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h2 class="panel-card-title">Log Details</h2>
+      </div>
+      <div class="panel-card-body">
+        {% crispy form %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

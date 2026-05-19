@@ -1,0 +1,45 @@
+{% extends 'manage_panel/base.html' %}
+{% load crispy_forms_tags %}
+{% block title %}{{ action }} Announcement{% endblock %}
+{% block active_announcements %}active{% endblock %}
+
+{% block content %}
+
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">{{ action }} Announcement</h1>
+    <p class="panel-breadcrumb mb-0">
+      <a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> /
+      <a href="{% url 'manage_panel:announcement_list' %}">Announcements</a> / {{ action }}
+    </p>
+  </div>
+  <a href="{% url 'manage_panel:announcement_list' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i>Back
+  </a>
+</div>
+
+<div class="row">
+  <div class="col-lg-8">
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h2 class="panel-card-title">Announcement Details</h2>
+      </div>
+      <div class="panel-card-body">
+        {% crispy form %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h2 class="panel-card-title">Tips</h2>
+      </div>
+      <div class="panel-card-body">
+        <p class="text-muted small mb-2"><strong>Pinned announcements</strong> appear at the top of the list and on the homepage.</p>
+        <p class="text-muted small mb-0">Keep announcements concise — members skim them quickly.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

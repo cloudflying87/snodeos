@@ -1,0 +1,84 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}Messages{% endblock %}
+{% block active_messages %}active{% endblock %}
+
+{% block content %}
+
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">Messages</h1>
+    <p class="panel-breadcrumb mb-0"><a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> / Messages</p>
+  </div>
+  <div class="btn-group">
+    <a href="?show=unread" class="btn btn-sm {% if show != 'all' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+      Unread
+    </a>
+    <a href="?show=all" class="btn btn-sm {% if show == 'all' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+      All
+    </a>
+  </div>
+</div>
+
+<div class="panel-card">
+  {% if msgs %}
+    <table class="panel-table">
+      <thead>
+        <tr>
+          <th>From</th>
+          <th>Subject</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for msg in msgs %}
+        <tr class="{% if not msg.is_read %}fw-semibold{% endif %}">
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <div class="panel-avatar-placeholder" style="width:36px;height:36px;font-size:0.8rem;">
+                {{ msg.name|first|upper }}
+              </div>
+              <div>
+                <div class="{% if not msg.is_read %}fw-bold{% endif %}">{{ msg.name }}</div>
+                <div class="text-muted small">{{ msg.email }}</div>
+              </div>
+            </div>
+          </td>
+          <td>{{ msg.subject }}</td>
+          <td class="text-muted small">{{ msg.submitted_at|date:"M j, Y" }}</td>
+          <td>
+            {% if msg.is_read %}
+              <span class="badge bg-secondary-subtle text-secondary">Read</span>
+            {% else %}
+              <span class="badge bg-primary-subtle text-primary">New</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <a href="{% url 'manage_panel:message_detail' msg.pk %}" class="btn btn-sm btn-outline-primary me-1">
+              <i class="bi bi-eye"></i>
+            </a>
+            <button class="btn btn-sm btn-outline-danger"
+                    data-delete-url="{% url 'manage_panel:message_delete' msg.pk %}"
+                    data-delete-label="message from {{ msg.name }}">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="panel-card-body text-center py-5">
+      <i class="bi bi-inbox display-4 text-muted mb-3 d-block"></i>
+      <p class="text-muted mb-0">
+        {% if show == 'all' %}No messages yet.{% else %}No unread messages.{% endif %}
+      </p>
+      {% if show != 'all' %}
+        <a href="?show=all" class="btn btn-outline-secondary btn-sm mt-3">View all messages</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

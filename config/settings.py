@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     'accounts',
     'core',
     'members',
+    'manage_panel',
 ]
 
 MIDDLEWARE = [

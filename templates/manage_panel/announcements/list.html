@@ -1,0 +1,71 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}Announcements{% endblock %}
+{% block active_announcements %}active{% endblock %}
+
+{% block content %}
+
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">Announcements</h1>
+    <p class="panel-breadcrumb mb-0"><a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> / Announcements</p>
+  </div>
+  <a href="{% url 'manage_panel:announcement_add' %}" class="btn btn-primary">
+    <i class="bi bi-plus me-1"></i>New Announcement
+  </a>
+</div>
+
+<div class="panel-card">
+  {% if announcements %}
+    <table class="panel-table">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Posted</th>
+          <th>Pinned</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ann in announcements %}
+        <tr>
+          <td>
+            <div class="fw-semibold">{{ ann.title }}</div>
+            <div class="text-muted small mt-1">{{ ann.body|truncatechars:80 }}</div>
+          </td>
+          <td class="text-muted small">{{ ann.created_at|date:"M j, Y" }}</td>
+          <td>
+            <form method="post" action="{% url 'manage_panel:announcement_pin' ann.pk %}" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="border-0 bg-transparent p-0" title="Toggle pin">
+                {% if ann.is_pinned %}
+                  <i class="bi bi-pin-angle-fill text-primary fs-5"></i>
+                {% else %}
+                  <i class="bi bi-pin-angle text-muted fs-5"></i>
+                {% endif %}
+              </button>
+            </form>
+          </td>
+          <td class="text-end">
+            <a href="{% url 'manage_panel:announcement_edit' ann.pk %}" class="btn btn-sm btn-outline-primary me-1">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <button class="btn btn-sm btn-outline-danger"
+                    data-delete-url="{% url 'manage_panel:announcement_delete' ann.pk %}"
+                    data-delete-label="{{ ann.title }}">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="panel-card-body text-center py-5">
+      <i class="bi bi-megaphone display-4 text-muted mb-3 d-block"></i>
+      <p class="text-muted mb-3">No announcements yet.</p>
+      <a href="{% url 'manage_panel:announcement_add' %}" class="btn btn-primary">Post First Announcement</a>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

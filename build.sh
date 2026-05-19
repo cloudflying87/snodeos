@@ -22,9 +22,33 @@ error()   { echo -e "${RED}[snodeos]${NC} $1"; exit 1; }
 
 MODE="${1:-}"
 
+# ── Helpers ────────────────────────────────────────────────────────────────────
+
+find_python() {
+  if [ -f "venv/bin/python3" ]; then
+    echo "venv/bin/python3"
+  elif command -v python3 >/dev/null 2>&1; then
+    echo "python3"
+  else
+    error "Python 3 not found. Install it and try again."
+  fi
+}
+
+git_pull() {
+  if git rev-parse --git-dir > /dev/null 2>&1; then
+    info "Pulling latest code from git..."
+    git pull --ff-only || warn "git pull failed — continuing with local code."
+    success "Code up to date."
+  else
+    warn "Not a git repository — skipping git pull."
+  fi
+}
+
 # ── Docker mode ────────────────────────────────────────────────────────────────
 if [ "$MODE" = "--docker" ]; then
   command -v docker >/dev/null 2>&1 || error "Docker not found. Install Docker Desktop and try again."
+
+  git_pull
 
   info "Building Docker images..."
   docker compose build
@@ -47,8 +71,9 @@ if [ "$MODE" = "--docker" ]; then
   echo ""
   success "Docker stack is up!"
   echo ""
-  echo "  Site:         http://snodeos.flyhomemnlab.com  (or http://localhost)"
-  echo "  Admin panel:  http://localhost/admin/"
+  echo "  Site:              http://snodeos.flyhomemnlab.com  (or http://localhost)"
+  echo "  Management panel:  http://localhost/manage/"
+  echo "  Django admin:      http://localhost/admin/"
   echo ""
   warn "To create a superuser (officer/admin account):"
   echo "  docker compose exec web python3 manage.py createsuperuser"
@@ -81,15 +106,15 @@ fi
 
 # ── Local dev mode (default) ───────────────────────────────────────────────────
 
-find_python() {
-  if [ -f "venv/bin/python3" ]; then
-    echo "venv/bin/python3"
-  elif command -v python3 >/dev/null 2>&1; then
-    echo "python3"
-  else
-    error "Python 3 not found. Install it and try again."
-  fi
-}
+# 0. Git pull
+git_pull
+
+# System dependencies (Debian/Ubuntu only)
+if command -v apt-get >/dev/null 2>&1; then
+  info "Installing system dependencies (git, python3-venv)..."
+  sudo apt-get install -y -q git python3-venv
+  success "System dependencies installed."
+fi
 
 PYTHON=$(find_python)
 
@@ -152,9 +177,9 @@ fi
 echo ""
 success "Build complete! Starting development server..."
 echo ""
-echo "  Site:         http://127.0.0.1:8000"
-echo "  Admin panel:  http://127.0.0.1:8000/admin/"
-echo "  Join form:    http://127.0.0.1:8000/accounts/register/"
-echo "  Members:      http://127.0.0.1:8000/members/dashboard/"
+echo "  Site:              http://127.0.0.1:8000"
+echo "  Management panel:  http://127.0.0.1:8000/manage/"
+echo "  Django admin:      http://127.0.0.1:8000/admin/"
+echo "  Join form:         http://127.0.0.1:8000/accounts/register/"
 echo ""
 $PYTHON manage.py runserver

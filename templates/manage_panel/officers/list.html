@@ -1,0 +1,72 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}Officers{% endblock %}
+{% block active_officers %}active{% endblock %}
+
+{% block content %}
+
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">Officers</h1>
+    <p class="panel-breadcrumb mb-0"><a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> / Officers</p>
+  </div>
+  <a href="{% url 'manage_panel:officer_add' %}" class="btn btn-primary">
+    <i class="bi bi-plus me-1"></i>Add Officer
+  </a>
+</div>
+
+<div class="panel-card">
+  {% if officers %}
+    <table class="panel-table">
+      <thead>
+        <tr>
+          <th style="width:40px;">#</th>
+          <th>Name</th>
+          <th>Title</th>
+          <th>Snowmobile</th>
+          <th>Email</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for officer in officers %}
+        <tr>
+          <td class="text-muted small">{{ officer.order }}</td>
+          <td>
+            <div class="d-flex align-items-center gap-3">
+              {% if officer.photo %}
+                <img src="{{ officer.photo.url }}" class="panel-avatar" alt="{{ officer.name }}">
+              {% else %}
+                <div class="panel-avatar-placeholder">{{ officer.name|first|upper }}</div>
+              {% endif %}
+              <span class="fw-semibold">{{ officer.name }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="badge bg-primary-subtle text-primary fw-semibold">{{ officer.title }}</span>
+          </td>
+          <td class="text-muted small">{{ officer.snowmobile_brand|default:"—" }}</td>
+          <td class="text-muted small">{{ officer.email|default:"—" }}</td>
+          <td class="text-end">
+            <a href="{% url 'manage_panel:officer_edit' officer.pk %}" class="btn btn-sm btn-outline-primary me-1">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <button class="btn btn-sm btn-outline-danger"
+                    data-delete-url="{% url 'manage_panel:officer_delete' officer.pk %}"
+                    data-delete-label="{{ officer.name }}">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="panel-card-body text-center py-5">
+      <i class="bi bi-person-badge display-4 text-muted mb-3 d-block"></i>
+      <p class="text-muted mb-3">No officers yet.</p>
+      <a href="{% url 'manage_panel:officer_add' %}" class="btn btn-primary">Add First Officer</a>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

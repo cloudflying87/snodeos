@@ -1,0 +1,39 @@
+{% extends 'manage_panel/base.html' %}
+{% load crispy_forms_tags %}
+{% block title %}{{ action }} Sponsor{% endblock %}
+{% block active_sponsors %}active{% endblock %}
+
+{% block content %}
+
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">{{ action }} Sponsor</h1>
+    <p class="panel-breadcrumb mb-0">
+      <a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> /
+      <a href="{% url 'manage_panel:sponsor_list' %}">Sponsors</a> / {{ action }}
+    </p>
+  </div>
+  <a href="{% url 'manage_panel:sponsor_list' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i>Back
+  </a>
+</div>
+
+<div class="row">
+  <div class="col-lg-7">
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h2 class="panel-card-title">Sponsor Details</h2>
+      </div>
+      <div class="panel-card-body">
+        {% if object and object.logo %}
+          <div class="mb-4 p-3 bg-light rounded-2 d-inline-block">
+            <img src="{{ object.logo.url }}" style="max-height:48px;width:auto;" alt="{{ object.name }}">
+          </div>
+        {% endif %}
+        {% crispy form %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
