@@ -122,6 +122,12 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@snodeos.flyho
 # Where officer notification emails are delivered (new applications, contact messages)
 NOTIFICATION_EMAIL = os.environ.get('NOTIFICATION_EMAIL', '')
 
+# SMS providers — set one to enable Text Members
+BREVO_API_KEY      = os.environ.get('BREVO_API_KEY', '')
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')
+TWILIO_AUTH_TOKEN  = os.environ.get('TWILIO_AUTH_TOKEN', '')
+TWILIO_FROM_NUMBER = os.environ.get('TWILIO_FROM_NUMBER', '')
+
 # Full public URL of the site — used in email links
 SITE_URL = os.environ.get('SITE_URL', 'https://snodeos.flyhomemnlab.com')
 

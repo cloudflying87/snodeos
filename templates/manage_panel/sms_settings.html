@@ -1,0 +1,138 @@
+{% extends "manage_panel/base.html" %}
+{% block title %}SMS / Texting{% endblock %}
+{% block active_sms %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="h3 fw-bold mb-1">SMS / Texting Setup</h1>
+    <p class="text-muted mb-0">Configure SMS so you can text members directly from this panel.</p>
+  </div>
+</div>
+
+<!-- Status -->
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3 p-4">
+        <div class="fs-2">{% if brevo_configured %}✅{% else %}⬜{% endif %}</div>
+        <div>
+          <div class="fw-bold">Brevo SMS</div>
+          <div class="text-muted small">{% if brevo_configured %}Configured — API key {{ brevo_api_key }}{% else %}Not configured{% endif %}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3 p-4">
+        <div class="fs-2">{% if twilio_configured %}✅{% else %}⬜{% endif %}</div>
+        <div>
+          <div class="fw-bold">Twilio</div>
+          <div class="text-muted small">{% if twilio_configured %}Configured — SID {{ twilio_sid }}{% else %}Not configured{% endif %}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Brevo (recommended) -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white border-bottom py-3 d-flex align-items-center gap-2">
+    <span class="badge bg-success">Recommended</span>
+    <h6 class="fw-semibold mb-0">Option A — Brevo (Email + SMS in one account)</h6>
+  </div>
+  <div class="card-body p-4">
+    <p class="text-muted mb-3">Brevo handles both your club email AND text messages from the same account and API key. No separate Twilio account needed. Free tier includes 300 emails/day and SMS at ~$0.008/message.</p>
+
+    <h6 class="fw-semibold mb-2">Setup Steps</h6>
+    <ol class="small mb-4">
+      <li class="mb-2">Create a free account at <strong>brevo.com</strong></li>
+      <li class="mb-2">Go to <strong>Account → SMTP & API → API Keys</strong> and create a new key</li>
+      <li class="mb-2">Add to the server's <code>.env</code> file:</li>
+    </ol>
+    <pre class="bg-light p-3 rounded small mb-4"><code># Brevo — handles BOTH email and SMS
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp-relay.brevo.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=your@email.com
+EMAIL_HOST_PASSWORD=xsmtpib-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+DEFAULT_FROM_EMAIL=Brainerd Snodeos &lt;noreply@snodeos.com&gt;
+NOTIFICATION_EMAIL=officers@youremail.com
+
+# Brevo SMS (same account, different key)
+BREVO_API_KEY=xkeysib-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code></pre>
+
+    <div class="alert alert-info d-flex gap-2 align-items-start">
+      <i class="bi bi-info-circle-fill flex-shrink-0 mt-1"></i>
+      <div>The <code>EMAIL_HOST_PASSWORD</code> for Brevo SMTP is your <strong>SMTP key</strong> (found under SMTP & API → SMTP). The <code>BREVO_API_KEY</code> is your <strong>API key</strong> (same page, different tab). They are different values.</div>
+    </div>
+
+    <p class="small text-muted mb-0">After adding to <code>.env</code>, rebuild with <code>./build.sh</code> and test from <a href="{% url 'manage_panel:email_settings' %}">Email Settings</a>. The Text Members page will unlock automatically.</p>
+  </div>
+</div>
+
+<!-- Twilio -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white border-bottom py-3">
+    <h6 class="fw-semibold mb-0">Option B — Twilio (SMS only)</h6>
+  </div>
+  <div class="card-body p-4">
+    <p class="text-muted mb-3">Twilio is the industry standard for SMS. More control over phone numbers and delivery. You would still need a separate email provider (Gmail, SendGrid, etc.).</p>
+
+    <ol class="small mb-4">
+      <li class="mb-2">Create an account at <strong>twilio.com</strong></li>
+      <li class="mb-2">Buy a US phone number from the Twilio Console (~$1.15/month)</li>
+      <li class="mb-2">Copy your <strong>Account SID</strong> and <strong>Auth Token</strong> from the dashboard</li>
+      <li class="mb-2">Add to <code>.env</code>:</li>
+    </ol>
+    <pre class="bg-light p-3 rounded small"><code>TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_FROM_NUMBER=+12185550100</code></pre>
+  </div>
+</div>
+
+<!-- Cost comparison -->
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-white border-bottom py-3">
+    <h6 class="fw-semibold mb-0"><i class="bi bi-currency-dollar me-2 text-primary"></i>Cost Comparison</h6>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0 small">
+      <thead class="table-light">
+        <tr>
+          <th class="ps-4 py-3">Service</th>
+          <th class="py-3">Email</th>
+          <th class="py-3">SMS per text</th>
+          <th class="py-3">Phone number</th>
+          <th class="pe-4 py-3">Free tier</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="ps-4 py-3 fw-semibold">Brevo <span class="badge bg-success ms-1">Recommended</span></td>
+          <td class="py-3">✅ 300/day free</td>
+          <td class="py-3">~$0.008</td>
+          <td class="py-3">Shared sender</td>
+          <td class="pe-4 py-3">Generous</td>
+        </tr>
+        <tr>
+          <td class="ps-4 py-3 fw-semibold">Twilio</td>
+          <td class="py-3">❌ Email only via SendGrid</td>
+          <td class="py-3">~$0.0079</td>
+          <td class="py-3">~$1.15/month</td>
+          <td class="pe-4 py-3">Trial credit</td>
+        </tr>
+        <tr>
+          <td class="ps-4 py-3 fw-semibold">Gmail</td>
+          <td class="py-3">✅ 500/day</td>
+          <td class="py-3">❌ No SMS</td>
+          <td class="py-3">—</td>
+          <td class="pe-4 py-3">Free</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

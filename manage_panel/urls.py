@@ -48,4 +48,6 @@ urlpatterns = [
     path('email/blast/', views.email_blast, name='email_blast'),
 
     path('setup-guide/', views.setup_guide, name='setup_guide'),
+    path('text-members/', views.text_members, name='text_members'),
+    path('sms-settings/', views.sms_settings, name='sms_settings'),
 ]

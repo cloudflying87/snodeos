@@ -651,3 +651,83 @@ def setup_guide(request):
         'checklist': checklist,
         'env_vars': env_vars,
     })
+
+
+# ── Text Members ───────────────────────────────────────────────────────────────
+
+@officer_required
+def text_members(request):
+    brevo_api_key  = getattr(settings, 'BREVO_API_KEY', '')
+    twilio_sid     = getattr(settings, 'TWILIO_ACCOUNT_SID', '')
+    sms_configured = bool(brevo_api_key or twilio_sid)
+
+    sent = failed = 0
+    if request.method == 'POST' and sms_configured:
+        message = request.POST.get('message', '').strip()
+        if message:
+            recipients = Member.objects.filter(
+                membership_status='active',
+                accepts_texts=True,
+            ).exclude(phone='')
+
+            if brevo_api_key:
+                import urllib.request, json as _json
+                for member in recipients:
+                    phone = member.phone.strip().replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
+                    if not phone.startswith('+'):
+                        phone = '+1' + phone
+                    payload = _json.dumps({
+                        'type': 'transactional',
+                        'unicodeEnabled': True,
+                        'sender': 'Snodeos',
+                        'recipient': phone,
+                        'content': message,
+                    }).encode()
+                    req = urllib.request.Request(
+                        'https://api.brevo.com/v3/transactionalSMS/sms',
+                        data=payload,
+                        headers={'api-key': brevo_api_key, 'Content-Type': 'application/json'},
+                    )
+                    try:
+                        urllib.request.urlopen(req, timeout=10)
+                        sent += 1
+                    except Exception:
+                        failed += 1
+
+            elif twilio_sid:
+                from twilio.rest import Client
+                twilio_token  = getattr(settings, 'TWILIO_AUTH_TOKEN', '')
+                twilio_from   = getattr(settings, 'TWILIO_FROM_NUMBER', '')
+                client = Client(twilio_sid, twilio_token)
+                for member in recipients:
+                    try:
+                        client.messages.create(body=message, from_=twilio_from, to=member.phone)
+                        sent += 1
+                    except Exception:
+                        failed += 1
+
+            if failed:
+                messages.warning(request, f'Sent to {sent} members. {failed} failed.')
+            else:
+                messages.success(request, f'Text sent to {sent} members who opted in.')
+            return redirect('manage_panel:text_members')
+
+    opted_in = Member.objects.filter(membership_status='active', accepts_texts=True).exclude(phone='').count()
+    return render(request, 'manage_panel/text_members.html', {
+        'sms_configured': sms_configured,
+        'opted_in': opted_in,
+    })
+
+
+# ── SMS Settings ───────────────────────────────────────────────────────────────
+
+@officer_required
+def sms_settings(request):
+    brevo_api_key  = getattr(settings, 'BREVO_API_KEY', '')
+    twilio_sid     = getattr(settings, 'TWILIO_ACCOUNT_SID', '')
+    return render(request, 'manage_panel/sms_settings.html', {
+        'brevo_configured':  bool(brevo_api_key),
+        'twilio_configured': bool(twilio_sid),
+        'brevo_api_key':     brevo_api_key[:8] + '…' if brevo_api_key else '',
+        'twilio_sid':        twilio_sid[:8] + '…' if twilio_sid else '',
+    })
