@@ -84,12 +84,15 @@ class Command(BaseCommand):
             photo_file = data.pop('photo_file')
             obj, created = Officer.objects.get_or_create(name=data['name'], defaults=data)
             if created:
-                if photo_file:
+                self.stdout.write(f'  Created officer: {obj.name}')
+            if photo_file:
+                needs_photo = not obj.photo or not os.path.exists(os.path.join(settings.MEDIA_ROOT, obj.photo.name))
+                if needs_photo:
                     photo_path = self._copy_image(photo_file, 'officers')
                     if photo_path:
                         obj.photo = photo_path
                         obj.save()
-                self.stdout.write(f'  Created officer: {obj.name}')
+                        self.stdout.write(f'  Restored photo: {obj.name}')
 
     def _seed_sponsors(self):
         sponsors = [
@@ -140,11 +143,15 @@ class Command(BaseCommand):
             logo_file = data.pop('logo_file')
             obj, created = Sponsor.objects.get_or_create(name=data['name'], defaults=data)
             if created:
+                self.stdout.write(f'  Created sponsor: {obj.name}')
+            # Always re-copy logo if the media file is missing (e.g. after a rebuild wiped media/)
+            needs_logo = not obj.logo or not os.path.exists(os.path.join(settings.MEDIA_ROOT, obj.logo.name))
+            if needs_logo:
                 logo_path = self._copy_image(logo_file, 'sponsors')
                 if logo_path:
                     obj.logo = logo_path
                     obj.save()
-                self.stdout.write(f'  Created sponsor: {obj.name}')
+                    self.stdout.write(f'  Restored logo: {obj.name}')
 
     def _seed_announcements(self):
         announcements = [
