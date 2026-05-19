@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.conf import settings
-from core.models import ClubStats, Officer, Sponsor, Announcement, TrailWorkLog, TrailWorkImage, ContactMessage
+from core.models import ClubStats, Officer, Sponsor, Announcement, TrailWorkLog, TrailWorkImage, ContactMessage, SiteSettings
 from core.email import send_test_email
 from accounts.models import Member
 from .forms import (
@@ -175,12 +175,31 @@ def announcement_list(request):
     return render(request, 'manage_panel/announcements/list.html', {'announcements': announcements})
 
 
+def _zapier_post(announcement):
+    import urllib.request, urllib.error, json
+    cfg = SiteSettings.get()
+    if cfg.facebook_integration != 'zapier' or not cfg.zapier_webhook_url:
+        return
+    payload = json.dumps({
+        'title': announcement.title,
+        'body': announcement.body,
+        'site_url': settings.SITE_URL,
+    }).encode()
+    try:
+        req = urllib.request.Request(cfg.zapier_webhook_url, data=payload,
+                                     headers={'Content-Type': 'application/json'})
+        urllib.request.urlopen(req, timeout=5)
+    except Exception:
+        pass  # never block the user if Zapier is down
+
+
 @officer_required
 def announcement_add(request):
     if request.method == 'POST':
         form = AnnouncementForm(request.POST)
         if form.is_valid():
-            form.save()
+            ann = form.save()
+            _zapier_post(ann)
             messages.success(request, 'Announcement posted.')
             return redirect('manage_panel:announcement_list')
     else:
@@ -359,6 +378,21 @@ def member_import(request):
         results = {'created': created, 'skipped': skipped, 'errors': errors, 'error_rows': error_rows}
 
     return render(request, 'manage_panel/member_import.html', {'results': results})
+
+
+# ── Facebook Integration ───────────────────────────────────────────────────────
+
+@officer_required
+def facebook_settings(request):
+    cfg = SiteSettings.get()
+    if request.method == 'POST':
+        cfg.facebook_integration = request.POST.get('facebook_integration', 'none')
+        cfg.facebook_page_url    = request.POST.get('facebook_page_url', '').strip()
+        cfg.zapier_webhook_url   = request.POST.get('zapier_webhook_url', '').strip()
+        cfg.save()
+        messages.success(request, 'Facebook integration settings saved.')
+        return redirect('manage_panel:facebook_settings')
+    return render(request, 'manage_panel/facebook_settings.html', {'cfg': cfg})
 
 
 # ── Email Blast ────────────────────────────────────────────────────────────────

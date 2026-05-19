@@ -87,6 +87,28 @@ class Announcement(models.Model):
         return self.title
 
 
+class SiteSettings(models.Model):
+    FACEBOOK_CHOICES = [
+        ('none',   'Disabled'),
+        ('plugin', 'Option 1 — Facebook Page Plugin (show live feed on site)'),
+        ('zapier', 'Option 3 — Zapier Webhook (auto-post announcements to Facebook)'),
+    ]
+    facebook_integration = models.CharField(max_length=20, choices=FACEBOOK_CHOICES, default='none')
+    facebook_page_url    = models.URLField(blank=True, default='https://www.facebook.com/brainerdsnodeos')
+    zapier_webhook_url   = models.URLField(blank=True, help_text='Paste your Zapier Catch Hook URL here')
+
+    class Meta:
+        verbose_name = 'Site Settings'
+
+    @classmethod
+    def get(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self):
+        return 'Site Settings'
+
+
 class ContactMessage(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField()

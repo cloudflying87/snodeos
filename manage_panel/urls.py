@@ -38,6 +38,7 @@ urlpatterns = [
     path('messages/<int:pk>/', views.message_detail, name='message_detail'),
     path('messages/<int:pk>/delete/', views.message_delete, name='message_delete'),
 
+    path('facebook/', views.facebook_settings, name='facebook_settings'),
     path('email/', views.email_settings, name='email_settings'),
     path('email/blast/', views.email_blast, name='email_blast'),
 ]

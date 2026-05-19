@@ -101,6 +101,9 @@
 
       <div class="panel-nav-section">
         <span class="panel-nav-label">Settings</span>
+        <a href="{% url 'manage_panel:facebook_settings' %}" class="panel-nav-link {% block active_facebook %}{% endblock %}">
+          <i class="bi bi-facebook"></i> Facebook
+        </a>
         <a href="{% url 'manage_panel:email_blast' %}" class="panel-nav-link {% block active_blast %}{% endblock %}">
           <i class="bi bi-broadcast"></i> Email Members
         </a>
