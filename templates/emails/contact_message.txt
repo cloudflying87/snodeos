@@ -1,0 +1,20 @@
+NEW CONTACT MESSAGE — Brainerd Snodeos
+======================================
+
+From:    {{ msg.name }}
+Email:   {{ msg.email }}
+{% if msg.phone %}Phone:   {{ msg.phone }}
+{% endif %}Subject: {{ msg.subject }}
+
+Message:
+--------
+{{ msg.message }}
+
+View in management panel:
+{{ detail_url }}
+
+Reply to {{ msg.name }}:
+mailto:{{ msg.email }}
+
+---
+Brainerd Snodeos Snowmobile Club | {{ site_url }}

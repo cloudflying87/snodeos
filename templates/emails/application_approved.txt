@@ -1,0 +1,17 @@
+Welcome to the Brainerd Snodeos, {{ member.first_name }}!
+==========================================================
+
+Your membership application has been approved. You're now an active member!
+
+Member:      {{ member.get_full_name }}
+Status:      Active Member
+Member Since: {{ member.membership_year }}
+
+Log in to your account:
+{{ login_url }}
+
+Our monthly meeting is every third Monday at 7:00 PM.
+We look forward to riding with you this season!
+
+---
+Brainerd Snodeos Snowmobile Club | {{ site_url }}

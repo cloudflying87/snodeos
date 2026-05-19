@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q
 from accounts.models import Member
+from core.email import notify_application_approved
 from .forms import MemberEditForm, MemberFilterForm, ProfileEditForm
 
 
@@ -73,6 +74,7 @@ def approve_member(request, pk):
     member.date_approved = timezone.now().date()
     member.membership_year = timezone.now().year
     member.save()
+    notify_application_approved(member)
     messages.success(request, f'{member.get_full_name()} has been approved as an active member.')
     return redirect('members:member_list')
 

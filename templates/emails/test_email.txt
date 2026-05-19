@@ -1,0 +1,12 @@
+EMAIL CONFIGURATION TEST — Brainerd Snodeos
+===========================================
+
+Your email settings are working correctly.
+
+If you received this, your SMTP configuration is set up correctly
+and notification emails will be delivered.
+
+Site: {{ site_url }}
+
+---
+Brainerd Snodeos Snowmobile Club | {{ site_url }}

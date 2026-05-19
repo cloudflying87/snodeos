@@ -1,0 +1,42 @@
+{% extends 'emails/base_email.html' %}
+{% block body %}
+<h2>New Membership Application</h2>
+<p>A new member has applied to join the Brainerd Snodeos. Review their application below.</p>
+
+<div class="info-box">
+  <div class="info-row">
+    <span class="info-label">Name</span>
+    <span class="info-value">{{ member.get_full_name }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Email</span>
+    <span class="info-value">{{ member.email }}</span>
+  </div>
+  {% if member.phone %}
+  <div class="info-row">
+    <span class="info-label">Phone</span>
+    <span class="info-value">{{ member.phone }}</span>
+  </div>
+  {% endif %}
+  {% if member.city %}
+  <div class="info-row">
+    <span class="info-label">Location</span>
+    <span class="info-value">{{ member.city }}, {{ member.state }}</span>
+  </div>
+  {% endif %}
+  {% if member.snowmobile_brand %}
+  <div class="info-row">
+    <span class="info-label">Snowmobile</span>
+    <span class="info-value">{{ member.get_snowmobile_brand_display }}</span>
+  </div>
+  {% endif %}
+  <div class="info-row">
+    <span class="info-label">Applied</span>
+    <span class="info-value">{{ member.date_applied|date:"F j, Y \a\t g:i A" }}</span>
+  </div>
+</div>
+
+<p style="text-align:center;margin-top:24px;">
+  <a href="{{ review_url }}" class="btn">Review Application →</a>
+</p>
+{% endblock %}

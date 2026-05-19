@@ -1,0 +1,22 @@
+{% extends 'emails/base_email.html' %}
+{% block body %}
+<h2>Email Configuration Test</h2>
+<p>Your email settings are working correctly. This is a test message sent from the Brainerd Snodeos management panel.</p>
+
+<div class="info-box">
+  <div class="info-row">
+    <span class="info-label">From</span>
+    <span class="info-value">{{ site_name }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Site</span>
+    <span class="info-value">{{ site_url }}</span>
+  </div>
+</div>
+
+<p>If you received this, your SMTP configuration is set up correctly and notification emails will be delivered.</p>
+
+<p style="text-align:center;margin-top:24px;">
+  <a href="{{ site_url }}/manage/" class="btn">Back to Management Panel →</a>
+</p>
+{% endblock %}

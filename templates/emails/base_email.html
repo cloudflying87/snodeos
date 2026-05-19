@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block subject %}Brainerd Snodeos{% endblock %}</title>
+  <style>
+    body { margin: 0; padding: 0; background: #f0f4f8; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #344055; }
+    .wrapper { max-width: 580px; margin: 32px auto; background: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    .header { background: #0f1923; padding: 28px 36px; text-align: center; }
+    .header-icon { font-size: 2rem; color: #0d6efd; }
+    .header h1 { margin: 8px 0 0; color: #ffffff; font-size: 1.2rem; font-weight: 700; letter-spacing: 0.5px; }
+    .body { padding: 36px; }
+    .body h2 { margin: 0 0 16px; font-size: 1.2rem; color: #1a2b3c; }
+    .body p { margin: 0 0 14px; line-height: 1.65; color: #4a5568; font-size: 0.95rem; }
+    .info-box { background: #f8fbff; border: 1px solid #dce8f8; border-radius: 8px; padding: 18px 20px; margin: 20px 0; }
+    .info-row { display: flex; gap: 12px; margin-bottom: 8px; font-size: 0.88rem; }
+    .info-row:last-child { margin-bottom: 0; }
+    .info-label { color: #7a96b0; font-weight: 600; min-width: 110px; }
+    .info-value { color: #1a2b3c; font-weight: 500; }
+    .btn { display: inline-block; background: #0d6efd; color: #ffffff !important; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 700; font-size: 0.95rem; margin: 8px 0; }
+    .btn-outline { background: transparent; border: 2px solid #0d6efd; color: #0d6efd !important; }
+    .footer { background: #f8fbff; border-top: 1px solid #e2eaf2; padding: 20px 36px; text-align: center; }
+    .footer p { margin: 0; font-size: 0.78rem; color: #9ab0c8; line-height: 1.6; }
+    .footer a { color: #0d6efd; text-decoration: none; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+    .badge-warning { background: #fff3cd; color: #856404; }
+    .badge-success { background: #d1e7dd; color: #0a3622; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <div class="header-icon">❄</div>
+      <h1>Brainerd Snodeos Snowmobile Club</h1>
+    </div>
+    <div class="body">
+      {% block body %}{% endblock %}
+    </div>
+    <div class="footer">
+      <p>
+        <a href="{{ site_url }}">snodeos.flyhomemnlab.com</a> &bull;
+        Brainerd Lakes Area, Minnesota &bull; Est. 1975
+      </p>
+      <p style="margin-top:6px;">You're receiving this because you're a member or officer of the Brainerd Snodeos club.</p>
+    </div>
+  </div>
+</body>
+</html>

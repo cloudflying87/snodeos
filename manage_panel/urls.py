@@ -34,4 +34,6 @@ urlpatterns = [
     path('messages/', views.message_list, name='message_list'),
     path('messages/<int:pk>/', views.message_detail, name='message_detail'),
     path('messages/<int:pk>/delete/', views.message_delete, name='message_delete'),
+
+    path('email/', views.email_settings, name='email_settings'),
 ]

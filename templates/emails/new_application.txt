@@ -1,0 +1,17 @@
+NEW MEMBERSHIP APPLICATION — Brainerd Snodeos
+=============================================
+
+A new member has applied to join the club.
+
+Name:       {{ member.get_full_name }}
+Email:      {{ member.email }}
+{% if member.phone %}Phone:      {{ member.phone }}
+{% endif %}{% if member.city %}Location:   {{ member.city }}, {{ member.state }}
+{% endif %}{% if member.snowmobile_brand %}Snowmobile: {{ member.get_snowmobile_brand_display }}
+{% endif %}Applied:    {{ member.date_applied|date:"F j, Y \a\t g:i A" }}
+
+Review this application:
+{{ review_url }}
+
+---
+Brainerd Snodeos Snowmobile Club | {{ site_url }}

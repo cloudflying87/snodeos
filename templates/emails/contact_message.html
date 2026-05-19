@@ -1,0 +1,36 @@
+{% extends 'emails/base_email.html' %}
+{% block body %}
+<h2>New Contact Message</h2>
+<p>Someone submitted a message through the Brainerd Snodeos contact form.</p>
+
+<div class="info-box">
+  <div class="info-row">
+    <span class="info-label">From</span>
+    <span class="info-value">{{ msg.name }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Email</span>
+    <span class="info-value">{{ msg.email }}</span>
+  </div>
+  {% if msg.phone %}
+  <div class="info-row">
+    <span class="info-label">Phone</span>
+    <span class="info-value">{{ msg.phone }}</span>
+  </div>
+  {% endif %}
+  <div class="info-row">
+    <span class="info-label">Subject</span>
+    <span class="info-value">{{ msg.subject }}</span>
+  </div>
+</div>
+
+<div style="background:#f8fbff;border-left:3px solid #0d6efd;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
+  <p style="margin:0;white-space:pre-wrap;font-size:0.92rem;line-height:1.65;">{{ msg.message }}</p>
+</div>
+
+<p style="text-align:center;margin-top:24px;">
+  <a href="{{ detail_url }}" class="btn">View in Management Panel →</a>
+  &nbsp;
+  <a href="mailto:{{ msg.email }}?subject=Re: {{ msg.subject }}" class="btn btn-outline">Reply via Email</a>
+</p>
+{% endblock %}

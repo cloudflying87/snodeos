@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib import messages
+from core.email import notify_new_application
 from .forms import MembershipApplicationForm, MemberLoginForm
 
 
@@ -10,7 +11,8 @@ def register(request):
     if request.method == 'POST':
         form = MembershipApplicationForm(request.POST)
         if form.is_valid():
-            form.save()
+            member = form.save()
+            notify_new_application(member)
             messages.success(request, 'Your application has been submitted! An officer will review it shortly.')
             return redirect('core:home')
     else:

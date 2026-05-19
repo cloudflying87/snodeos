@@ -3,7 +3,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.conf import settings
 from core.models import ClubStats, Officer, Sponsor, Announcement, TrailWorkLog, ContactMessage
+from core.email import send_test_email
 from accounts.models import Member
 from .forms import (
     ClubStatsForm, OfficerForm, SponsorForm,
@@ -292,3 +294,30 @@ def message_delete(request, pk):
     msg.delete()
     messages.success(request, 'Message deleted.')
     return redirect('manage_panel:message_list')
+
+
+# ── Email Settings ─────────────────────────────────────────────────────────────
+
+@officer_required
+def email_settings(request):
+    if request.method == 'POST' and 'send_test' in request.POST:
+        recipient = request.POST.get('test_recipient', '').strip() or request.user.email
+        try:
+            send_test_email(recipient)
+            messages.success(request, f'Test email sent to {recipient}. Check your inbox (and spam folder).')
+        except Exception as exc:
+            messages.error(request, f'Failed to send test email: {exc}')
+        return redirect('manage_panel:email_settings')
+
+    config = {
+        'backend': settings.EMAIL_BACKEND,
+        'host': settings.EMAIL_HOST or '(not set)',
+        'port': settings.EMAIL_PORT,
+        'use_tls': settings.EMAIL_USE_TLS,
+        'user': settings.EMAIL_HOST_USER or '(not set)',
+        'from_email': settings.DEFAULT_FROM_EMAIL,
+        'notification_email': getattr(settings, 'NOTIFICATION_EMAIL', '') or '(not set)',
+        'is_console': 'console' in settings.EMAIL_BACKEND,
+        'is_smtp': 'smtp' in settings.EMAIL_BACKEND,
+    }
+    return render(request, 'manage_panel/email_settings.html', {'config': config})

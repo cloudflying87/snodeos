@@ -116,7 +116,13 @@ EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@snodeos.com')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@snodeos.flyhomemnlab.com')
+
+# Where officer notification emails are delivered (new applications, contact messages)
+NOTIFICATION_EMAIL = os.environ.get('NOTIFICATION_EMAIL', '')
+
+# Full public URL of the site — used in email links
+SITE_URL = os.environ.get('SITE_URL', 'https://snodeos.flyhomemnlab.com')
 
 # Required when running behind a reverse proxy (Nginx in Docker)
 CSRF_TRUSTED_ORIGINS = [

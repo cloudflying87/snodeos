@@ -1,0 +1,155 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}Email Settings{% endblock %}
+{% block active_email %}active{% endblock %}
+
+{% block content %}
+
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">Email Settings</h1>
+    <p class="panel-breadcrumb mb-0"><a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> / Email Settings</p>
+  </div>
+</div>
+
+<div class="row g-4">
+
+  <!-- Current Config -->
+  <div class="col-lg-7">
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h2 class="panel-card-title"><i class="bi bi-gear me-2 text-primary"></i>Current Configuration</h2>
+        <span class="badge {% if config.is_smtp %}bg-success-subtle text-success{% else %}bg-warning-subtle text-warning{% endif %} fw-semibold">
+          {% if config.is_smtp %}SMTP Active{% elif config.is_console %}Console (Dev){% else %}{{ config.backend }}{% endif %}
+        </span>
+      </div>
+      <div class="panel-card-body">
+        {% if config.is_console %}
+          <div class="alert alert-warning d-flex gap-3 align-items-start mb-4">
+            <i class="bi bi-exclamation-triangle-fill mt-1 flex-shrink-0"></i>
+            <div>
+              <strong>Console backend active.</strong> Emails print to the terminal — they are not actually sent.
+              Set <code>EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend</code> in your <code>.env</code> to send real emails.
+            </div>
+          </div>
+        {% endif %}
+
+        <table class="table table-borderless table-sm mb-0">
+          <tr>
+            <td class="text-muted fw-semibold" style="width:180px;">Backend</td>
+            <td><code class="small">{{ config.backend }}</code></td>
+          </tr>
+          <tr>
+            <td class="text-muted fw-semibold">SMTP Host</td>
+            <td>{{ config.host }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted fw-semibold">Port / TLS</td>
+            <td>{{ config.port }} / {% if config.use_tls %}TLS enabled{% else %}TLS disabled{% endif %}</td>
+          </tr>
+          <tr>
+            <td class="text-muted fw-semibold">Login User</td>
+            <td>{{ config.user }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted fw-semibold">From Address</td>
+            <td>{{ config.from_email }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted fw-semibold">Notifications To</td>
+            <td>{{ config.notification_email }}</td>
+          </tr>
+        </table>
+
+        <hr class="my-4">
+        <p class="text-muted small mb-0">
+          Change these values in your <code>.env</code> file and restart the server (or redeploy with <code>./build.sh --docker</code>).
+        </p>
+      </div>
+    </div>
+
+    <!-- Test Send -->
+    <div class="panel-card mt-4">
+      <div class="panel-card-header">
+        <h2 class="panel-card-title"><i class="bi bi-send me-2 text-primary"></i>Send Test Email</h2>
+      </div>
+      <div class="panel-card-body">
+        <p class="text-muted small mb-4">Sends a test email to verify your SMTP config is working correctly.</p>
+        <form method="post">
+          {% csrf_token %}
+          <div class="input-group">
+            <input type="email" name="test_recipient" class="form-control"
+                   placeholder="{{ request.user.email }}"
+                   value="{{ request.user.email }}">
+            <button type="submit" name="send_test" class="btn btn-primary px-4">
+              <i class="bi bi-send me-1"></i>Send Test
+            </button>
+          </div>
+          <p class="text-muted small mt-2 mb-0">Defaults to your account email if left blank.</p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Setup Guide -->
+  <div class="col-lg-5">
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h2 class="panel-card-title"><i class="bi bi-book me-2 text-muted"></i>SMTP Setup Guide</h2>
+      </div>
+      <div class="panel-card-body">
+
+        <p class="text-muted small mb-3">Add these to your <code>.env</code> file:</p>
+
+        <!-- Gmail -->
+        <div class="mb-4">
+          <h6 class="fw-bold mb-2"><i class="bi bi-google me-2 text-danger"></i>Gmail</h6>
+          <pre class="bg-dark text-light p-3 rounded small mb-1" style="font-size:0.75rem;">EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=you@gmail.com
+EMAIL_HOST_PASSWORD=your_app_password</pre>
+          <p class="text-muted" style="font-size:0.72rem;">
+            Requires a <strong>Gmail App Password</strong> (not your regular password).
+            Create one at <em>Google Account → Security → 2-Step Verification → App passwords</em>.
+          </p>
+        </div>
+
+        <!-- SendGrid -->
+        <div class="mb-4">
+          <h6 class="fw-bold mb-2"><i class="bi bi-lightning me-2 text-primary"></i>SendGrid</h6>
+          <pre class="bg-dark text-light p-3 rounded small mb-1" style="font-size:0.75rem;">EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.sendgrid.net
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=apikey
+EMAIL_HOST_PASSWORD=your_sendgrid_api_key</pre>
+          <p class="text-muted" style="font-size:0.72rem;">Free tier includes 100 emails/day. API key from <em>Settings → API Keys</em>.</p>
+        </div>
+
+        <!-- Mailgun -->
+        <div class="mb-4">
+          <h6 class="fw-bold mb-2"><i class="bi bi-envelope me-2 text-warning"></i>Mailgun</h6>
+          <pre class="bg-dark text-light p-3 rounded small mb-1" style="font-size:0.75rem;">EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.mailgun.org
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=postmaster@mg.yourdomain.com
+EMAIL_HOST_PASSWORD=your_mailgun_smtp_password</pre>
+        </div>
+
+        <!-- Notification email -->
+        <div class="alert alert-primary d-flex gap-2 align-items-start mt-3 mb-0" style="font-size:0.82rem;">
+          <i class="bi bi-info-circle-fill mt-1 flex-shrink-0"></i>
+          <div>
+            Set <code>NOTIFICATION_EMAIL=officers@yourdomain.com</code> to control where new application and contact message alerts are delivered.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

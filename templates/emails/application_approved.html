@@ -1,0 +1,31 @@
+{% extends 'emails/base_email.html' %}
+{% block body %}
+<h2>Welcome to the Club, {{ member.first_name }}! 🎉</h2>
+<p>Great news — your Brainerd Snodeos membership application has been approved. You're now an active member!</p>
+
+<div class="info-box">
+  <div class="info-row">
+    <span class="info-label">Member</span>
+    <span class="info-value">{{ member.get_full_name }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Status</span>
+    <span class="info-value"><span class="badge badge-success">Active Member</span></span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Member Since</span>
+    <span class="info-value">{{ member.membership_year }}</span>
+  </div>
+</div>
+
+<p>You can now log in to your member account to access your dashboard and club resources.</p>
+
+<p style="text-align:center;margin-top:24px;">
+  <a href="{{ login_url }}" class="btn">Log In to Your Account →</a>
+</p>
+
+<p style="margin-top:28px;font-size:0.88rem;color:#7a96b0;">
+  Our monthly meeting is every <strong>third Monday at 7:00 PM</strong>.
+  We look forward to riding with you this season!
+</p>
+{% endblock %}
