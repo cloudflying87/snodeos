@@ -15,23 +15,23 @@
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+<nav class="navbar navbar-expand-lg sticky-top site-navbar">
   <div class="container">
     <a class="navbar-brand" href="{% url 'core:home' %}">
-      <img src="{% static 'images/logo-name.png' %}" alt="Brainerd Snodeos" height="48">
+      <img src="{% static 'images/logo-name.png' %}" alt="Brainerd Snodeos" height="56">
     </a>
     <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarMain">
       <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
-        <li class="nav-item"><a class="nav-link nav-underline" href="{% url 'core:home' %}">Home</a></li>
-        <li class="nav-item"><a class="nav-link nav-underline" href="{% url 'core:about' %}">About Us</a></li>
-        <li class="nav-item"><a class="nav-link nav-underline" href="{% url 'core:trail_work' %}">Trail Work</a></li>
-        <li class="nav-item"><a class="nav-link nav-underline" href="{% url 'core:contact' %}">Contact Us / Join</a></li>
+        <li class="nav-item"><a class="nav-link site-nav-link" href="{% url 'core:home' %}">Home</a></li>
+        <li class="nav-item"><a class="nav-link site-nav-link" href="{% url 'core:about' %}">About Us</a></li>
+        <li class="nav-item"><a class="nav-link site-nav-link" href="{% url 'core:trail_work' %}">Trail Work</a></li>
+        <li class="nav-item"><a class="nav-link site-nav-link" href="{% url 'core:contact' %}">Contact Us / Join</a></li>
         {% if user.is_authenticated %}
           <li class="nav-item ms-lg-2">
-            <a class="nav-link nav-underline" href="{% url 'members:dashboard' %}">
+            <a class="nav-link site-nav-link" href="{% url 'members:dashboard' %}">
               <i class="bi bi-person-circle me-1"></i>{{ user.get_short_name }}
             </a>
           </li>
@@ -43,20 +43,24 @@
             </li>
           {% endif %}
           <li class="nav-item">
-            <a class="btn btn-outline-dark btn-sm ms-lg-1" href="{% url 'accounts:logout' %}">Log Out</a>
+            <a class="btn btn-outline-light btn-sm ms-lg-1" href="{% url 'accounts:logout' %}">Log Out</a>
           </li>
         {% else %}
           <li class="nav-item ms-lg-2">
-            <a class="nav-link nav-underline" href="{% url 'accounts:login' %}">Member Login</a>
+            <a class="nav-link site-nav-link" href="{% url 'accounts:login' %}">Member Login</a>
           </li>
           <li class="nav-item">
-            <a class="btn btn-primary btn-sm ms-lg-1" href="{% url 'accounts:register' %}">Join the Club</a>
+            <a class="btn btn-outline-light btn-sm ms-lg-1" href="{% url 'accounts:register' %}">Join the Club</a>
           </li>
         {% endif %}
       </ul>
     </div>
   </div>
 </nav>
+<!-- Navbar wave bottom -->
+<div class="navbar-wave" aria-hidden="true">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 283.5 27.8" preserveAspectRatio="none"><path fill="#ffffff" d="M283.5,9.7c0,0-7.3,4.3-14,4.6c-6.8,0.3-12.6,0-20.9-1.5c-11.3-2-33.1-10.1-44.7-5.7s-12.1,4.6-18,7.4c-6.6,3.2-20,9.6-36.6,9.3C131.6,23.5,99.5,7.2,86.3,8c-1.4,0.1-6.6,0.8-10.5,2c-3.8,1.2-9.4,3.8-17,4.7c-3.2,0.4-8.3,1.1-14.2,0.9c-1.5-0.1-6.3-0.4-12-1.6c-5.7-1.2-11-3.1-15.8-3.7C6.5,9.2,0,10.8,0,10.8V0h283.5V9.7z"/></svg>
+</div>
 
 <!-- Messages -->
 {% if messages %}
