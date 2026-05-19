@@ -61,6 +61,19 @@ class TrailWorkLog(models.Model):
         return f'{self.date} — {self.title}'
 
 
+class TrailWorkImage(models.Model):
+    log = models.ForeignKey(TrailWorkLog, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='trail_work/')
+    caption = models.CharField(max_length=200, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['uploaded_at']
+
+    def __str__(self):
+        return f'Image for {self.log}'
+
+
 class Announcement(models.Model):
     title = models.CharField(max_length=200)
     body = models.TextField()

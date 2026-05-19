@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.conf import settings
-from core.models import ClubStats, Officer, Sponsor, Announcement, TrailWorkLog, ContactMessage
+from core.models import ClubStats, Officer, Sponsor, Announcement, TrailWorkLog, TrailWorkImage, ContactMessage
 from core.email import send_test_email
 from accounts.models import Member
 from .forms import (
@@ -235,7 +235,9 @@ def trail_work_add(request):
     if request.method == 'POST':
         form = TrailWorkLogForm(request.POST)
         if form.is_valid():
-            form.save()
+            log = form.save()
+            for img in request.FILES.getlist('images'):
+                TrailWorkImage.objects.create(log=log, image=img)
             messages.success(request, 'Trail work log added.')
             return redirect('manage_panel:trail_work_list')
     else:
@@ -250,11 +252,27 @@ def trail_work_edit(request, pk):
         form = TrailWorkLogForm(request.POST, instance=log)
         if form.is_valid():
             form.save()
+            for img in request.FILES.getlist('images'):
+                TrailWorkImage.objects.create(log=log, image=img)
             messages.success(request, 'Trail work log updated.')
             return redirect('manage_panel:trail_work_list')
     else:
         form = TrailWorkLogForm(instance=log)
-    return render(request, 'manage_panel/trail_work/form.html', {'form': form, 'action': 'Edit', 'object': log})
+    return render(request, 'manage_panel/trail_work/form.html', {
+        'form': form, 'action': 'Edit', 'object': log,
+        'existing_images': log.images.all(),
+    })
+
+
+@officer_required
+@require_POST
+def trail_work_image_delete(request, pk):
+    img = get_object_or_404(TrailWorkImage, pk=pk)
+    log_pk = img.log_id
+    img.image.delete(save=False)
+    img.delete()
+    messages.success(request, 'Image removed.')
+    return redirect('manage_panel:trail_work_edit', pk=log_pk)
 
 
 @officer_required
@@ -294,6 +312,53 @@ def message_delete(request, pk):
     msg.delete()
     messages.success(request, 'Message deleted.')
     return redirect('manage_panel:message_list')
+
+
+# ── Member CSV Import ──────────────────────────────────────────────────────────
+
+@officer_required
+def member_import(request):
+    import csv, io
+    results = None
+
+    if request.method == 'POST' and request.FILES.get('csv_file'):
+        f = request.FILES['csv_file']
+        text = io.TextIOWrapper(f, encoding='utf-8-sig', errors='replace')
+        reader = csv.DictReader(text)
+        created = skipped = errors = 0
+        error_rows = []
+
+        for i, row in enumerate(reader, start=2):
+            email = (row.get('email') or row.get('Email') or '').strip().lower()
+            if not email:
+                errors += 1
+                error_rows.append(f'Row {i}: missing email')
+                continue
+            if Member.objects.filter(email=email).exists():
+                skipped += 1
+                continue
+            try:
+                Member.objects.create_user(
+                    email=email,
+                    password=None,
+                    first_name=(row.get('first_name') or row.get('First Name') or '').strip(),
+                    last_name=(row.get('last_name') or row.get('Last Name') or '').strip(),
+                    phone=(row.get('phone') or row.get('Phone') or '').strip(),
+                    city=(row.get('city') or row.get('City') or '').strip(),
+                    state=(row.get('state') or row.get('State') or 'MN').strip(),
+                    zip_code=(row.get('zip_code') or row.get('Zip') or '').strip(),
+                    snowmobile_brand=(row.get('snowmobile_brand') or row.get('Sled') or '').strip().lower(),
+                    membership_status=(row.get('membership_status') or row.get('Status') or 'active').strip().lower(),
+                    membership_year=int(row['membership_year']) if (row.get('membership_year') or '').strip().isdigit() else None,
+                )
+                created += 1
+            except Exception as e:
+                errors += 1
+                error_rows.append(f'Row {i} ({email}): {e}')
+
+        results = {'created': created, 'skipped': skipped, 'errors': errors, 'error_rows': error_rows}
+
+    return render(request, 'manage_panel/member_import.html', {'results': results})
 
 
 # ── Email Blast ────────────────────────────────────────────────────────────────

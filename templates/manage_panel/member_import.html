@@ -1,0 +1,91 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}Import Members{% endblock %}
+{% block active_members %}active{% endblock %}
+
+{% block content %}
+<div class="panel-page-header d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="panel-page-title">Import Members</h1>
+    <p class="text-muted mb-0">Upload a CSV file to bulk-import members.</p>
+  </div>
+  <a href="{% url 'members:member_list' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i>Back to Members
+  </a>
+</div>
+
+{% if results %}
+<div class="alert {% if results.errors %}alert-warning{% else %}alert-success{% endif %} mb-4">
+  <strong>Import complete.</strong>
+  {{ results.created }} created &bull;
+  {{ results.skipped }} skipped (already exist) &bull;
+  {{ results.errors }} errors
+  {% if results.error_rows %}
+  <ul class="mt-2 mb-0 small">
+    {% for err in results.error_rows %}<li>{{ err }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h5 class="panel-card-title mb-0"><i class="bi bi-upload me-2"></i>Upload CSV</h5>
+      </div>
+      <div class="panel-card-body">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">CSV File</label>
+            <input type="file" name="csv_file" class="form-control" accept=".csv" required>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-upload me-2"></i>Import
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h5 class="panel-card-title mb-0"><i class="bi bi-info-circle me-2"></i>CSV Format</h5>
+      </div>
+      <div class="panel-card-body">
+        <p class="small text-muted mb-2">Required column: <strong>email</strong>. All others are optional.</p>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered small">
+            <thead class="table-light">
+              <tr>
+                <th>Column</th>
+                <th>Example</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>email <span class="text-danger">*</span></td><td>john@example.com</td></tr>
+              <tr><td>first_name</td><td>John</td></tr>
+              <tr><td>last_name</td><td>Smith</td></tr>
+              <tr><td>phone</td><td>218-555-1234</td></tr>
+              <tr><td>city</td><td>Brainerd</td></tr>
+              <tr><td>state</td><td>MN</td></tr>
+              <tr><td>zip_code</td><td>56401</td></tr>
+              <tr><td>snowmobile_brand</td><td>polaris</td></tr>
+              <tr><td>membership_status</td><td>active</td></tr>
+              <tr><td>membership_year</td><td>2025</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small text-muted mt-2 mb-0">
+          <i class="bi bi-info-circle me-1"></i>Existing members (matched by email) are skipped. Imported members have no password set — they must use "Forgot Password" to log in.
+        </p>
+        <a href="data:text/csv;charset=utf-8,email,first_name,last_name,phone,city,state,zip_code,snowmobile_brand,membership_status,membership_year%0Ajohn@example.com,John,Smith,218-555-1234,Brainerd,MN,56401,polaris,active,2025"
+           download="members_template.csv" class="btn btn-outline-secondary btn-sm mt-3">
+          <i class="bi bi-download me-1"></i>Download Template
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -37,6 +37,9 @@ def contact(request):
     return render(request, 'core/contact.html', {'form': form})
 
 
+from django.contrib.auth.decorators import login_required
+
+@login_required
 def trail_work(request):
-    logs = TrailWorkLog.objects.all()
+    logs = TrailWorkLog.objects.prefetch_related('images').all()
     return render(request, 'core/trail_work.html', {'logs': logs})

@@ -18,16 +18,54 @@
   </a>
 </div>
 
-<div class="row">
+<div class="row g-4">
   <div class="col-lg-8">
-    <div class="panel-card">
-      <div class="panel-card-header">
-        <h2 class="panel-card-title">Log Details</h2>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="panel-card mb-4">
+        <div class="panel-card-header">
+          <h2 class="panel-card-title">Log Details</h2>
+        </div>
+        <div class="panel-card-body">
+          {% crispy form %}
+        </div>
       </div>
-      <div class="panel-card-body">
-        {% crispy form %}
+
+      <div class="panel-card">
+        <div class="panel-card-header">
+          <h2 class="panel-card-title">Photos</h2>
+        </div>
+        <div class="panel-card-body">
+
+          {% if existing_images %}
+          <p class="text-muted small mb-3">Existing photos — click to remove:</p>
+          <div class="row g-2 mb-4">
+            {% for img in existing_images %}
+            <div class="col-6 col-md-3 position-relative">
+              <img src="{{ img.image.url }}" class="img-fluid rounded" style="height:120px;object-fit:cover;width:100%;" alt="">
+              <form method="post" action="{% url 'manage_panel:trail_work_image_delete' img.pk %}" class="position-absolute top-0 end-0 m-1">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm py-0 px-1" title="Remove" onclick="return confirm('Remove this photo?')">
+                  <i class="bi bi-x"></i>
+                </button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <label class="form-label fw-semibold">Add Photos</label>
+          <input type="file" name="images" class="form-control" multiple accept="image/*">
+          <div class="form-text">Select one or multiple photos. JPG, PNG, WEBP accepted.</div>
+
+          <div class="mt-4">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save me-2"></i>Save Log
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    </form>
   </div>
 </div>
 

@@ -108,6 +108,7 @@ class TrailWorkLogForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
+        self.helper.form_tag = False
         self.helper.layout = Layout(
             Row(
                 Column('date', css_class='col-md-4'),
@@ -116,5 +117,4 @@ class TrailWorkLogForm(forms.ModelForm):
             ),
             'title',
             'description',
-            Submit('submit', 'Save Log', css_class='btn btn-primary mt-3'),
         )
