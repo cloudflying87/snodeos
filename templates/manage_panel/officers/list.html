@@ -61,16 +61,9 @@
   </div>
 
   <!-- Mobile list -->
-  <div class="d-md-none mob-list">
+  <div class="d-md-none mob-card-list">
     {% for officer in officers %}
     <div class="mob-swipe-wrapper">
-      <div class="mob-swipe-delete">
-        <button class="btn btn-danger h-100 w-100 rounded-0 border-0"
-                data-delete-url="{% url 'manage_panel:officer_delete' officer.pk %}"
-                data-delete-label="{{ officer.name }}">
-          <i class="bi bi-trash fs-5"></i>
-        </button>
-      </div>
       <a href="{% url 'manage_panel:officer_edit' officer.pk %}" class="mob-swipe-row">
         {% if officer.photo %}
           <img src="{{ officer.photo.url }}" class="rounded-circle flex-shrink-0" style="width:44px;height:44px;object-fit:cover;">
@@ -86,6 +79,13 @@
         </div>
         <i class="bi bi-chevron-right text-muted" style="flex-shrink:0;font-size:0.8rem;"></i>
       </a>
+      <div class="mob-swipe-delete">
+        <button class="btn btn-danger w-100 h-100 border-0 rounded-0"
+                data-delete-url="{% url 'manage_panel:officer_delete' officer.pk %}"
+                data-delete-label="{{ officer.name }}">
+          <i class="bi bi-trash fs-5"></i>
+        </button>
+      </div>
     </div>
     {% endfor %}
   </div>

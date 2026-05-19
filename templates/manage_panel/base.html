@@ -194,15 +194,14 @@
     });
   });
 
-  // Swipe-to-delete for any .mob-swipe-wrapper rows
+  // Swipe-to-delete for .mob-swipe-wrapper cards
   (function () {
+    const SWIPE_WIDTH = 80;
     let openRow = null;
 
     document.querySelectorAll('.mob-swipe-wrapper').forEach(wrapper => {
       const row = wrapper.querySelector('.mob-swipe-row');
       if (!row) return;
-      const deleteZone = wrapper.querySelector('.mob-swipe-delete');
-      const SWIPE_WIDTH = deleteZone ? deleteZone.offsetWidth : 75;
       let startX = 0, startY = 0, dx = 0, dragging = false;
 
       row.addEventListener('touchstart', e => {
@@ -216,8 +215,10 @@
         const t = e.touches[0];
         const deltaX = t.clientX - startX;
         const deltaY = t.clientY - startY;
-        if (!dragging && Math.abs(deltaX) < Math.abs(deltaY)) return;
-        dragging = true;
+        if (!dragging) {
+          if (Math.abs(deltaY) > Math.abs(deltaX)) return;
+          dragging = true;
+        }
         e.preventDefault();
         if (openRow && openRow !== row) {
           openRow.style.transition = 'transform 0.2s ease';
@@ -239,12 +240,18 @@
         }
       });
 
+      // Tap: close if open; navigate for data-href divs
       row.addEventListener('click', e => {
         if (openRow === row) {
+          e.stopPropagation();
           e.preventDefault();
           row.style.transition = 'transform 0.2s ease';
           row.style.transform = 'translateX(0)';
           openRow = null;
+          return;
+        }
+        if (row.dataset.href && !e.target.closest('form, button, a')) {
+          location.href = row.dataset.href;
         }
       });
     });

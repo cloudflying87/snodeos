@@ -59,23 +59,10 @@
   </div>
 
   <!-- Mobile list -->
-  <div class="d-md-none mob-list">
+  <div class="d-md-none mob-card-list">
     {% for ann in announcements %}
     <div class="mob-swipe-wrapper">
-      <div class="mob-swipe-delete dual">
-        <form method="post" action="{% url 'manage_panel:announcement_pin' ann.pk %}" style="flex:1;">
-          {% csrf_token %}
-          <button type="submit" class="btn {% if ann.is_pinned %}btn-primary{% else %}btn-secondary{% endif %} h-100 w-100 rounded-0 border-0" title="Toggle pin">
-            <i class="bi bi-pin-angle{% if ann.is_pinned %}-fill{% endif %} fs-5"></i>
-          </button>
-        </form>
-        <button class="btn btn-danger h-100 rounded-0 border-0" style="width:75px;"
-                data-delete-url="{% url 'manage_panel:announcement_delete' ann.pk %}"
-                data-delete-label="{{ ann.title }}">
-          <i class="bi bi-trash fs-5"></i>
-        </button>
-      </div>
-      <a href="{% url 'manage_panel:announcement_edit' ann.pk %}" class="mob-swipe-row">
+      <div class="mob-swipe-row" data-href="{% url 'manage_panel:announcement_edit' ann.pk %}">
         <div class="mob-info">
           <div class="mob-title">
             {% if ann.is_pinned %}<i class="bi bi-pin-angle-fill text-primary me-1" style="font-size:0.75rem;"></i>{% endif %}
@@ -83,8 +70,21 @@
           </div>
           <div class="mob-sub">{{ ann.created_at|date:"M j, Y" }} &middot; {{ ann.get_visibility_display }}</div>
         </div>
+        <form method="post" action="{% url 'manage_panel:announcement_pin' ann.pk %}" onclick="event.stopPropagation()">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm {% if ann.is_pinned %}btn-primary{% else %}btn-outline-secondary{% endif %} border-0" style="min-width:36px;min-height:36px;" title="Toggle pin">
+            <i class="bi bi-pin-angle{% if ann.is_pinned %}-fill{% endif %}"></i>
+          </button>
+        </form>
         <i class="bi bi-chevron-right text-muted" style="flex-shrink:0;font-size:0.8rem;"></i>
-      </a>
+      </div>
+      <div class="mob-swipe-delete">
+        <button class="btn btn-danger w-100 h-100 border-0 rounded-0"
+                data-delete-url="{% url 'manage_panel:announcement_delete' ann.pk %}"
+                data-delete-label="{{ ann.title }}">
+          <i class="bi bi-trash fs-5"></i>
+        </button>
+      </div>
     </div>
     {% endfor %}
   </div>
