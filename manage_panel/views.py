@@ -1490,8 +1490,54 @@ def event_form(request, pk=None):
             max_v = request.POST.get('max_volunteers', '').strip()
             event.max_volunteers = int(max_v) if max_v.isdigit() else None
 
+            # Recurrence — only expand on CREATE, not edit
+            recurrence = request.POST.get('recurrence', 'none')
+            recurrence_count = request.POST.get('recurrence_count', '').strip()
+            try:
+                recurrence_count = int(recurrence_count) if recurrence_count else 1
+            except ValueError:
+                recurrence_count = 1
+            recurrence_count = max(1, min(52, recurrence_count))   # safety cap
+
+            is_new = event.pk is None
+            event.recurrence = recurrence
+            event.recurrence_count = recurrence_count if recurrence != 'none' else None
             event.save()
-            messages.success(request, f'Event "{event.title}" saved.')
+
+            if is_new and recurrence != 'none' and recurrence_count > 1:
+                import uuid as _uuid
+                import datetime as _dt
+                group_id = _uuid.uuid4()
+                event.recurrence_group = group_id
+                event.save(update_fields=['recurrence_group'])
+                delta_map = {
+                    'daily':    _dt.timedelta(days=1),
+                    'weekly':   _dt.timedelta(weeks=1),
+                    'biweekly': _dt.timedelta(weeks=2),
+                }
+                for i in range(1, recurrence_count):
+                    if recurrence == 'monthly':
+                        # add i months (approximate via 30.44 days/month for simplicity;
+                        # exact month math has edge cases like Feb 31)
+                        offset = _dt.timedelta(days=int(round(30.44 * i)))
+                    else:
+                        offset = delta_map[recurrence] * i
+                    Event.objects.create(
+                        title=event.title, kind=event.kind, description=event.description,
+                        starts_at=event.starts_at + offset, ends_at=event.ends_at + offset,
+                        location_text=event.location_text,
+                        location_trail_id=event.location_trail_id,
+                        location_lat=event.location_lat, location_lng=event.location_lng,
+                        equipment_id=event.equipment_id,
+                        status=event.status, visibility=event.visibility,
+                        max_volunteers=event.max_volunteers,
+                        target_group_id=event.target_group_id,
+                        created_by=event.created_by,
+                        recurrence='none', recurrence_group=group_id,
+                    )
+                messages.success(request, f'Event "{event.title}" saved with {recurrence_count} occurrences.')
+            else:
+                messages.success(request, f'Event "{event.title}" saved.')
             return redirect('manage_panel:event_edit', pk=event.pk)
 
     trails = TrailSegment.objects.all()
@@ -1569,3 +1615,67 @@ def _notify_event_assignment(event, member, assigned_by=None):
         )
     except Exception:
         pass
+
+
+# ── Member photo submission queue ──────────────────────────────────────────────
+
+@officer_required
+def photo_queue(request):
+    from core.models import MemberShare
+    show = request.GET.get('show', 'pending')
+    qs = MemberShare.objects.select_related('member', 'reviewed_by').all()
+    if show in ('pending', 'approved', 'rejected'):
+        qs = qs.filter(status=show)
+    return render(request, 'manage_panel/photo_queue.html', {
+        'shares': qs[:100],
+        'show': show,
+        'pending_count': MemberShare.objects.filter(status='pending').count(),
+    })
+
+
+@officer_required
+@require_POST
+def photo_review(request, pk):
+    from core.models import MemberShare, AnnouncementImage, TrailCondition, TrailConditionImage
+    from django.utils import timezone as _tz
+    share = get_object_or_404(MemberShare, pk=pk)
+    decision = request.POST.get('decision')
+    note = (request.POST.get('note') or '').strip()[:300]
+    share.reviewed_by = request.user
+    share.reviewed_at = _tz.now()
+    share.review_note = note
+
+    if decision == 'approve':
+        # Approval path: create a TrailCondition (default kind for member shares
+        # on the trail) and attach the photo as a TrailConditionImage. This puts
+        # the photo on the public map and the conditions list.
+        title = share.caption[:120] if share.caption else f'Photo from {share.member.get_short_name() if share.member else "member"}'
+        cond = TrailCondition.objects.create(
+            title=title, status='open', body=share.caption or '',
+            visibility='public', lat=share.lat, lng=share.lng,
+        )
+        # Move the uploaded file to a TrailConditionImage row (re-open the file)
+        share.image.open('rb')
+        tci = TrailConditionImage(condition=cond, caption=share.caption[:200], lat=share.lat, lng=share.lng)
+        tci.image.save(share.image.name.split('/')[-1], share.image, save=True)
+        share.image.close()
+        share.status = 'approved'
+        share.save()
+        messages.success(request, f'Approved — published as "{title}".')
+    elif decision == 'reject':
+        share.status = 'rejected'
+        share.save()
+        messages.info(request, 'Rejected.')
+    return redirect('manage_panel:photo_queue')
+
+
+@officer_required
+@require_POST
+def photo_delete(request, pk):
+    from core.models import MemberShare
+    share = get_object_or_404(MemberShare, pk=pk)
+    if share.image:
+        share.image.delete(save=False)
+    share.delete()
+    messages.success(request, 'Removed.')
+    return redirect('manage_panel:photo_queue')

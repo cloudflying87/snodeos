@@ -66,6 +66,9 @@ class TrailWorkLog(models.Model):
     date = models.DateField()
     title = models.CharField(max_length=200)
     description = models.TextField()
+    trail = models.ForeignKey('TrailSegment', null=True, blank=True, on_delete=models.SET_NULL,
+                              related_name='work_logs',
+                              help_text='Which trail this work happened on (optional)')
     volunteers = models.PositiveIntegerField(default=0)
     hours = models.DecimalField(max_digits=6, decimal_places=1, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -168,6 +171,9 @@ class TrailCondition(models.Model):
     title      = models.CharField(max_length=200)
     status     = models.CharField(max_length=10, choices=STATUS_CHOICES, default='open')
     body       = models.TextField(blank=True)
+    trail      = models.ForeignKey('TrailSegment', null=True, blank=True, on_delete=models.SET_NULL,
+                                   related_name='conditions',
+                                   help_text='Which trail this condition applies to (optional)')
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='both')
     is_pinned  = models.BooleanField(default=False)
     lat        = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True,
@@ -580,6 +586,22 @@ class Event(models.Model):
                                       help_text='If set, "Suggested volunteers" prioritizes this group')
     assignees     = models.ManyToManyField('accounts.Member', blank=True, related_name='events_assigned')
 
+    # Recurrence — when an officer creates a recurring event, we expand it
+    # into N separate Event rows on save (simple, lets each occurrence be
+    # edited / cancelled individually).
+    RECUR_CHOICES = [
+        ('none',    'No repeat'),
+        ('daily',   'Daily'),
+        ('weekly',  'Weekly'),
+        ('biweekly','Every two weeks'),
+        ('monthly', 'Monthly'),
+    ]
+    recurrence       = models.CharField(max_length=10, choices=RECUR_CHOICES, default='none')
+    recurrence_count = models.PositiveIntegerField(null=True, blank=True,
+                                                   help_text='How many occurrences total (incl. the first)')
+    recurrence_group = models.UUIDField(null=True, blank=True, db_index=True,
+                                        help_text='Shared between all occurrences expanded from one recurring event')
+
     created_by    = models.ForeignKey('accounts.Member', null=True, on_delete=models.SET_NULL,
                                       related_name='events_created')
     created_at    = models.DateTimeField(auto_now_add=True)
@@ -686,3 +708,105 @@ class Event(models.Model):
             r['member'].first_name.lower(),
         ))
         return ranked
+
+
+class Conversation(models.Model):
+    """A thread of internal messages between members. Light-weight — no
+    real-time, just an inbox + reply model."""
+    subject       = models.CharField(max_length=200)
+    participants  = models.ManyToManyField('accounts.Member', related_name='conversations')
+    last_activity = models.DateTimeField(auto_now_add=True, db_index=True)
+    created_at    = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-last_activity']
+
+    def __str__(self):
+        return self.subject
+
+    @property
+    def latest_message(self):
+        return self.messages.order_by('-sent_at').first()
+
+
+class InternalMessage(models.Model):
+    """A single message in a Conversation."""
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages')
+    sender       = models.ForeignKey('accounts.Member', null=True, on_delete=models.SET_NULL, related_name='sent_messages')
+    body         = models.TextField()
+    sent_at      = models.DateTimeField(auto_now_add=True, db_index=True)
+    read_by      = models.ManyToManyField('accounts.Member', blank=True, related_name='read_messages')
+
+    class Meta:
+        ordering = ['sent_at']
+
+    def __str__(self):
+        return f'{self.sender_id} → {self.conversation_id}: {self.body[:40]}'
+
+
+class Notification(models.Model):
+    """A small in-site alert visible via the bell icon. Created when something
+    happens that a user should know about: new message, event assignment, photo
+    submission needing review, etc."""
+    KIND_CHOICES = [
+        ('message',          'New message'),
+        ('event_assigned',   'Added to an event'),
+        ('event_signup',     'Someone signed up for your event'),
+        ('photo_submission', 'New photo to review'),
+        ('application',      'New membership application'),
+        ('other',            'Other'),
+    ]
+    user       = models.ForeignKey('accounts.Member', on_delete=models.CASCADE, related_name='notifications')
+    kind       = models.CharField(max_length=20, choices=KIND_CHOICES)
+    title      = models.CharField(max_length=200)
+    url        = models.CharField(max_length=300, blank=True,
+                                  help_text='Where to send the user when they click the notification')
+    is_read    = models.BooleanField(default=False, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.user_id}: {self.title}'
+
+    @property
+    def icon(self):
+        return {
+            'message':          'envelope',
+            'event_assigned':   'calendar-check',
+            'event_signup':     'person-plus',
+            'photo_submission': 'image',
+            'application':      'person-add',
+            'other':            'bell',
+        }.get(self.kind, 'bell')
+
+
+class MemberShare(models.Model):
+    """A photo + caption a member submits for officer review. Approved shares
+    appear on the public map and (optionally) home page."""
+    STATUS_CHOICES = [
+        ('pending',  'Pending Review'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    member       = models.ForeignKey('accounts.Member', null=True, on_delete=models.SET_NULL, related_name='photo_shares')
+    image        = models.ImageField(upload_to='member_shares/')
+    caption      = models.CharField(max_length=300, blank=True)
+    lat          = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
+    lng          = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
+    status       = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending', db_index=True)
+    reviewed_by  = models.ForeignKey('accounts.Member', null=True, blank=True, on_delete=models.SET_NULL, related_name='reviewed_shares')
+    reviewed_at  = models.DateTimeField(null=True, blank=True)
+    review_note  = models.CharField(max_length=300, blank=True)
+    submitted_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-submitted_at']
+
+    def __str__(self):
+        return f'{self.member_id}: {self.caption[:40]}'
+
+    @property
+    def has_location(self):
+        return self.lat is not None and self.lng is not None

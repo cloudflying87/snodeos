@@ -53,6 +53,10 @@ urlpatterns = [
     path('events/<int:pk>/assign/', views.event_assign, name='event_assign'),
     path('events/<int:pk>/unassign/<int:member_pk>/', views.event_unassign, name='event_unassign'),
 
+    path('photo-queue/', views.photo_queue, name='photo_queue'),
+    path('photo-queue/<int:pk>/review/', views.photo_review, name='photo_review'),
+    path('photo-queue/<int:pk>/delete/', views.photo_delete, name='photo_delete'),
+
     path('trail-work/', views.trail_work_list, name='trail_work_list'),
     path('trail-work/add/', views.trail_work_add, name='trail_work_add'),
     path('trail-work/<int:pk>/edit/', views.trail_work_edit, name='trail_work_edit'),

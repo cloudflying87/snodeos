@@ -19,4 +19,21 @@ urlpatterns = [
     path('events/<int:pk>/', views.event_detail, name='event_detail'),
     path('events/<int:pk>/signup/', views.event_signup, name='event_signup'),
     path('events/<int:pk>/withdraw/', views.event_withdraw, name='event_withdraw'),
+
+    # Messaging
+    path('inbox/', views.inbox, name='inbox'),
+    path('inbox/new/', views.inbox_compose, name='inbox_compose'),
+    path('inbox/<int:pk>/', views.conversation_detail, name='conversation_detail'),
+
+    # Notifications
+    path('notifications/', views.notifications_view, name='notifications'),
+    path('notifications/<int:pk>/open/', views.notification_open, name='notification_open'),
+    path('notifications/mark-all-read/', views.notifications_mark_all_read, name='notifications_mark_all_read'),
+
+    # iCal feeds
+    path('calendar.ics',         views.calendar_ics,         name='calendar_ics'),
+    path('members/calendar.ics', views.members_calendar_ics, name='members_calendar_ics'),
+
+    # Member photo submissions
+    path('share-photo/', views.share_photo, name='share_photo'),
 ]

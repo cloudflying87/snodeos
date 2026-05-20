@@ -323,3 +323,237 @@ def event_withdraw(request, pk):
         event.assignees.remove(request.user)
         messages.info(request, f"You've been removed from {event.title}.")
     return redirect('core:event_detail', pk=pk)
+
+
+# ── Inbox / Internal Messaging ─────────────────────────────────────────────────
+
+@login_required
+def inbox(request):
+    """All conversations the current user participates in."""
+    convs = (request.user.conversations
+             .prefetch_related('messages', 'participants')
+             .order_by('-last_activity'))
+    return render(request, 'core/inbox.html', {'conversations': convs})
+
+
+@login_required
+def conversation_detail(request, pk):
+    from .models import Conversation, InternalMessage
+    conv = get_object_or_404(Conversation, pk=pk, participants=request.user)
+    if request.method == 'POST':
+        body = (request.POST.get('body') or '').strip()
+        if body:
+            msg = InternalMessage.objects.create(conversation=conv, sender=request.user, body=body)
+            msg.read_by.add(request.user)
+            from django.utils import timezone as _tz
+            conv.last_activity = _tz.now()
+            conv.save(update_fields=['last_activity'])
+            _notify_message_recipients(conv, msg, exclude_user=request.user)
+            return redirect('core:conversation_detail', pk=pk)
+
+    msgs = conv.messages.select_related('sender').all()
+    # Mark unread messages as read by this user
+    from django.db.models import Q as _Q
+    unread = msgs.exclude(read_by=request.user)
+    for m in unread:
+        m.read_by.add(request.user)
+
+    return render(request, 'core/conversation_detail.html', {
+        'conversation': conv,
+        'messages_list': msgs,
+        'others': conv.participants.exclude(pk=request.user.pk),
+    })
+
+
+@login_required
+def inbox_compose(request):
+    """Send a new message to one or more members, or a MemberGroup."""
+    from .models import Conversation, InternalMessage
+    from accounts.models import Member, MemberGroup
+    if request.method == 'POST':
+        subject = (request.POST.get('subject') or '').strip()
+        body    = (request.POST.get('body') or '').strip()
+        recipient_ids = request.POST.getlist('recipient_ids')
+        group_id = request.POST.get('group_id') or ''
+
+        if not subject or not body:
+            messages.error(request, 'Subject and body are required.')
+            return redirect('core:inbox_compose')
+
+        # Resolve recipients
+        recipients = set()
+        for rid in recipient_ids:
+            if rid.isdigit():
+                m = Member.objects.filter(pk=int(rid)).first()
+                if m: recipients.add(m)
+        if group_id.isdigit():
+            grp = MemberGroup.objects.filter(pk=int(group_id)).first()
+            if grp:
+                # Only officers can blast a whole group
+                if request.user.is_officer or request.user.is_site_admin or request.user.is_staff:
+                    for m in grp.members.filter(membership_status='active'):
+                        recipients.add(m)
+                else:
+                    messages.error(request, 'Only officers can send to a whole group.')
+                    return redirect('core:inbox_compose')
+
+        if not recipients:
+            messages.error(request, 'Pick at least one recipient.')
+            return redirect('core:inbox_compose')
+
+        conv = Conversation.objects.create(subject=subject)
+        conv.participants.add(request.user, *recipients)
+        msg = InternalMessage.objects.create(conversation=conv, sender=request.user, body=body)
+        msg.read_by.add(request.user)
+        _notify_message_recipients(conv, msg, exclude_user=request.user)
+        messages.success(request, f'Message sent to {len(recipients)} member{"" if len(recipients)==1 else "s"}.')
+        return redirect('core:conversation_detail', pk=conv.pk)
+
+    members = Member.objects.filter(membership_status='active').exclude(pk=request.user.pk).order_by('last_name', 'first_name')
+    can_blast_group = request.user.is_officer or request.user.is_site_admin or request.user.is_staff
+    groups = MemberGroup.objects.all() if can_blast_group else []
+    return render(request, 'core/inbox_compose.html', {
+        'members':         members,
+        'groups':          groups,
+        'can_blast_group': can_blast_group,
+    })
+
+
+def _notify_message_recipients(conversation, message, exclude_user=None):
+    """Create Notification rows + send a notification email when a new message
+    is sent. Best-effort — never raises."""
+    from .notify import notify
+    from .email import send_email as _send_email, _tmpl_override
+    from django.conf import settings as _settings
+    msg_url = f'/inbox/{conversation.pk}/'
+    site_url = getattr(_settings, 'SITE_URL', '').rstrip('/')
+
+    for member in conversation.participants.all():
+        if exclude_user and member.pk == exclude_user.pk:
+            continue
+        notify(member, 'message', f'{message.sender.get_short_name() if message.sender else "Someone"}: {conversation.subject}', msg_url)
+        try:
+            _send_email(
+                subject=f'New message: {conversation.subject}',
+                to=member.email,
+                template='internal_message',
+                context={
+                    'recipient':    member,
+                    'sender':       message.sender,
+                    'conversation': conversation,
+                    'message':      message,
+                    'inbox_url':    f'{site_url}{msg_url}',
+                    **_tmpl_override('template_member'),
+                },
+            )
+        except Exception:
+            pass
+
+
+# ── Notifications ──────────────────────────────────────────────────────────────
+
+@login_required
+def notifications_view(request):
+    notifs = request.user.notifications.all()[:100]
+    return render(request, 'core/notifications.html', {'notifs': notifs})
+
+
+@login_required
+def notification_open(request, pk):
+    """Mark a notification read, then redirect to its target URL."""
+    from .models import Notification
+    notif = get_object_or_404(Notification, pk=pk, user=request.user)
+    notif.is_read = True
+    notif.save(update_fields=['is_read'])
+    return redirect(notif.url or 'core:notifications')
+
+
+@login_required
+def notifications_mark_all_read(request):
+    if request.method == 'POST':
+        request.user.notifications.filter(is_read=False).update(is_read=True)
+    return redirect('core:notifications')
+
+
+# ── iCal feed ──────────────────────────────────────────────────────────────────
+
+def _ical_response(events, calname):
+    """Return events as RFC 5545 iCalendar text."""
+    from django.http import HttpResponse
+    import datetime as _dt
+    def _fmt(dt):
+        return dt.strftime('%Y%m%dT%H%M%SZ') if dt else ''
+    lines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//SnoDeos//Events//EN',
+        f'X-WR-CALNAME:{calname}',
+        'CALSCALE:GREGORIAN',
+    ]
+    for e in events:
+        # UID needs to be stable per event
+        uid = f'event-{e.pk}@snodeos'
+        desc = (e.description or '').replace('\n', '\\n').replace(',', '\\,').replace(';', '\;')
+        title = (e.title or '').replace(',', '\\,').replace(';', '\;')
+        loc = (e.location_label or '').replace(',', '\\,').replace(';', '\;')
+        lines += [
+            'BEGIN:VEVENT',
+            f'UID:{uid}',
+            f'DTSTAMP:{_fmt(e.created_at.astimezone(_dt.timezone.utc) if e.created_at else _dt.datetime.now(_dt.timezone.utc))}',
+            f'DTSTART:{_fmt(e.starts_at.astimezone(_dt.timezone.utc))}',
+            f'DTEND:{_fmt(e.ends_at.astimezone(_dt.timezone.utc))}',
+            f'SUMMARY:{title}',
+        ]
+        if desc:
+            lines.append(f'DESCRIPTION:{desc}')
+        if loc:
+            lines.append(f'LOCATION:{loc}')
+        lines.append('END:VEVENT')
+    lines.append('END:VCALENDAR')
+    body = '\r\n'.join(lines) + '\r\n'
+    resp = HttpResponse(body, content_type='text/calendar; charset=utf-8')
+    resp['Content-Disposition'] = f'inline; filename="{calname.lower().replace(" ", "-")}.ics"'
+    return resp
+
+
+def calendar_ics(request):
+    """Public iCal feed — public/both events only. No auth required so members
+    can subscribe in Google Calendar, Apple Calendar, etc."""
+    qs = Event.objects.filter(visibility__in=['public', 'both']).exclude(status='cancelled').order_by('starts_at')
+    return _ical_response(qs, 'Brainerd Snodeos')
+
+
+@login_required
+def members_calendar_ics(request):
+    """Members-only iCal feed — includes members-only events. Requires login."""
+    qs = Event.objects.exclude(status='cancelled').order_by('starts_at')
+    return _ical_response(qs, 'Brainerd Snodeos (All)')
+
+
+# ── Member photo submissions ───────────────────────────────────────────────────
+
+@login_required
+def share_photo(request):
+    """Member-facing form to submit a photo for officer review."""
+    from .models import MemberShare
+    from .geo import extract_gps
+    if request.method == 'POST' and request.FILES.get('image'):
+        img = request.FILES['image']
+        lat, lng = extract_gps(img)
+        share = MemberShare.objects.create(
+            member=request.user, image=img,
+            caption=(request.POST.get('caption') or '').strip()[:300],
+            lat=lat, lng=lng,
+        )
+        # Notify officers (active officers) via Notification
+        from accounts.models import Member as _M
+        from .notify import notify
+        officers = _M.objects.filter(membership_status='active').filter(
+            models.Q(is_officer=True) | models.Q(is_site_admin=True) | models.Q(is_staff=True)
+        ).distinct()
+        review_url = '/manage/photo-queue/'
+        for o in officers:
+            notify(o, 'photo_submission', f'{request.user.get_short_name()} shared a photo', review_url)
+        messages.success(request, 'Thanks! Your photo is in the review queue. You\'ll see it on the map once an officer approves it.')
+        return redirect('members:dashboard')
+    return render(request, 'core/share_photo.html', {})

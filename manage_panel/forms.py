@@ -106,7 +106,7 @@ class AnnouncementForm(forms.ModelForm):
 class TrailConditionForm(forms.ModelForm):
     class Meta:
         model = TrailCondition
-        fields = ['title', 'status', 'body', 'visibility', 'is_pinned', 'lat', 'lng']
+        fields = ['title', 'trail', 'status', 'body', 'visibility', 'is_pinned', 'lat', 'lng']
         widgets = {
             'body': forms.Textarea(attrs={'rows': 5}),
             'lat':  forms.NumberInput(attrs={'step': '0.000001', 'placeholder': 'optional'}),
@@ -120,6 +120,8 @@ class TrailConditionForm(forms.ModelForm):
         if initial:
             for k, v in initial.items():
                 self.fields[k].initial = v
+        # Trail dropdown shows "— Not specific to one trail —" as the empty option
+        self.fields['trail'].empty_label = '— Not specific to one trail —'
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.layout = Layout(
@@ -127,6 +129,7 @@ class TrailConditionForm(forms.ModelForm):
                 Column('title', css_class='col-md-8'),
                 Column('status', css_class='col-md-4'),
             ),
+            'trail',
             'body',
             'visibility',
             Field('is_pinned'),
@@ -140,7 +143,7 @@ class TrailConditionForm(forms.ModelForm):
 class TrailWorkLogForm(forms.ModelForm):
     class Meta:
         model = TrailWorkLog
-        fields = ['date', 'title', 'description', 'volunteers', 'hours']
+        fields = ['date', 'title', 'trail', 'description', 'volunteers', 'hours']
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
             'description': forms.Textarea(attrs={'rows': 4}),
@@ -148,6 +151,7 @@ class TrailWorkLogForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['trail'].empty_label = '— Not specific to one trail —'
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.layout = Layout(
@@ -157,5 +161,6 @@ class TrailWorkLogForm(forms.ModelForm):
                 Column('hours', css_class='col-md-4'),
             ),
             'title',
+            'trail',
             'description',
         )

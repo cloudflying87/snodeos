@@ -1,0 +1,16 @@
+{% extends 'emails/base_email.html' %}
+{% block body %}
+<h2>New message: {{ conversation.subject }}</h2>
+<p style="font-size:0.82rem;color:#9ab0c8;margin-bottom:14px;">
+  From {{ sender.get_full_name|default:"(deleted member)" }} &middot; {{ message.sent_at|date:"F j, Y g:i A" }}
+</p>
+<div style="background:#f6f9fe;border-left:3px solid #1363A2;padding:14px 18px;border-radius:4px;margin:0 0 24px;">
+  <p style="margin:0;white-space:pre-wrap;line-height:1.55;">{{ message.body }}</p>
+</div>
+{% if inbox_url %}
+<hr class="divider">
+<div class="btn-wrap">
+  <a href="{{ inbox_url }}" class="btn">View &amp; Reply →</a>
+</div>
+{% endif %}
+{% endblock %}

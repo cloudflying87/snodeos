@@ -62,6 +62,19 @@
           {% endwith %}
           {% if user.is_authenticated %}
             <li class="nav-item ms-lg-2">
+              <a class="nav-link site-nav-link position-relative" href="{% url 'core:notifications' %}" aria-label="Notifications">
+                <i class="bi bi-bell{% if notif_unread_count %}-fill{% endif %}"></i>
+                {% if notif_unread_count %}
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.6rem;">{{ notif_unread_count }}</span>
+                {% endif %}
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link site-nav-link" href="{% url 'core:inbox' %}" aria-label="Inbox">
+                <i class="bi bi-envelope"></i>
+              </a>
+            </li>
+            <li class="nav-item ms-lg-2">
               <a class="nav-link site-nav-link" href="{% url 'members:dashboard' %}">
                 <i class="bi bi-person-circle me-1"></i>{{ user.get_short_name }}
               </a>

@@ -82,6 +82,9 @@
         <a href="{% url 'manage_panel:equipment_list' %}" class="panel-nav-link {% block active_equipment %}{% endblock %}">
           <i class="bi bi-truck"></i> Equipment
         </a>
+        <a href="{% url 'manage_panel:photo_queue' %}" class="panel-nav-link {% block active_photo_queue %}{% endblock %}">
+          <i class="bi bi-images"></i> Photo Queue
+        </a>
         <a href="{% url 'manage_panel:email_blast' %}" class="panel-nav-link {% block active_blast %}{% endblock %}">
           <i class="bi bi-envelope-fill"></i> Email Members
         </a>

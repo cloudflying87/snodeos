@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Share a Photo — Brainerd Snodeos{% endblock %}
+
+{% block content %}
+<section class="page-hero text-center py-4">
+  <div class="container sn-on-blue">
+    <h1 class="display-5 fw-bold font-oswald mb-1">Share a Photo</h1>
+    <p class="sn-muted-on-blue mb-0">See something on the trail? Send it in — officers will review and post to the map.</p>
+  </div>
+</section>
+
+<section class="py-4">
+  <div class="container" style="max-width:620px;">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="image" class="form-label fw-semibold">Photo</label>
+            <input id="image" type="file" name="image" class="form-control" accept="image/*" capture="environment" required>
+            <div class="form-text">Take a photo right from your phone, or pick one from your camera roll. Location is read from the photo automatically when present.</div>
+          </div>
+          <div class="mb-3">
+            <label for="caption" class="form-label fw-semibold">Caption <span class="text-muted small fw-normal">(optional)</span></label>
+            <input id="caption" type="text" name="caption" class="form-control" maxlength="300" placeholder="e.g. Tree down near Mile 7">
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-send me-1" aria-hidden="true"></i>Submit Photo
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="alert alert-info mt-4 small mb-0">
+      <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+      Approved photos appear as pins on the public trail map.
+      Make sure your phone's <strong>Camera → Location</strong> setting is on so the pin lands in the right spot.
+    </div>
+  </div>
+</section>
+{% endblock %}

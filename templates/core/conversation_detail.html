@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}{{ conversation.subject }} — Inbox{% endblock %}
+
+{% block extra_head %}
+<style>
+  .msg-row { display:flex; gap:10px; padding:14px 16px; border-bottom:1px solid #f0f4f8; }
+  .msg-row:last-child { border-bottom:none; }
+  .msg-avatar { width:36px; height:36px; border-radius:50%; background:#1363A2; color:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-weight:700; }
+  .msg-body { white-space:pre-wrap; line-height:1.55; }
+  .msg-meta { font-size:0.75rem; color:#7a96b0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="py-4">
+  <div class="container" style="max-width:760px;">
+    <a href="{% url 'core:inbox' %}" class="text-muted small mb-2 d-inline-block"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Back to inbox</a>
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white border-bottom py-3">
+        <h5 class="fw-bold mb-1">{{ conversation.subject }}</h5>
+        <div class="text-muted small">
+          With {% for p in others %}{% if not forloop.first %}, {% endif %}{{ p.get_full_name }}{% endfor %}
+        </div>
+      </div>
+      <div class="card-body p-0">
+        {% for m in messages_list %}
+        <div class="msg-row">
+          <div class="msg-avatar">{{ m.sender.first_name|first|default:"?"|upper }}</div>
+          <div class="flex-grow-1 min-w-0">
+            <div class="d-flex justify-content-between gap-2 align-items-start mb-1">
+              <strong class="small">{{ m.sender.get_short_name|default:"(deleted)" }}</strong>
+              <span class="msg-meta">{{ m.sent_at|date:"M j, g:i A" }}</span>
+            </div>
+            <div class="msg-body">{{ m.body }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="card-footer bg-white border-top py-3">
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-2">
+            <label for="reply-body" class="visually-hidden">Reply</label>
+            <textarea id="reply-body" name="body" class="form-control" rows="3" placeholder="Write a reply…" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-send me-1" aria-hidden="true"></i>Send Reply
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

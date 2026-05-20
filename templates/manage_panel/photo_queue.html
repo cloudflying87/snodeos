@@ -1,0 +1,68 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}Photo Queue{% endblock %}
+{% block active_photo_queue %}active{% endblock %}
+
+{% block content %}
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">Photo Submissions {% if pending_count %}<span class="badge bg-danger ms-2">{{ pending_count }} pending</span>{% endif %}</h1>
+    <p class="panel-breadcrumb mb-0"><a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> / Photo Queue</p>
+  </div>
+  <div class="btn-group btn-group-sm" role="group">
+    <a href="?show=pending"  class="btn btn-outline-secondary {% if show == 'pending'  %}active{% endif %}">Pending</a>
+    <a href="?show=approved" class="btn btn-outline-secondary {% if show == 'approved' %}active{% endif %}">Approved</a>
+    <a href="?show=rejected" class="btn btn-outline-secondary {% if show == 'rejected' %}active{% endif %}">Rejected</a>
+    <a href="?show=all"      class="btn btn-outline-secondary {% if show == 'all'      %}active{% endif %}">All</a>
+  </div>
+</div>
+
+<div class="panel-card">
+{% if shares %}
+  <div class="row g-3 p-3">
+    {% for s in shares %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card border h-100">
+        <img src="{{ s.image.url }}" alt="" class="card-img-top" style="height:200px;object-fit:cover;">
+        <div class="card-body">
+          <p class="mb-1 fw-semibold">{{ s.member.get_full_name|default:"(deleted)" }}</p>
+          {% if s.caption %}<p class="small text-muted mb-2">{{ s.caption }}</p>{% endif %}
+          {% if s.has_location %}<p class="small text-muted mb-2"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i>{{ s.lat }}, {{ s.lng }}</p>{% else %}<p class="small text-muted fst-italic mb-2">No GPS in photo</p>{% endif %}
+          <small class="text-muted d-block mb-3">{{ s.submitted_at|date:"M j, g:i A" }}</small>
+
+          {% if s.status == 'pending' %}
+          <form method="post" action="{% url 'manage_panel:photo_review' s.pk %}">
+            {% csrf_token %}
+            <input type="text" name="note" class="form-control form-control-sm mb-2" placeholder="Optional review note">
+            <div class="d-flex gap-2">
+              <button type="submit" name="decision" value="approve" class="btn btn-sm btn-success flex-grow-1">
+                <i class="bi bi-check-lg me-1" aria-hidden="true"></i>Approve
+              </button>
+              <button type="submit" name="decision" value="reject" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-x" aria-hidden="true"></i>
+              </button>
+            </div>
+          </form>
+          {% else %}
+          <span class="badge bg-{% if s.status == 'approved' %}success{% else %}secondary{% endif %}">{{ s.get_status_display }}</span>
+          {% if s.reviewed_by %}<small class="text-muted d-block mt-2">by {{ s.reviewed_by.get_short_name }} on {{ s.reviewed_at|date:"M j" }}</small>{% endif %}
+          {% if s.review_note %}<p class="text-muted small mt-2 mb-0 fst-italic">{{ s.review_note }}</p>{% endif %}
+          <form method="post" action="{% url 'manage_panel:photo_delete' s.pk %}" class="mt-2">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this submission?')">
+              <i class="bi bi-trash me-1" aria-hidden="true"></i>Delete
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="panel-card-body text-center py-5">
+    <i class="bi bi-image display-4 text-muted mb-3 d-block" aria-hidden="true"></i>
+    <p class="text-muted mb-0">No {% if show == 'pending' %}pending{% else %}{{ show }}{% endif %} photos.</p>
+  </div>
+{% endif %}
+</div>
+{% endblock %}
