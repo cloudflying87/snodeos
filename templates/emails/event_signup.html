@@ -1,0 +1,7 @@
+{% extends 'emails/base_email.html' %}
+{% block body %}
+<h2>New volunteer signup</h2>
+<p><strong>{{ member.get_full_name }}</strong> signed up for <strong>{{ event.title }}</strong>.</p>
+<p style="color:#9ab0c8;font-size:0.82rem;">{{ event.starts_at|date:"l, F j" }} &middot; {{ event.starts_at|date:"g:i A" }}–{{ event.ends_at|date:"g:i A" }}</p>
+<p style="margin-top:14px;">{{ event.assignees.count }} signed up so far{% if event.max_volunteers %} (of {{ event.max_volunteers }}){% endif %}.</p>
+{% endblock %}

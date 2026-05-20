@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.conf import settings
-from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, AnnouncementImage, TrailCondition, TrailConditionImage, TrailWorkLog, TrailWorkImage, ContactMessage, SiteSettings, EmailTemplate, AuditLog, EmailLog, InboundSMS, TrailSegment
+from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, AnnouncementImage, TrailCondition, TrailConditionImage, TrailWorkLog, TrailWorkImage, ContactMessage, SiteSettings, EmailTemplate, AuditLog, EmailLog, InboundSMS, TrailSegment, Event, EquipmentItem
 from accounts.models import Member, RegistrationField, MemberGroup
 from core.email import send_test_email
 from core.geo import create_image_with_gps
@@ -1354,3 +1354,200 @@ def member_group_delete(request, pk):
     group.delete()
     messages.success(request, f'Group "{name}" deleted.')
     return redirect('manage_panel:member_group_list')
+
+
+# ── Equipment ──────────────────────────────────────────────────────────────────
+
+@officer_required
+def equipment_list(request):
+    items = EquipmentItem.objects.all()
+    return render(request, 'manage_panel/equipment/list.html', {'items': items})
+
+
+@officer_required
+def equipment_form(request, pk=None):
+    item = get_object_or_404(EquipmentItem, pk=pk) if pk else None
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        if not name:
+            messages.error(request, 'Equipment name is required.')
+        else:
+            if item is None:
+                item = EquipmentItem(name=name)
+            else:
+                item.name = name
+            item.description = request.POST.get('description', '').strip()
+            item.is_active = bool(request.POST.get('is_active'))
+            if request.POST.get('clear_photo') == '1' and item.photo:
+                item.photo.delete(save=False)
+                item.photo = None
+            if request.FILES.get('photo'):
+                item.photo = request.FILES['photo']
+            item.save()
+            messages.success(request, f'Equipment "{item.name}" saved.')
+            return redirect('manage_panel:equipment_list')
+    return render(request, 'manage_panel/equipment/form.html', {'item': item})
+
+
+@officer_required
+@require_POST
+def equipment_delete(request, pk):
+    item = get_object_or_404(EquipmentItem, pk=pk)
+    name = item.name
+    item.delete()
+    messages.success(request, f'Equipment "{name}" deleted.')
+    return redirect('manage_panel:equipment_list')
+
+
+# ── Events ─────────────────────────────────────────────────────────────────────
+
+@officer_required
+def event_list(request):
+    """Officer view: upcoming + past events."""
+    from django.utils import timezone as _tz
+    now = _tz.now()
+    upcoming = Event.objects.filter(ends_at__gte=now).select_related('equipment', 'location_trail', 'target_group').prefetch_related('assignees')
+    past = Event.objects.filter(ends_at__lt=now).select_related('equipment').prefetch_related('assignees')[:30]
+    return render(request, 'manage_panel/events/list.html', {
+        'upcoming': upcoming,
+        'past': past,
+    })
+
+
+def _parse_dt(value):
+    """Parse the datetime-local HTML input format into a timezone-aware datetime."""
+    from django.utils import timezone as _tz
+    import datetime as _dt
+    if not value:
+        return None
+    try:
+        # datetime-local gives 'YYYY-MM-DDTHH:MM'
+        naive = _dt.datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    if _tz.is_naive(naive):
+        return _tz.make_aware(naive)
+    return naive
+
+
+@officer_required
+def event_form(request, pk=None):
+    from accounts.models import MemberGroup
+    event = get_object_or_404(Event, pk=pk) if pk else None
+
+    if request.method == 'POST':
+        title = request.POST.get('title', '').strip()
+        starts_at = _parse_dt(request.POST.get('starts_at'))
+        ends_at   = _parse_dt(request.POST.get('ends_at'))
+
+        if not title:
+            messages.error(request, 'Title is required.')
+        elif not starts_at or not ends_at:
+            messages.error(request, 'Start and end times are required.')
+        elif ends_at <= starts_at:
+            messages.error(request, 'End time must be after start time.')
+        else:
+            if event is None:
+                event = Event(created_by=request.user)
+            event.title = title
+            event.kind = request.POST.get('kind', 'work')
+            event.description = request.POST.get('description', '').strip()
+            event.starts_at = starts_at
+            event.ends_at   = ends_at
+            event.status     = request.POST.get('status', 'open')
+            event.visibility = request.POST.get('visibility', 'members')
+            event.location_text = request.POST.get('location_text', '').strip()
+
+            trail_id = request.POST.get('location_trail') or ''
+            event.location_trail_id = int(trail_id) if trail_id.isdigit() else None
+            equip_id = request.POST.get('equipment') or ''
+            event.equipment_id = int(equip_id) if equip_id.isdigit() else None
+            group_id = request.POST.get('target_group') or ''
+            event.target_group_id = int(group_id) if group_id.isdigit() else None
+
+            try:
+                event.location_lat = float(request.POST.get('location_lat')) if request.POST.get('location_lat') else None
+                event.location_lng = float(request.POST.get('location_lng')) if request.POST.get('location_lng') else None
+            except (ValueError, TypeError):
+                event.location_lat = event.location_lng = None
+
+            max_v = request.POST.get('max_volunteers', '').strip()
+            event.max_volunteers = int(max_v) if max_v.isdigit() else None
+
+            event.save()
+            messages.success(request, f'Event "{event.title}" saved.')
+            return redirect('manage_panel:event_edit', pk=event.pk)
+
+    trails = TrailSegment.objects.all()
+    equipment_items = EquipmentItem.objects.filter(is_active=True)
+    groups = MemberGroup.objects.all()
+    candidates = event.rank_candidates() if event else []
+    conflicts = list(event.equipment_conflicts()) if event else []
+
+    return render(request, 'manage_panel/events/form.html', {
+        'event': event,
+        'trails': trails,
+        'equipment_items': equipment_items,
+        'groups': groups,
+        'candidates': candidates,
+        'conflicts': conflicts,
+        'kind_choices': Event.KIND_CHOICES,
+        'status_choices': Event.STATUS_CHOICES,
+        'visibility_choices': Event.VISIBILITY_CHOICES,
+    })
+
+
+@officer_required
+@require_POST
+def event_delete(request, pk):
+    event = get_object_or_404(Event, pk=pk)
+    title = event.title
+    event.delete()
+    messages.success(request, f'Event "{title}" deleted.')
+    return redirect('manage_panel:event_list')
+
+
+@officer_required
+@require_POST
+def event_assign(request, pk):
+    """Officer assigns a member to the event. Sends notification email."""
+    event = get_object_or_404(Event, pk=pk)
+    member_id = request.POST.get('member_id')
+    member = get_object_or_404(Member, pk=member_id)
+    if event.assignees.filter(pk=member.pk).exists():
+        messages.info(request, f'{member.get_full_name()} is already on this event.')
+    else:
+        event.assignees.add(member)
+        _notify_event_assignment(event, member, assigned_by=request.user)
+        messages.success(request, f'{member.get_full_name()} added.')
+    return redirect('manage_panel:event_edit', pk=pk)
+
+
+@officer_required
+@require_POST
+def event_unassign(request, pk, member_pk):
+    event = get_object_or_404(Event, pk=pk)
+    event.assignees.remove(member_pk)
+    messages.success(request, 'Member removed.')
+    return redirect('manage_panel:event_edit', pk=pk)
+
+
+def _notify_event_assignment(event, member, assigned_by=None):
+    """Email a member that they've been added to an event."""
+    from core.email import send_email as _send_email, _tmpl_override
+    event_url = f"{getattr(settings, 'SITE_URL', '').rstrip('/')}/events/{event.pk}/"
+    try:
+        _send_email(
+            subject=f'You\'ve been added to: {event.title}',
+            to=member.email,
+            template='event_assignment',
+            context={
+                'member':      member,
+                'event':       event,
+                'event_url':   event_url,
+                'assigned_by': assigned_by.get_full_name() if assigned_by else None,
+                **_tmpl_override('template_member'),
+            },
+        )
+    except Exception:
+        pass

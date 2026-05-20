@@ -1,0 +1,92 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}Events{% endblock %}
+{% block active_events %}active{% endblock %}
+
+{% block content %}
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">Events</h1>
+    <p class="panel-breadcrumb mb-0"><a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> / Events</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'core:calendar' %}" class="btn btn-outline-secondary"><i class="bi bi-calendar-week me-1" aria-hidden="true"></i>View Calendar</a>
+    <a href="{% url 'manage_panel:event_add' %}" class="btn btn-primary"><i class="bi bi-plus me-1" aria-hidden="true"></i>New Event</a>
+  </div>
+</div>
+
+<div class="panel-card mb-4">
+  <div class="panel-card-header"><h2 class="panel-card-title">Upcoming &amp; Active</h2></div>
+  {% if upcoming %}
+    <div class="d-none d-md-block">
+      <table class="panel-table align-middle">
+        <thead>
+          <tr><th></th><th>Title</th><th>When</th><th>Location</th><th>Equipment</th><th>Assigned</th><th>Status</th><th class="text-end">Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for e in upcoming %}
+          <tr>
+            <td class="ps-4"><span class="d-inline-block rounded" style="width:14px;height:14px;background:{{ e.effective_color }};"></span></td>
+            <td><div class="fw-semibold">{{ e.title }}</div><div class="text-muted small">{{ e.get_kind_display }}</div></td>
+            <td class="small">{{ e.starts_at|date:"M j" }}<br><span class="text-muted">{{ e.starts_at|date:"g:i A" }}–{{ e.ends_at|date:"g:i A" }}</span></td>
+            <td class="small text-muted">{{ e.location_label|default:"—" }}</td>
+            <td class="small text-muted">{{ e.equipment.name|default:"—" }}</td>
+            <td>
+              <span class="badge bg-primary-subtle text-primary-emphasis">{{ e.assignees.count }}{% if e.max_volunteers %} / {{ e.max_volunteers }}{% endif %}</span>
+            </td>
+            <td><span class="badge bg-secondary-subtle text-secondary">{{ e.get_status_display }}</span></td>
+            <td class="text-end pe-4">
+              <a href="{% url 'manage_panel:event_edit' e.pk %}" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+              <button class="btn btn-sm btn-outline-danger"
+                      data-delete-url="{% url 'manage_panel:event_delete' e.pk %}"
+                      data-delete-label="{{ e.title }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="d-md-none mob-card-list">
+      {% for e in upcoming %}
+      <a href="{% url 'manage_panel:event_edit' e.pk %}" class="d-block text-decoration-none text-reset border-bottom px-3 py-3">
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="d-inline-block rounded flex-shrink-0" style="width:12px;height:12px;background:{{ e.effective_color }};"></span>
+          <strong>{{ e.title }}</strong>
+        </div>
+        <div class="text-muted small">{{ e.starts_at|date:"M j, g:i A" }} &middot; {{ e.get_status_display }}</div>
+        {% if e.location_label %}<div class="text-muted small">{{ e.location_label }}</div>{% endif %}
+        <div class="small mt-1"><span class="badge bg-primary-subtle text-primary-emphasis">{{ e.assignees.count }} assigned</span></div>
+      </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="panel-card-body text-center py-5">
+      <i class="bi bi-calendar-event display-4 text-muted mb-3 d-block" aria-hidden="true"></i>
+      <p class="text-muted mb-3">No upcoming events scheduled.</p>
+      <a href="{% url 'manage_panel:event_add' %}" class="btn btn-primary">Schedule First Event</a>
+    </div>
+  {% endif %}
+</div>
+
+{% if past %}
+<div class="panel-card">
+  <div class="panel-card-header"><h2 class="panel-card-title">Past Events</h2></div>
+  <div class="d-none d-md-block">
+    <table class="panel-table align-middle">
+      <thead><tr><th></th><th>Title</th><th>When</th><th>Status</th><th class="text-end"></th></tr></thead>
+      <tbody>
+        {% for e in past %}
+        <tr>
+          <td class="ps-4"><span class="d-inline-block rounded" style="width:12px;height:12px;background:{{ e.effective_color }};"></span></td>
+          <td>{{ e.title }}</td>
+          <td class="small text-muted">{{ e.starts_at|date:"M j, Y" }}</td>
+          <td><span class="badge bg-secondary-subtle text-secondary">{{ e.get_status_display }}</span></td>
+          <td class="text-end pe-4"><a href="{% url 'manage_panel:event_edit' e.pk %}" class="btn btn-sm btn-outline-secondary">View</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -6,6 +6,7 @@ from django.urls import reverse
 from .models import (
     ClubStats, Officer, Sponsor, TrailWorkLog, Announcement, TrailCondition,
     AnnouncementImage, TrailConditionImage, TrailWorkImage, TrailSegment,
+    Event,
 )
 from .forms import ContactForm
 from .email import notify_contact_message
@@ -212,3 +213,97 @@ def trail_segment_gpx(request, pk):
     safe_name = ''.join(ch if ch.isalnum() else '_' for ch in seg.name)[:60] or f'trail-{seg.pk}'
     resp['Content-Disposition'] = f'attachment; filename="{safe_name}.gpx"'
     return resp
+
+
+def calendar_view(request):
+    """Public calendar page (FullCalendar). Visibility-filtered events."""
+    return render(request, 'core/calendar.html', {})
+
+
+def calendar_data(request):
+    """FullCalendar JSON feed. Accepts ?start=ISO&end=ISO."""
+    from django.utils.dateparse import parse_datetime
+    start = parse_datetime(request.GET.get('start', '')) if request.GET.get('start') else None
+    end   = parse_datetime(request.GET.get('end',   '')) if request.GET.get('end')   else None
+
+    qs = Event.objects.all()
+    if not request.user.is_authenticated:
+        qs = qs.filter(visibility__in=['public', 'both'])
+    if start: qs = qs.filter(ends_at__gte=start)
+    if end:   qs = qs.filter(starts_at__lte=end)
+
+    events = []
+    for e in qs.select_related('equipment', 'location_trail')[:500]:
+        events.append({
+            'id':    e.pk,
+            'title': e.title,
+            'start': e.starts_at.isoformat(),
+            'end':   e.ends_at.isoformat(),
+            'url':   f'/events/{e.pk}/',
+            'color': e.effective_color,
+            'extendedProps': {
+                'kind':     e.get_kind_display(),
+                'status':   e.get_status_display(),
+                'location': e.location_label,
+                'assigned': e.assignees.count(),
+                'max':      e.max_volunteers,
+            },
+        })
+    return JsonResponse(events, safe=False)
+
+
+def event_detail(request, pk):
+    event = get_object_or_404(Event, pk=pk)
+    if not event.is_public and not request.user.is_authenticated:
+        from django.contrib.auth.views import redirect_to_login
+        return redirect_to_login(request.get_full_path())
+    is_assigned = request.user.is_authenticated and event.assignees.filter(pk=request.user.pk).exists()
+    return render(request, 'core/event_detail.html', {
+        'event': event,
+        'is_assigned': is_assigned,
+    })
+
+
+@login_required
+def event_signup(request, pk):
+    """Member self-signup. POST only."""
+    if request.method != 'POST':
+        return redirect('core:event_detail', pk=pk)
+    event = get_object_or_404(Event, pk=pk)
+    if not event.is_member_visible:
+        messages.error(request, 'You cannot sign up for this event.')
+        return redirect('core:event_detail', pk=pk)
+    if event.status != 'open':
+        messages.error(request, 'This event is not open for signups.')
+    elif event.is_full:
+        messages.error(request, 'This event is already full.')
+    elif event.assignees.filter(pk=request.user.pk).exists():
+        messages.info(request, "You're already signed up.")
+    else:
+        event.assignees.add(request.user)
+        messages.success(request, f"You're signed up for {event.title}.")
+        # Notify the creator (if any) that someone signed up
+        if event.created_by_id and event.created_by_id != request.user.pk:
+            from .email import send_email as _send_email
+            try:
+                _send_email(
+                    subject=f'{request.user.get_full_name()} signed up for: {event.title}',
+                    to=event.created_by.email,
+                    template='event_signup',
+                    context={'event': event, 'member': request.user},
+                )
+            except Exception:
+                pass
+    return redirect('core:event_detail', pk=pk)
+
+
+@login_required
+def event_withdraw(request, pk):
+    """Member removes themselves from an event."""
+    if request.method != 'POST':
+        return redirect('core:event_detail', pk=pk)
+    event = get_object_or_404(Event, pk=pk)
+    if event.assignees.filter(pk=request.user.pk).exists():
+        event.assignees.remove(request.user)
+        messages.info(request, f"You've been removed from {event.title}.")
+    return redirect('core:event_detail', pk=pk)

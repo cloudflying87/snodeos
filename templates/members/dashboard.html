@@ -91,11 +91,48 @@
     {# Quick actions strip #}
     <div class="dash-quick mb-4">
       <a href="{% url 'core:map' %}"><i class="bi bi-map" aria-hidden="true"></i>Trail Map</a>
-      <a href="{% url 'core:map' %}#conditions"><i class="bi bi-signpost-split" aria-hidden="true"></i>Conditions</a>
-      <a href="{% url 'core:map' %}#work"><i class="bi bi-tools" aria-hidden="true"></i>Trail Work</a>
+      <a href="{% url 'core:calendar' %}"><i class="bi bi-calendar-week" aria-hidden="true"></i>Calendar</a>
+      <a href="{% url 'members:my_availability' %}"><i class="bi bi-clock-history" aria-hidden="true"></i>My Availability</a>
       <a href="{% url 'core:contact' %}"><i class="bi bi-envelope" aria-hidden="true"></i>Contact</a>
       <a href="{% url 'members:profile_edit' %}"><i class="bi bi-person-gear" aria-hidden="true"></i>My Profile</a>
     </div>
+
+    {% if my_events or open_events %}
+    <div class="row g-3 mb-4">
+      {% if my_events %}
+      <div class="col-12 col-lg-6">
+        <div class="dash-card">
+          <h2><i class="bi bi-calendar-check text-primary" aria-hidden="true"></i>My Commitments</h2>
+          {% for e in my_events %}
+          <a href="{% url 'core:event_detail' e.pk %}" class="d-flex gap-3 py-2 border-bottom text-decoration-none text-reset" style="border-color:#f0f4f8;">
+            <div style="width:6px;background:{{ e.effective_color }};border-radius:3px;flex-shrink:0;"></div>
+            <div class="flex-grow-1 min-w-0">
+              <div class="fw-semibold small">{{ e.title }}</div>
+              <div class="text-muted" style="font-size:0.75rem;">{{ e.starts_at|date:"D M j, g:i A" }}{% if e.location_label %} &middot; {{ e.location_label }}{% endif %}</div>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+      {% if open_events %}
+      <div class="col-12 col-lg-6">
+        <div class="dash-card">
+          <h2><i class="bi bi-hand-thumbs-up text-primary" aria-hidden="true"></i>Open Tasks</h2>
+          {% for e in open_events %}
+          <a href="{% url 'core:event_detail' e.pk %}" class="d-flex gap-3 py-2 border-bottom text-decoration-none text-reset" style="border-color:#f0f4f8;">
+            <div style="width:6px;background:{{ e.effective_color }};border-radius:3px;flex-shrink:0;"></div>
+            <div class="flex-grow-1 min-w-0">
+              <div class="fw-semibold small">{{ e.title }}</div>
+              <div class="text-muted" style="font-size:0.75rem;">{{ e.starts_at|date:"D M j, g:i A" }} &middot; {{ e.assignees.count }} signed up{% if e.max_volunteers %} / {{ e.max_volunteers }}{% endif %}</div>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
 
     <div class="row g-3">
       {# Combined Recent Activity feed #}

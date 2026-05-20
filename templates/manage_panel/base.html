@@ -76,6 +76,12 @@
         <a href="{% url 'manage_panel:trail_segment_list' %}" class="panel-nav-link {% block active_trail_segments %}{% endblock %}">
           <i class="bi bi-map"></i> Trail Map
         </a>
+        <a href="{% url 'manage_panel:event_list' %}" class="panel-nav-link {% block active_events %}{% endblock %}">
+          <i class="bi bi-calendar-week"></i> Events
+        </a>
+        <a href="{% url 'manage_panel:equipment_list' %}" class="panel-nav-link {% block active_equipment %}{% endblock %}">
+          <i class="bi bi-truck"></i> Equipment
+        </a>
         <a href="{% url 'manage_panel:email_blast' %}" class="panel-nav-link {% block active_blast %}{% endblock %}">
           <i class="bi bi-envelope-fill"></i> Email Members
         </a>

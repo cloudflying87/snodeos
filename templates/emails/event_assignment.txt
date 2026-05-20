@@ -1,0 +1,14 @@
+You're on the schedule
+======================
+
+Hi {{ member.first_name }},
+
+{% if assigned_by %}{{ assigned_by }}{% else %}A club officer{% endif %} added you to {{ event.title }}.
+
+When:  {{ event.starts_at|date:"l, F j" }} {{ event.starts_at|date:"g:i A" }} – {{ event.ends_at|date:"g:i A" }}
+{% if event.location_label %}Where: {{ event.location_label }}{% endif %}
+{% if event.equipment %}Equipment: {{ event.equipment.name }}{% endif %}
+
+{% if event.description %}{{ event.description }}{% endif %}
+
+{% if event_url %}View details: {{ event_url }}{% endif %}

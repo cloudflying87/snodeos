@@ -14,4 +14,9 @@ urlpatterns = [
     path('map/', views.map_view, name='map'),
     path('map/data/', views.map_data, name='map_data'),
     path('trails/<int:pk>.gpx', views.trail_segment_gpx, name='trail_segment_gpx'),
+    path('calendar/', views.calendar_view, name='calendar'),
+    path('calendar/data/', views.calendar_data, name='calendar_data'),
+    path('events/<int:pk>/', views.event_detail, name='event_detail'),
+    path('events/<int:pk>/signup/', views.event_signup, name='event_signup'),
+    path('events/<int:pk>/withdraw/', views.event_withdraw, name='event_withdraw'),
 ]

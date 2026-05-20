@@ -41,6 +41,18 @@ urlpatterns = [
     path('trail-segments/<int:pk>/edit/', views.trail_segment_editor, name='trail_segment_edit'),
     path('trail-segments/<int:pk>/delete/', views.trail_segment_delete, name='trail_segment_delete'),
 
+    path('equipment/', views.equipment_list, name='equipment_list'),
+    path('equipment/new/', views.equipment_form, name='equipment_add'),
+    path('equipment/<int:pk>/edit/', views.equipment_form, name='equipment_edit'),
+    path('equipment/<int:pk>/delete/', views.equipment_delete, name='equipment_delete'),
+
+    path('events/', views.event_list, name='event_list'),
+    path('events/new/', views.event_form, name='event_add'),
+    path('events/<int:pk>/edit/', views.event_form, name='event_edit'),
+    path('events/<int:pk>/delete/', views.event_delete, name='event_delete'),
+    path('events/<int:pk>/assign/', views.event_assign, name='event_assign'),
+    path('events/<int:pk>/unassign/<int:member_pk>/', views.event_unassign, name='event_unassign'),
+
     path('trail-work/', views.trail_work_list, name='trail_work_list'),
     path('trail-work/add/', views.trail_work_add, name='trail_work_add'),
     path('trail-work/<int:pk>/edit/', views.trail_work_edit, name='trail_work_edit'),

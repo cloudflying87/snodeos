@@ -3,8 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q
-from accounts.models import Member
-from core.models import Announcement, TrailCondition, TrailWorkLog
+from accounts.models import Member, MemberAvailability
+from core.models import Announcement, TrailCondition, TrailWorkLog, Event
 from core.email import notify_application_approved
 from .forms import MemberEditForm, MemberFilterForm, ProfileEditForm
 
@@ -65,10 +65,23 @@ def dashboard(request):
 
     my_groups = member.groups_membership.all() if hasattr(member, 'groups_membership') else []
 
+    # Scheduling: events I'm assigned to (upcoming) + open tasks I might want
+    now = timezone.now()
+    my_events = member.events_assigned.filter(ends_at__gte=now).order_by('starts_at')[:5]
+    open_qs = Event.objects.filter(status='open', ends_at__gte=now, visibility__in=['members', 'both'])
+    # If member is in any groups, prioritize events targeting those groups
+    group_ids = list(my_groups.values_list('pk', flat=True)) if hasattr(my_groups, 'values_list') else []
+    if group_ids:
+        from django.db.models import Q as _Q
+        open_qs = open_qs.filter(_Q(target_group__isnull=True) | _Q(target_group_id__in=group_ids))
+    open_events = open_qs.exclude(assignees=member).order_by('starts_at')[:6]
+
     context = {
         'member': member,
         'feed': feed,
         'my_groups': my_groups,
+        'my_events': my_events,
+        'open_events': open_events,
     }
     return render(request, 'members/dashboard.html', context)
 
@@ -156,3 +169,63 @@ def profile_edit(request):
 def pending_applications(request):
     pending = Member.objects.filter(membership_status='pending').order_by('date_applied')
     return render(request, 'members/pending.html', {'pending': pending})
+
+
+@login_required
+def my_availability(request):
+    """Member-facing page to declare recurring + specific availability."""
+    if request.method == 'POST':
+        kind = request.POST.get('kind')
+        notes = request.POST.get('notes', '').strip()[:200]
+        try:
+            if kind == 'recurring':
+                day = int(request.POST.get('day_of_week', '0'))
+                from datetime import time as _t
+                st = request.POST.get('start_time', '08:00')
+                et = request.POST.get('end_time',   '17:00')
+                sh, sm = (int(x) for x in st.split(':')[:2])
+                eh, em = (int(x) for x in et.split(':')[:2])
+                MemberAvailability.objects.create(
+                    member=request.user, kind='recurring',
+                    day_of_week=day, start_time=_t(sh, sm), end_time=_t(eh, em),
+                    notes=notes,
+                )
+                messages.success(request, 'Recurring availability added.')
+            elif kind == 'specific':
+                from django.utils.dateparse import parse_datetime
+                from django.utils import timezone as _tz
+                s = parse_datetime(request.POST.get('starts_at', ''))
+                e = parse_datetime(request.POST.get('ends_at', ''))
+                if not s or not e:
+                    messages.error(request, 'Start and end times are required.')
+                    return redirect('members:my_availability')
+                if _tz.is_naive(s): s = _tz.make_aware(s)
+                if _tz.is_naive(e): e = _tz.make_aware(e)
+                if e <= s:
+                    messages.error(request, 'End must be after start.')
+                    return redirect('members:my_availability')
+                MemberAvailability.objects.create(
+                    member=request.user, kind='specific',
+                    starts_at=s, ends_at=e, notes=notes,
+                )
+                messages.success(request, 'Date range added.')
+        except (ValueError, TypeError) as exc:
+            messages.error(request, f'Invalid input: {exc}')
+        return redirect('members:my_availability')
+
+    avail = request.user.availabilities.all()
+    return render(request, 'members/availability.html', {
+        'availabilities': avail,
+        'days': MemberAvailability.DAY_CHOICES,
+    })
+
+
+@login_required
+def availability_delete(request, pk):
+    if request.method != 'POST':
+        return redirect('members:my_availability')
+    item = MemberAvailability.objects.filter(pk=pk, member=request.user).first()
+    if item:
+        item.delete()
+        messages.success(request, 'Removed.')
+    return redirect('members:my_availability')

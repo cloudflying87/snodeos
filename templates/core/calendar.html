@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Calendar — Brainerd Snodeos{% endblock %}
+
+{% block extra_head %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+<style>
+  #fc { background:#fff; padding:14px; border-radius:8px; box-shadow:0 1px 6px rgba(0,0,0,0.08); }
+  .fc .fc-toolbar-title { font-family:'Oswald',sans-serif; font-size:1.4rem; }
+  .fc-event { cursor:pointer; border:none !important; padding:2px 4px !important; }
+  .legend-pills { display:flex; flex-wrap:wrap; gap:8px; font-size:0.78rem; color:#344055; }
+  .legend-pills .pill { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:999px; background:#f0f4f8; }
+  .legend-pills .swatch { width:10px; height:10px; border-radius:2px; }
+  @media (max-width: 575.98px) {
+    .fc .fc-toolbar { flex-direction:column; gap:6px; }
+    .fc .fc-toolbar-title { font-size:1.15rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-hero text-center py-4">
+  <div class="container sn-on-blue">
+    <h1 class="display-5 fw-bold font-oswald mb-1">Calendar</h1>
+    <p class="sn-muted-on-blue mb-0">Grooming runs, work parties, meetings, and club events</p>
+  </div>
+</section>
+
+<section class="py-4">
+  <div class="container">
+    <div class="legend-pills mb-3">
+      <span class="pill"><span class="swatch" style="background:#0d6efd;"></span>Grooming</span>
+      <span class="pill"><span class="swatch" style="background:#fd7e14;"></span>Trail Work</span>
+      <span class="pill"><span class="swatch" style="background:#6f42c1;"></span>Meeting</span>
+      <span class="pill"><span class="swatch" style="background:#198754;"></span>Equipment</span>
+      <span class="pill"><span class="swatch" style="background:#d63384;"></span>Club Event</span>
+      <span class="pill"><span class="swatch" style="background:#6c757d;"></span>Other</span>
+    </div>
+    <div id="fc"></div>
+    {% if not user.is_authenticated %}
+    <p class="text-muted small mt-3 mb-0"><a href="{% url 'accounts:login' %}">Log in</a> to see members-only events and sign up.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const isMobile = window.matchMedia('(max-width: 767.98px)').matches;
+  const calendar = new FullCalendar.Calendar(document.getElementById('fc'), {
+    initialView: isMobile ? 'listMonth' : 'dayGridMonth',
+    headerToolbar: {
+      left:   'prev,next today',
+      center: 'title',
+      right:  isMobile ? 'listMonth,dayGridMonth' : 'dayGridMonth,timeGridWeek,listMonth',
+    },
+    height: 'auto',
+    events: '{% url "core:calendar_data" %}',
+    eventDidMount: info => {
+      const p = info.event.extendedProps;
+      const tip = `${p.kind || ''}${p.status ? ' · ' + p.status : ''}${p.location ? ' · ' + p.location : ''}`;
+      info.el.title = tip;
+    },
+  });
+  calendar.render();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}{{ event.title }} — Brainerd Snodeos{% endblock %}
+
+{% block content %}
+<section class="page-hero text-center">
+  <div class="container sn-on-blue">
+    <span class="badge mb-2" style="background:{{ event.effective_color }};">{{ event.get_kind_display }}</span>
+    <h1 class="display-5 fw-bold font-oswald mb-2">{{ event.title }}</h1>
+    <p class="sn-muted-on-blue mb-0">
+      {{ event.starts_at|date:"l, F j, Y" }} &middot; {{ event.starts_at|date:"g:i A" }} – {{ event.ends_at|date:"g:i A" }}
+    </p>
+  </div>
+</section>
+
+<section class="py-6 bg-white">
+  <div class="container">
+    <div class="row justify-content-center g-4">
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm p-4 p-lg-5">
+          <div class="mb-3">
+            <span class="badge bg-secondary-subtle text-secondary me-1">{{ event.get_status_display }}</span>
+            {% if event.is_full %}<span class="badge bg-warning text-dark">Full</span>{% endif %}
+          </div>
+
+          {% if event.location_label %}
+          <p class="mb-2"><i class="bi bi-geo-alt-fill text-primary me-1" aria-hidden="true"></i><strong>Location:</strong> {{ event.location_label }}</p>
+          {% endif %}
+          {% if event.equipment %}
+          <p class="mb-2"><i class="bi bi-truck text-primary me-1" aria-hidden="true"></i><strong>Equipment:</strong> {{ event.equipment.name }}</p>
+          {% endif %}
+          {% if event.target_group %}
+          <p class="mb-2 text-muted small">Targeting group: <strong>{{ event.target_group.name }}</strong></p>
+          {% endif %}
+
+          {% if event.description %}
+          <hr>
+          <div style="white-space:pre-wrap;line-height:1.7;font-size:1.02rem;color:#344055;">{{ event.description }}</div>
+          {% endif %}
+
+          {% if user.is_authenticated %}
+          <hr>
+          <h5 class="fw-bold mb-3">Volunteers <span class="text-muted fw-normal small">({{ event.assignees.count }}{% if event.max_volunteers %} of {{ event.max_volunteers }}{% endif %})</span></h5>
+          {% if event.assignees.all %}
+          <ul class="list-unstyled mb-3">
+            {% for m in event.assignees.all %}
+            <li class="mb-1"><i class="bi bi-check-circle-fill text-success me-1" aria-hidden="true"></i>{{ m.get_full_name }}</li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-muted">No one signed up yet — be first!</p>
+          {% endif %}
+
+          <div class="d-flex gap-2 flex-wrap">
+            {% if is_assigned %}
+              <form method="post" action="{% url 'core:event_withdraw' event.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Remove yourself from this event?')">
+                  <i class="bi bi-x-circle me-1" aria-hidden="true"></i>Withdraw
+                </button>
+              </form>
+            {% elif event.is_open_for_signup %}
+              <form method="post" action="{% url 'core:event_signup' event.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-check-lg me-1" aria-hidden="true"></i>Sign Me Up
+                </button>
+              </form>
+            {% endif %}
+            <a href="{% url 'core:calendar' %}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Back to Calendar
+            </a>
+            {% if user.is_officer or user.is_staff %}
+            <a href="{% url 'manage_panel:event_edit' event.pk %}" class="btn btn-outline-primary">
+              <i class="bi bi-pencil me-1" aria-hidden="true"></i>Edit
+            </a>
+            {% endif %}
+          </div>
+          {% else %}
+          <hr>
+          <p class="text-muted">
+            <a href="{% url 'accounts:login' %}?next={{ request.get_full_path }}">Log in</a> to sign up for this event.
+          </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

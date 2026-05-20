@@ -1,0 +1,221 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}{% if event %}{{ event.title }}{% else %}New Event{% endif %}{% endblock %}
+{% block active_events %}active{% endblock %}
+
+{% block content %}
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">{% if event %}Edit Event{% else %}New Event{% endif %}</h1>
+    <p class="panel-breadcrumb mb-0">
+      <a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> /
+      <a href="{% url 'manage_panel:event_list' %}">Events</a> /
+      {% if event %}{{ event.title }}{% else %}New{% endif %}
+    </p>
+  </div>
+  <a href="{% url 'manage_panel:event_list' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Back
+  </a>
+</div>
+
+<form method="post">
+  {% csrf_token %}
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="panel-card mb-4">
+        <div class="panel-card-header"><h2 class="panel-card-title">Event Details</h2></div>
+        <div class="panel-card-body">
+          <div class="mb-3">
+            <label for="title" class="form-label fw-semibold">Title</label>
+            <input id="title" type="text" name="title" class="form-control" required
+                   value="{{ event.title|default:'' }}" placeholder="e.g. Saturday Grooming — North Loop">
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-sm-6">
+              <label for="kind" class="form-label fw-semibold">Kind</label>
+              <select id="kind" name="kind" class="form-select">
+                {% for val, label in kind_choices %}
+                <option value="{{ val }}" {% if event.kind == val %}selected{% elif not event and val == 'work' %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-sm-6">
+              <label for="status" class="form-label fw-semibold">Status</label>
+              <select id="status" name="status" class="form-select">
+                {% for val, label in status_choices %}
+                <option value="{{ val }}" {% if event.status == val %}selected{% elif not event and val == 'open' %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-sm-6">
+              <label for="starts_at" class="form-label fw-semibold">Starts</label>
+              <input id="starts_at" type="datetime-local" name="starts_at" class="form-control" required
+                     value="{% if event %}{{ event.starts_at|date:'Y-m-d\TH:i' }}{% endif %}">
+            </div>
+            <div class="col-sm-6">
+              <label for="ends_at" class="form-label fw-semibold">Ends</label>
+              <input id="ends_at" type="datetime-local" name="ends_at" class="form-control" required
+                     value="{% if event %}{{ event.ends_at|date:'Y-m-d\TH:i' }}{% endif %}">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="description" class="form-label fw-semibold">Description <span class="text-muted fw-normal small">(optional)</span></label>
+            <textarea id="description" name="description" class="form-control" rows="3">{{ event.description|default:'' }}</textarea>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label for="location_trail" class="form-label fw-semibold">Trail <span class="text-muted fw-normal small">(optional)</span></label>
+              <select id="location_trail" name="location_trail" class="form-select">
+                <option value="">— None —</option>
+                {% for t in trails %}
+                <option value="{{ t.pk }}" {% if event.location_trail_id == t.pk %}selected{% endif %}>{{ t.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="location_text" class="form-label fw-semibold">Location Note <span class="text-muted fw-normal small">(optional)</span></label>
+              <input id="location_text" type="text" name="location_text" class="form-control"
+                     value="{{ event.location_text|default:'' }}" placeholder="e.g. Parking lot off Hwy 25">
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label for="equipment" class="form-label fw-semibold">Equipment</label>
+              <select id="equipment" name="equipment" class="form-select">
+                <option value="">— None —</option>
+                {% for eq in equipment_items %}
+                <option value="{{ eq.pk }}" {% if event.equipment_id == eq.pk %}selected{% endif %}>{{ eq.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label for="target_group" class="form-label fw-semibold">Target Group</label>
+              <select id="target_group" name="target_group" class="form-select">
+                <option value="">— Any active member —</option>
+                {% for g in groups %}
+                <option value="{{ g.pk }}" {% if event.target_group_id == g.pk %}selected{% endif %}>{{ g.name }}</option>
+                {% endfor %}
+              </select>
+              <div class="form-text">Used to rank suggested volunteers.</div>
+            </div>
+            <div class="col-md-4">
+              <label for="max_volunteers" class="form-label fw-semibold">Max volunteers</label>
+              <input id="max_volunteers" type="number" min="1" name="max_volunteers" class="form-control"
+                     value="{{ event.max_volunteers|default:'' }}" placeholder="Unlimited">
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-sm-6">
+              <label for="visibility" class="form-label fw-semibold">Visibility</label>
+              <select id="visibility" name="visibility" class="form-select">
+                {% for val, label in visibility_choices %}
+                <option value="{{ val }}" {% if event.visibility == val %}selected{% elif not event and val == 'members' %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-sm-3">
+              <label for="location_lat" class="form-label fw-semibold">Lat <span class="text-muted small">(opt)</span></label>
+              <input id="location_lat" type="number" step="0.000001" name="location_lat" class="form-control"
+                     value="{{ event.location_lat|default:'' }}">
+            </div>
+            <div class="col-sm-3">
+              <label for="location_lng" class="form-label fw-semibold">Lng <span class="text-muted small">(opt)</span></label>
+              <input id="location_lng" type="number" step="0.000001" name="location_lng" class="form-control"
+                     value="{{ event.location_lng|default:'' }}">
+            </div>
+          </div>
+
+          {% if conflicts %}
+          <div class="alert alert-warning d-flex gap-2 align-items-start">
+            <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1" aria-hidden="true"></i>
+            <div>
+              <strong>Equipment conflict</strong> — this equipment is already booked at the same time:
+              <ul class="mb-0 mt-1">
+                {% for c in conflicts %}
+                <li><a href="{% url 'manage_panel:event_edit' c.pk %}">{{ c.title }}</a> &mdash; {{ c.starts_at|date:"M j g:i A" }}–{{ c.ends_at|date:"g:i A" }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+          {% endif %}
+
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save me-1" aria-hidden="true"></i>Save Event
+          </button>
+        </div>
+      </div>
+
+      {% if event %}
+      <div class="panel-card mb-4">
+        <div class="panel-card-header"><h2 class="panel-card-title">Assigned ({{ event.assignees.count }}{% if event.max_volunteers %} / {{ event.max_volunteers }}{% endif %})</h2></div>
+        <div class="panel-card-body">
+          {% if event.assignees.all %}
+          <ul class="list-unstyled mb-0">
+            {% for m in event.assignees.all %}
+            <li class="d-flex align-items-center justify-content-between border-bottom py-2">
+              <div>
+                <strong>{{ m.get_full_name }}</strong>
+                <small class="text-muted ms-2">{{ m.email }}{% if m.phone %} &middot; {{ m.phone }}{% endif %}</small>
+              </div>
+              <form method="post" action="{% url 'manage_panel:event_unassign' event.pk m.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Remove">
+                  <i class="bi bi-x" aria-hidden="true"></i>
+                </button>
+              </form>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-muted small mb-0">No one assigned yet. Pick from the suggested volunteers on the right.</p>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if event %}
+    <div class="col-lg-4">
+      <div class="panel-card" style="position:sticky;top:80px;">
+        <div class="panel-card-header"><h2 class="panel-card-title">Suggested Volunteers</h2></div>
+        <div class="panel-card-body p-0">
+          {% if candidates %}
+          <div style="max-height:60vh;overflow-y:auto;">
+            {% for c in candidates %}
+            <div class="border-bottom px-3 py-2 d-flex align-items-center gap-2">
+              <div class="flex-grow-1 min-w-0">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <strong class="small">{{ c.member.get_full_name }}</strong>
+                  {% if c.in_group %}<span class="badge bg-primary-subtle text-primary-emphasis" style="font-size:0.65rem;">in group</span>{% endif %}
+                  {% if c.available %}<span class="badge bg-success-subtle text-success-emphasis" style="font-size:0.65rem;">available</span>{% endif %}
+                  {% if c.has_conflict %}<span class="badge bg-warning text-dark" style="font-size:0.65rem;" title="Already on another event in this window">conflict</span>{% endif %}
+                </div>
+                <div class="text-muted" style="font-size:0.72rem;">{{ c.member.email }}</div>
+              </div>
+              <form method="post" action="{% url 'manage_panel:event_assign' event.pk %}" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="member_id" value="{{ c.member.pk }}">
+                <button type="submit" class="btn btn-sm btn-outline-primary" {% if event.is_full %}disabled{% endif %} aria-label="Add">
+                  <i class="bi bi-plus" aria-hidden="true"></i>
+                </button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="text-muted small p-3 mb-0">No active members yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</form>
+{% endblock %}

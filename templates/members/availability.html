@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}My Availability — Brainerd Snodeos{% endblock %}
+
+{% block content %}
+<section class="page-hero text-center py-4">
+  <div class="container sn-on-blue">
+    <h1 class="display-5 fw-bold font-oswald mb-1">My Availability</h1>
+    <p class="sn-muted-on-blue mb-0">Let officers know when you can pitch in</p>
+  </div>
+</section>
+
+<section class="py-4">
+  <div class="container">
+    <div class="row g-4">
+
+      <div class="col-lg-7">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-bottom py-3">
+            <h5 class="fw-bold mb-0"><i class="bi bi-calendar-check me-2 text-primary" aria-hidden="true"></i>Your Availability</h5>
+          </div>
+          <div class="card-body p-0">
+            {% if availabilities %}
+            <ul class="list-unstyled mb-0">
+              {% for a in availabilities %}
+              <li class="d-flex align-items-center justify-content-between border-bottom px-3 py-3">
+                <div>
+                  <div class="fw-semibold">
+                    {% if a.kind == 'recurring' %}
+                      <i class="bi bi-arrow-repeat text-primary me-1" aria-hidden="true"></i>Recurring
+                    {% else %}
+                      <i class="bi bi-calendar-event text-primary me-1" aria-hidden="true"></i>One-time
+                    {% endif %}
+                  </div>
+                  <div class="text-muted small">{{ a.display }}</div>
+                  {% if a.notes %}<div class="text-muted small fst-italic">{{ a.notes }}</div>{% endif %}
+                </div>
+                <form method="post" action="{% url 'members:availability_delete' a.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove this availability?')">
+                    <i class="bi bi-trash" aria-hidden="true"></i>
+                  </button>
+                </form>
+              </li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted text-center py-4 mb-0">No availability set yet.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="card border-0 shadow-sm mb-3">
+          <div class="card-header bg-white border-bottom py-3">
+            <h5 class="fw-bold mb-0">Add Recurring Availability</h5>
+            <p class="text-muted small mb-0 mt-1">Same day each week (e.g. "Saturday mornings")</p>
+          </div>
+          <div class="card-body">
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="kind" value="recurring">
+              <div class="mb-3">
+                <label class="form-label fw-semibold small">Day of week</label>
+                <select name="day_of_week" class="form-select">
+                  {% for val, label in days %}
+                  <option value="{{ val }}">{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <label class="form-label fw-semibold small">From</label>
+                  <input type="time" name="start_time" class="form-control" value="08:00" required>
+                </div>
+                <div class="col-6">
+                  <label class="form-label fw-semibold small">Until</label>
+                  <input type="time" name="end_time" class="form-control" value="17:00" required>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold small">Notes (optional)</label>
+                <input type="text" name="notes" class="form-control" maxlength="200" placeholder="e.g. Prefer trail-clearing">
+              </div>
+              <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus me-1" aria-hidden="true"></i>Add Recurring</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-bottom py-3">
+            <h5 class="fw-bold mb-0">Add Specific Date</h5>
+            <p class="text-muted small mb-0 mt-1">A one-time window you're free (e.g. "Sat Dec 7, 9am–noon")</p>
+          </div>
+          <div class="card-body">
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="kind" value="specific">
+              <div class="mb-3">
+                <label class="form-label fw-semibold small">From</label>
+                <input type="datetime-local" name="starts_at" class="form-control" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold small">Until</label>
+                <input type="datetime-local" name="ends_at" class="form-control" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold small">Notes (optional)</label>
+                <input type="text" name="notes" class="form-control" maxlength="200">
+              </div>
+              <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus me-1" aria-hidden="true"></i>Add Date</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-info mt-4 small mb-0">
+      <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+      Officers see your availability when scheduling events — letting them know you're free Saturday mornings means you'll be suggested for grooming runs and work parties that match.
+    </div>
+  </div>
+</section>
+{% endblock %}

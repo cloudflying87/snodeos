@@ -506,3 +506,176 @@ class AuditLog(models.Model):
     def __str__(self):
         actor = self.actor.get_full_name() if self.actor else 'system'
         return f'{actor} {self.get_action_display()} — {self.target or ""}'
+
+
+class EquipmentItem(models.Model):
+    """A piece of club equipment that can be reserved via Events (groomer, drag, ATV, etc.)"""
+    name        = models.CharField(max_length=80)
+    description = models.TextField(blank=True)
+    photo       = models.ImageField(upload_to='equipment/', blank=True, null=True)
+    is_active   = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
+class Event(models.Model):
+    """A scheduled club event: grooming run, work party, meeting, equipment use, etc.
+    Officers create them; members can self-sign-up if a slot is open."""
+    KIND_CHOICES = [
+        ('grooming',  'Grooming Run'),
+        ('work',      'Trail Work / Work Party'),
+        ('meeting',   'Meeting'),
+        ('equipment', 'Equipment Use'),
+        ('event',     'Club Event'),
+        ('other',     'Other'),
+    ]
+    STATUS_CHOICES = [
+        ('open',        'Open — needs volunteers'),
+        ('assigned',    'Assigned / scheduled'),
+        ('in_progress', 'In progress'),
+        ('done',        'Completed'),
+        ('cancelled',   'Cancelled'),
+    ]
+    VISIBILITY_CHOICES = [
+        ('public',  'Public — anyone can see'),
+        ('members', 'Members Only'),
+        ('both',    'Both'),
+    ]
+
+    title         = models.CharField(max_length=180)
+    kind          = models.CharField(max_length=12, choices=KIND_CHOICES, default='work', db_index=True)
+    description   = models.TextField(blank=True)
+
+    starts_at     = models.DateTimeField(db_index=True)
+    ends_at       = models.DateTimeField()
+
+    # Location can be linked to a trail, OR a free-form text + map pin, OR nothing
+    location_trail = models.ForeignKey('TrailSegment', null=True, blank=True, on_delete=models.SET_NULL,
+                                       related_name='events')
+    location_text  = models.CharField(max_length=200, blank=True,
+                                      help_text='e.g. "Parking lot off Hwy 25" — used when no trail is linked')
+    location_lat   = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    location_lng   = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+
+    equipment     = models.ForeignKey('EquipmentItem', null=True, blank=True, on_delete=models.SET_NULL,
+                                      related_name='events')
+    status        = models.CharField(max_length=12, choices=STATUS_CHOICES, default='open', db_index=True)
+    visibility    = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='members')
+
+    max_volunteers = models.PositiveIntegerField(null=True, blank=True,
+                                                 help_text='Leave blank for unlimited')
+    target_group  = models.ForeignKey('accounts.MemberGroup', null=True, blank=True, on_delete=models.SET_NULL,
+                                      related_name='events',
+                                      help_text='If set, "Suggested volunteers" prioritizes this group')
+    assignees     = models.ManyToManyField('accounts.Member', blank=True, related_name='events_assigned')
+
+    created_by    = models.ForeignKey('accounts.Member', null=True, on_delete=models.SET_NULL,
+                                      related_name='events_created')
+    created_at    = models.DateTimeField(auto_now_add=True)
+    updated_at    = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['starts_at']
+
+    def __str__(self):
+        return f'{self.title} ({self.starts_at:%Y-%m-%d %H:%M})'
+
+    @property
+    def is_public(self):
+        return self.visibility in ('public', 'both')
+
+    @property
+    def is_member_visible(self):
+        return self.visibility in ('members', 'both')
+
+    @property
+    def is_full(self):
+        return self.max_volunteers is not None and self.assignees.count() >= self.max_volunteers
+
+    @property
+    def is_open_for_signup(self):
+        return self.status == 'open' and not self.is_full
+
+    @property
+    def effective_color(self):
+        return {
+            'grooming':  '#0d6efd',
+            'work':      '#fd7e14',
+            'meeting':   '#6f42c1',
+            'equipment': '#198754',
+            'event':     '#d63384',
+            'other':     '#6c757d',
+        }.get(self.kind, '#1363A2')
+
+    @property
+    def location_label(self):
+        if self.location_trail:
+            return self.location_trail.name
+        return self.location_text or ''
+
+    def equipment_conflicts(self):
+        """Return other events that share equipment and overlap in time."""
+        if not self.equipment_id:
+            return Event.objects.none()
+        qs = Event.objects.filter(
+            equipment_id=self.equipment_id,
+            starts_at__lt=self.ends_at,
+            ends_at__gt=self.starts_at,
+        ).exclude(status__in=['cancelled', 'done'])
+        if self.pk:
+            qs = qs.exclude(pk=self.pk)
+        return qs
+
+    def rank_candidates(self):
+        """Return active members ranked by suitability for this event:
+        1. In target_group (if set)
+        2. Has matching MemberAvailability
+        3. Alphabetical fallback
+        Returns a list of dicts: {member, in_group, available, has_conflict}.
+        """
+        from accounts.models import Member, MemberAvailability
+        members = list(
+            Member.objects.filter(membership_status='active').order_by('last_name', 'first_name')
+        )
+        target_ids = set()
+        if self.target_group_id:
+            target_ids = set(self.target_group.members.values_list('pk', flat=True))
+
+        # Member-id → has any availability matching this window
+        avail_ids = set()
+        for av in MemberAvailability.objects.all():
+            if av.covers(self.starts_at, self.ends_at):
+                avail_ids.add(av.member_id)
+
+        # Member-id → already assigned to a conflicting event in this window
+        conflict_ids = set()
+        clash_qs = Event.objects.filter(
+            starts_at__lt=self.ends_at,
+            ends_at__gt=self.starts_at,
+        ).exclude(status__in=['cancelled', 'done'])
+        if self.pk:
+            clash_qs = clash_qs.exclude(pk=self.pk)
+        for ev in clash_qs.prefetch_related('assignees'):
+            for m in ev.assignees.all():
+                conflict_ids.add(m.pk)
+
+        ranked = []
+        for m in members:
+            ranked.append({
+                'member':       m,
+                'in_group':     m.pk in target_ids,
+                'available':    m.pk in avail_ids,
+                'has_conflict': m.pk in conflict_ids,
+            })
+        ranked.sort(key=lambda r: (
+            not r['in_group'],
+            not r['available'],
+            r['has_conflict'],
+            r['member'].last_name.lower(),
+            r['member'].first_name.lower(),
+        ))
+        return ranked

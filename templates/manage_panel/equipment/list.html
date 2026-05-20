@@ -1,0 +1,62 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}Equipment{% endblock %}
+{% block active_equipment %}active{% endblock %}
+
+{% block content %}
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">Equipment</h1>
+    <p class="panel-breadcrumb mb-0"><a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> / Equipment</p>
+  </div>
+  <a href="{% url 'manage_panel:equipment_add' %}" class="btn btn-primary">
+    <i class="bi bi-plus me-1" aria-hidden="true"></i>New Equipment
+  </a>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body p-4">
+    <p class="text-muted small mb-0">
+      Track the groomer, drag, ATV, etc. so Events can reserve them. The site warns about double-bookings when you schedule events.
+    </p>
+  </div>
+</div>
+
+<div class="panel-card">
+{% if items %}
+  <div class="row g-3 p-3">
+    {% for item in items %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card border h-100 {% if not item.is_active %}opacity-50{% endif %}">
+        {% if item.photo %}
+          <img src="{{ item.photo.url }}" class="card-img-top" alt="" style="height:160px;object-fit:cover;">
+        {% else %}
+          <div class="card-img-top d-flex align-items-center justify-content-center" style="height:160px;background:#e2eaf2;">
+            <i class="bi bi-truck text-muted display-4" aria-hidden="true"></i>
+          </div>
+        {% endif %}
+        <div class="card-body">
+          <h5 class="fw-bold mb-1">{{ item.name }}</h5>
+          {% if not item.is_active %}<span class="badge bg-secondary mb-2">Inactive</span>{% endif %}
+          {% if item.description %}<p class="text-muted small mb-3">{{ item.description|truncatechars:100 }}</p>{% endif %}
+          <div class="d-flex gap-2">
+            <a href="{% url 'manage_panel:equipment_edit' item.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil me-1" aria-hidden="true"></i>Edit</a>
+            <button class="btn btn-sm btn-outline-danger"
+                    data-delete-url="{% url 'manage_panel:equipment_delete' item.pk %}"
+                    data-delete-label="{{ item.name }}">
+              <i class="bi bi-trash" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="panel-card-body text-center py-5">
+    <i class="bi bi-truck display-4 text-muted mb-3 d-block" aria-hidden="true"></i>
+    <p class="text-muted mb-3">No equipment tracked yet.</p>
+    <a href="{% url 'manage_panel:equipment_add' %}" class="btn btn-primary">Add First Equipment</a>
+  </div>
+{% endif %}
+</div>
+{% endblock %}

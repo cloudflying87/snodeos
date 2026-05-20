@@ -1,0 +1,62 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}{% if item %}Edit Equipment{% else %}New Equipment{% endif %}{% endblock %}
+{% block active_equipment %}active{% endblock %}
+
+{% block content %}
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">{% if item %}Edit Equipment{% else %}New Equipment{% endif %}</h1>
+    <p class="panel-breadcrumb mb-0">
+      <a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> /
+      <a href="{% url 'manage_panel:equipment_list' %}">Equipment</a> /
+      {% if item %}{{ item.name }}{% else %}New{% endif %}
+    </p>
+  </div>
+  <a href="{% url 'manage_panel:equipment_list' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Back
+  </a>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="panel-card">
+        <div class="panel-card-header"><h2 class="panel-card-title">Details</h2></div>
+        <div class="panel-card-body">
+          <div class="mb-3">
+            <label for="name" class="form-label fw-semibold">Name</label>
+            <input id="name" type="text" name="name" class="form-control" required
+                   value="{{ item.name|default:'' }}" placeholder="e.g. John Deere 1200 Groomer">
+          </div>
+          <div class="mb-3">
+            <label for="description" class="form-label fw-semibold">Description <span class="text-muted fw-normal small">(optional)</span></label>
+            <textarea id="description" name="description" class="form-control" rows="3">{{ item.description|default:'' }}</textarea>
+          </div>
+          <div class="mb-3">
+            <label for="photo" class="form-label fw-semibold">Photo <span class="text-muted fw-normal small">(optional)</span></label>
+            {% if item.photo %}
+              <div class="mb-2">
+                <img src="{{ item.photo.url }}" alt="" style="max-width:200px;border-radius:6px;">
+                <div class="form-check mt-2">
+                  <input id="clear_photo" class="form-check-input" type="checkbox" name="clear_photo" value="1">
+                  <label class="form-check-label small text-danger" for="clear_photo">Remove current photo</label>
+                </div>
+              </div>
+            {% endif %}
+            <input id="photo" type="file" name="photo" class="form-control" accept="image/*">
+          </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1" {% if item.is_active or not item %}checked{% endif %}>
+            <label class="form-check-label fw-semibold" for="is_active">Active</label>
+            <div class="form-text">Inactive equipment is hidden from the event-creation dropdown.</div>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save me-1" aria-hidden="true"></i>Save Equipment
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}

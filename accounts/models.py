@@ -138,3 +138,57 @@ class MemberGroup(models.Model):
     @property
     def active_member_count(self):
         return self.members.filter(membership_status='active').count()
+
+
+class MemberAvailability(models.Model):
+    """A member's stated availability — either a recurring weekly window or
+    a specific date range. Used to rank candidate volunteers for events."""
+    KIND_CHOICES = [
+        ('recurring', 'Recurring weekly'),
+        ('specific',  'Specific date range'),
+    ]
+    DAY_CHOICES = [
+        (0, 'Monday'), (1, 'Tuesday'), (2, 'Wednesday'),
+        (3, 'Thursday'), (4, 'Friday'), (5, 'Saturday'), (6, 'Sunday'),
+    ]
+    member       = models.ForeignKey('Member', on_delete=models.CASCADE, related_name='availabilities')
+    kind         = models.CharField(max_length=10, choices=KIND_CHOICES)
+    # For recurring:
+    day_of_week  = models.PositiveSmallIntegerField(null=True, blank=True, choices=DAY_CHOICES)
+    start_time   = models.TimeField(null=True, blank=True)
+    end_time     = models.TimeField(null=True, blank=True)
+    # For specific:
+    starts_at    = models.DateTimeField(null=True, blank=True)
+    ends_at      = models.DateTimeField(null=True, blank=True)
+    notes        = models.CharField(max_length=200, blank=True)
+    created_at   = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['kind', 'day_of_week', 'starts_at']
+
+    def __str__(self):
+        if self.kind == 'recurring':
+            return f'{self.member.get_short_name()}: {self.get_day_of_week_display()} {self.start_time}-{self.end_time}'
+        return f'{self.member.get_short_name()}: {self.starts_at} – {self.ends_at}'
+
+    def covers(self, start_dt, end_dt):
+        """Does this availability fully cover the given UTC datetime range?"""
+        if self.kind == 'specific':
+            if not (self.starts_at and self.ends_at):
+                return False
+            return self.starts_at <= start_dt and self.ends_at >= end_dt
+
+        # Recurring — same calendar day, day-of-week matches, time window covers
+        if self.day_of_week is None or self.start_time is None or self.end_time is None:
+            return False
+        if start_dt.date() != end_dt.date():
+            return False  # multi-day events: skip recurring match for v1
+        if start_dt.weekday() != self.day_of_week:
+            return False
+        return self.start_time <= start_dt.time() and self.end_time >= end_dt.time()
+
+    @property
+    def display(self):
+        if self.kind == 'recurring':
+            return f'{self.get_day_of_week_display()}s, {self.start_time:%-I:%M %p} – {self.end_time:%-I:%M %p}'
+        return f'{self.starts_at:%a %b %-d, %-I:%M %p} – {self.ends_at:%-I:%M %p}'

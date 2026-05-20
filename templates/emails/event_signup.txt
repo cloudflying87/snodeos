@@ -1,0 +1,8 @@
+New volunteer signup
+====================
+
+{{ member.get_full_name }} signed up for {{ event.title }}.
+
+When: {{ event.starts_at|date:"l, F j" }} {{ event.starts_at|date:"g:i A" }}–{{ event.ends_at|date:"g:i A" }}
+
+{{ event.assignees.count }} signed up so far{% if event.max_volunteers %} (of {{ event.max_volunteers }}){% endif %}.

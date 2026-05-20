@@ -1,0 +1,22 @@
+{% extends 'emails/base_email.html' %}
+{% block body %}
+<h2>You're on the schedule</h2>
+<p>Hi {{ member.first_name }},</p>
+<p>
+  {% if assigned_by %}{{ assigned_by }}{% else %}A club officer{% endif %} added you to <strong>{{ event.title }}</strong>.
+</p>
+
+<div style="background:#f6f9fe;border-left:3px solid #1363A2;padding:14px 18px;border-radius:4px;margin:0 0 24px;">
+  <p style="margin:0 0 6px;"><strong>When:</strong> {{ event.starts_at|date:"l, F j" }} &middot; {{ event.starts_at|date:"g:i A" }} – {{ event.ends_at|date:"g:i A" }}</p>
+  {% if event.location_label %}<p style="margin:0 0 6px;"><strong>Where:</strong> {{ event.location_label }}</p>{% endif %}
+  {% if event.equipment %}<p style="margin:0 0 6px;"><strong>Equipment:</strong> {{ event.equipment.name }}</p>{% endif %}
+  {% if event.description %}<p style="margin:6px 0 0;">{{ event.description|linebreaksbr }}</p>{% endif %}
+</div>
+
+{% if event_url %}
+<hr class="divider">
+<div class="btn-wrap">
+  <a href="{{ event_url }}" class="btn">View Event Details →</a>
+</div>
+{% endif %}
+{% endblock %}
