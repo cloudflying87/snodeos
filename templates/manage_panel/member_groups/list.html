@@ -1,0 +1,94 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}Member Groups{% endblock %}
+{% block active_member_groups %}active{% endblock %}
+
+{% block content %}
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">Member Groups</h1>
+    <p class="panel-breadcrumb mb-0">
+      <a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> / Member Groups
+    </p>
+  </div>
+  <a href="{% url 'manage_panel:member_group_add' %}" class="btn btn-primary">
+    <i class="bi bi-plus me-1" aria-hidden="true"></i>New Group
+  </a>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body p-4">
+    <p class="text-muted small mb-0">
+      Groups let you message a focused subset of members — for example, a "Sign Crew" or "Groomers" — without blasting the whole roster.
+      Pick the group on the Email Blast or Text Members page to target just that crew.
+    </p>
+  </div>
+</div>
+
+<div class="panel-card">
+{% if groups %}
+
+  <div class="d-none d-md-block">
+    <table class="panel-table align-middle">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Members</th>
+          <th>Active</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for g in groups %}
+        <tr>
+          <td><div class="fw-semibold">{{ g.name }}</div></td>
+          <td class="text-muted small">{{ g.description|default:"—" }}</td>
+          <td><span class="badge bg-secondary-subtle text-secondary">{{ g.member_count }}</span></td>
+          <td><span class="badge bg-success-subtle text-success-emphasis">{{ g.active_member_count }}</span></td>
+          <td class="text-end pe-4">
+            <a href="{% url 'manage_panel:member_group_edit' g.pk %}" class="btn btn-sm btn-outline-primary me-1" title="Edit">
+              <i class="bi bi-pencil" aria-hidden="true"></i>
+            </a>
+            <button class="btn btn-sm btn-outline-danger"
+                    data-delete-url="{% url 'manage_panel:member_group_delete' g.pk %}"
+                    data-delete-label="{{ g.name }}" aria-label="Delete">
+              <i class="bi bi-trash" aria-hidden="true"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="d-md-none mob-card-list">
+    {% for g in groups %}
+    <div class="mob-swipe-wrapper">
+      <a href="{% url 'manage_panel:member_group_edit' g.pk %}" class="mob-swipe-row">
+        <div class="mob-info">
+          <div class="mob-title">{{ g.name }}</div>
+          <div class="mob-sub">{{ g.active_member_count }} active &middot; {{ g.member_count }} total</div>
+        </div>
+        <i class="bi bi-chevron-right text-muted" style="flex-shrink:0;font-size:0.8rem;" aria-hidden="true"></i>
+      </a>
+      <div class="mob-swipe-delete">
+        <button class="btn"
+                data-delete-url="{% url 'manage_panel:member_group_delete' g.pk %}"
+                data-delete-label="{{ g.name }}" aria-label="Delete">
+          <i class="bi bi-trash fs-5" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+{% else %}
+  <div class="panel-card-body text-center py-5">
+    <i class="bi bi-people display-4 text-muted mb-3 d-block" aria-hidden="true"></i>
+    <p class="text-muted mb-3">No groups yet. Create one to message a focused subset of members.</p>
+    <a href="{% url 'manage_panel:member_group_add' %}" class="btn btn-primary">Create First Group</a>
+  </div>
+{% endif %}
+</div>
+
+{% endblock %}

@@ -105,6 +105,9 @@
         <a href="{% url 'members:member_list' %}" class="panel-nav-link {% block active_members %}{% endblock %}">
           <i class="bi bi-people"></i> All Members
         </a>
+        <a href="{% url 'manage_panel:member_group_list' %}" class="panel-nav-link {% block active_member_groups %}{% endblock %}">
+          <i class="bi bi-people-fill"></i> Member Groups
+        </a>
         <a href="{% url 'manage_panel:member_import' %}" class="panel-nav-link {% block active_import %}{% endblock %}">
           <i class="bi bi-upload"></i> Import Members
         </a>

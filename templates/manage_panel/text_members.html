@@ -33,6 +33,21 @@
       <div class="card-body p-4">
         <form method="post">
           {% csrf_token %}
+
+          <div class="mb-3">
+            <label for="group_id" class="form-label fw-semibold">Send To</label>
+            <select name="group_id" id="group_id" class="form-select">
+              <option value="">All opted-in active members ({{ opted_in }})</option>
+              {% for g in groups %}
+              <option value="{{ g.pk }}">Group: {{ g.name }} ({{ g.active_member_count }} active members)</option>
+              {% endfor %}
+            </select>
+            <div class="form-text">
+              Picking a group still only sends to members who opted in to texts.
+              <a href="{% url 'manage_panel:member_group_list' %}">Manage groups</a>.
+            </div>
+          </div>
+
           <div class="mb-3">
             <label class="form-label fw-semibold">Message</label>
             <textarea name="message" class="form-control" rows="4" maxlength="160"
@@ -43,12 +58,8 @@
               <span id="char-count" class="text-muted">0 / 160</span>
             </div>
           </div>
-          <div class="alert alert-info d-flex gap-2 align-items-start mb-3">
-            <i class="bi bi-info-circle-fill flex-shrink-0 mt-1"></i>
-            <div>This will send to <strong>{{ opted_in }} member{{ opted_in|pluralize }}</strong> who are active and answered "Yes" to receiving texts on their application.</div>
-          </div>
           <button type="submit" class="btn btn-primary" {% if opted_in == 0 %}disabled{% endif %}>
-            <i class="bi bi-send me-2"></i>Send Text to {{ opted_in }} Member{{ opted_in|pluralize }}
+            <i class="bi bi-send me-2"></i>Send Text
           </button>
           {% if opted_in == 0 %}
           <p class="text-muted small mt-2 mb-0">No active members have opted in to texts yet.</p>

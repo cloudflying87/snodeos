@@ -25,16 +25,50 @@ def dashboard(request):
     member = request.user
     announcements = Announcement.objects.filter(
         visibility__in=['members', 'both']
-    ).prefetch_related('images').order_by('-is_pinned', '-created_at')[:10]
+    ).prefetch_related('images').order_by('-is_pinned', '-created_at')[:6]
     trail_conditions = TrailCondition.objects.filter(
         visibility__in=['members', 'both']
-    ).prefetch_related('images').order_by('-is_pinned', '-created_at')[:5]
-    trail_logs = TrailWorkLog.objects.prefetch_related('images').all()[:5]
+    ).prefetch_related('images').order_by('-is_pinned', '-created_at')[:6]
+
+    feed = []
+    for a in announcements:
+        img = a.images.first()
+        feed.append({
+            'kind': 'announcement',
+            'badge': 'Announcement',
+            'badge_class': 'bg-primary-subtle text-primary-emphasis',
+            'icon': 'megaphone',
+            'title': a.title,
+            'snippet': a.body,
+            'image': img.image.url if img else None,
+            'date': a.created_at,
+            'pinned': a.is_pinned,
+            'url': f'/announcements/{a.pk}/',
+        })
+    for tc in trail_conditions:
+        img = tc.images.first()
+        feed.append({
+            'kind': 'trail_condition',
+            'badge': tc.get_status_display(),
+            'badge_class': tc.status_badge_class,
+            'icon': 'signpost-split',
+            'title': tc.title,
+            'snippet': tc.body,
+            'image': img.image.url if img else None,
+            'date': tc.created_at,
+            'pinned': tc.is_pinned,
+            'url': f'/trail-conditions/{tc.pk}/',
+        })
+    # Sort merged feed: pinned first, then by date desc; cap at 10
+    feed.sort(key=lambda x: (not x['pinned'], -x['date'].timestamp()))
+    feed = feed[:10]
+
+    my_groups = member.groups_membership.all() if hasattr(member, 'groups_membership') else []
+
     context = {
         'member': member,
-        'announcements': announcements,
-        'trail_conditions': trail_conditions,
-        'trail_logs': trail_logs,
+        'feed': feed,
+        'my_groups': my_groups,
     }
     return render(request, 'members/dashboard.html', context)
 

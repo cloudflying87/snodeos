@@ -56,9 +56,7 @@
           {% with vn=request.resolver_match.view_name %}
           <li class="nav-item"><a class="nav-link site-nav-link{% if vn == 'core:home' %} nav-active{% endif %}" href="{% url 'core:home' %}">Home</a></li>
           <li class="nav-item"><a class="nav-link site-nav-link{% if vn == 'core:about' %} nav-active{% endif %}" href="{% url 'core:about' %}">About Us</a></li>
-          <li class="nav-item"><a class="nav-link site-nav-link{% if vn == 'core:trail_conditions' or vn == 'core:trail_condition_detail' %} nav-active{% endif %}" href="{% url 'core:trail_conditions' %}">Trail Conditions</a></li>
-          <li class="nav-item"><a class="nav-link site-nav-link{% if vn == 'core:map' %} nav-active{% endif %}" href="{% url 'core:map' %}">Map</a></li>
-          <li class="nav-item"><a class="nav-link site-nav-link{% if vn == 'core:trail_work' %} nav-active{% endif %}" href="{% url 'core:trail_work' %}">Trail Work</a></li>
+          <li class="nav-item"><a class="nav-link site-nav-link{% if vn == 'core:map' or vn == 'core:trail_condition_detail' %} nav-active{% endif %}" href="{% url 'core:map' %}">Map &amp; Trails</a></li>
           <li class="nav-item"><a class="nav-link site-nav-link{% if vn == 'core:contact' or vn == 'accounts:register' %} nav-active{% endif %}" href="{% url 'core:contact' %}">Contact Us</a></li>
           {% endwith %}
           {% if user.is_authenticated %}

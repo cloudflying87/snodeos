@@ -48,6 +48,10 @@ urlpatterns = [
     path('trail-work/image/<int:pk>/delete/', views.trail_work_image_delete, name='trail_work_image_delete'),
 
     path('members/import/', views.member_import, name='member_import'),
+    path('member-groups/', views.member_group_list, name='member_group_list'),
+    path('member-groups/new/', views.member_group_form, name='member_group_add'),
+    path('member-groups/<int:pk>/edit/', views.member_group_form, name='member_group_edit'),
+    path('member-groups/<int:pk>/delete/', views.member_group_delete, name='member_group_delete'),
 
     path('messages/', views.message_list, name='message_list'),
     path('messages/<int:pk>/', views.message_detail, name='message_detail'),

@@ -65,17 +65,16 @@ def contact(request):
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 
-@login_required
 def trail_work(request):
-    logs = TrailWorkLog.objects.prefetch_related('images').all()
-    return render(request, 'core/trail_work.html', {'logs': logs})
+    """Legacy URL — the trail work list now lives on /map/. Permanent redirect."""
+    from django.http import HttpResponsePermanentRedirect
+    return HttpResponsePermanentRedirect(reverse('core:map') + '#work')
 
 
 def trail_conditions(request):
-    conditions = TrailCondition.objects.filter(
-        visibility__in=['public', 'both']
-    ).prefetch_related('images').order_by('-is_pinned', '-created_at')[:20]
-    return render(request, 'core/trail_conditions.html', {'conditions': conditions})
+    """Legacy URL — the trail conditions list now lives on /map/. Permanent redirect."""
+    from django.http import HttpResponsePermanentRedirect
+    return HttpResponsePermanentRedirect(reverse('core:map') + '#conditions')
 
 
 def trail_condition_detail(request, pk):
@@ -96,9 +95,18 @@ def announcement_detail(request, pk):
 
 
 def map_view(request):
-    """Public-facing map page. Shows trails and geotagged photos, filtered by
-    what the current user is allowed to see."""
-    return render(request, 'core/map.html', {})
+    """Map-centric page that combines the interactive trail map with the
+    most-recent trail conditions and (for members) recent trail work."""
+    is_member = request.user.is_authenticated
+    cond_qs = TrailCondition.objects.prefetch_related('images').order_by('-is_pinned', '-created_at')
+    if not is_member:
+        cond_qs = cond_qs.filter(visibility__in=['public', 'both'])
+    conditions = cond_qs[:8]
+    work_logs = TrailWorkLog.objects.prefetch_related('images').all()[:6] if is_member else []
+    return render(request, 'core/map.html', {
+        'conditions': conditions,
+        'work_logs':  work_logs,
+    })
 
 
 def map_data(request):

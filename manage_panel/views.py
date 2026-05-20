@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.conf import settings
 from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, AnnouncementImage, TrailCondition, TrailConditionImage, TrailWorkLog, TrailWorkImage, ContactMessage, SiteSettings, EmailTemplate, AuditLog, EmailLog, InboundSMS, TrailSegment
-from accounts.models import Member, RegistrationField
+from accounts.models import Member, RegistrationField, MemberGroup
 from core.email import send_test_email
 from core.geo import create_image_with_gps
 from accounts.models import Member
@@ -780,15 +780,25 @@ def email_blast(request):
     from core.email import send_email as _send_email
     from core.throttle import throttle
     import re
-    recipients = Member.objects.filter(membership_status='active')
 
     templates = EmailTemplate.objects.all()
+    groups = MemberGroup.objects.prefetch_related('members').all()
 
     if request.method == 'POST':
         # 5 blasts per officer per hour — guards against double-clicks and spam
         if not throttle(f'email_blast:{request.user.pk}', max_count=5, window_seconds=3600):
             messages.error(request, "You've sent several blasts recently. Wait a bit before sending another.")
             return redirect('manage_panel:email_blast')
+
+        # Recipient selection: either "all active" or a specific group
+        group_id = request.POST.get('group_id', '').strip()
+        if group_id:
+            group = MemberGroup.objects.filter(pk=group_id).first()
+            recipients = group.members.filter(membership_status='active') if group else Member.objects.none()
+            audience_label = f'group "{group.name}"' if group else 'no one (invalid group)'
+        else:
+            recipients = Member.objects.filter(membership_status='active')
+            audience_label = 'all active members'
 
         subject   = request.POST.get('subject', '').strip()
         blast_html = request.POST.get('body_html', '').strip()
@@ -827,16 +837,17 @@ def email_blast(request):
             from core.audit import log_action
             log_action(request.user, 'email_blast',
                        target=subject,
-                       detail=f'Sent: {sent}, Failed: {failed}, Template: {tmpl.name if tmpl else "default"}')
+                       detail=f'Audience: {audience_label}, Sent: {sent}, Failed: {failed}, Template: {tmpl.name if tmpl else "default"}')
             if failed:
-                messages.warning(request, f'Sent to {sent} members. {failed} failed.')
+                messages.warning(request, f'Sent to {sent} ({audience_label}). {failed} failed.')
             else:
-                messages.success(request, f'Email sent to {sent} active members.')
+                messages.success(request, f'Email sent to {sent} ({audience_label}).')
             return redirect('manage_panel:email_blast')
 
     return render(request, 'manage_panel/email_blast.html', {
-        'recipient_count': recipients.count(),
+        'recipient_count': Member.objects.filter(membership_status='active').count(),
         'templates': templates,
+        'groups': groups,
         'default_tmpl': EmailTemplate.get_default(),
     })
 
@@ -990,14 +1001,22 @@ def text_members(request):
     sms_configured = cfg.sms_configured
 
     if request.method == 'POST' and sms_configured:
-        # 3 SMS blasts per officer per hour — SMS costs real money, be conservative
         if not throttle(f'sms_blast:{request.user.pk}', max_count=3, window_seconds=3600):
             messages.error(request, "You've sent several texts recently. Wait a bit before sending another.")
             return redirect('manage_panel:text_members')
 
+        group_id = request.POST.get('group_id', '').strip()
+        if group_id:
+            group = MemberGroup.objects.filter(pk=group_id).first()
+            base = group.members if group else Member.objects.none()
+            audience_label = f'group "{group.name}"' if group else 'no one (invalid group)'
+        else:
+            base = Member.objects.all()
+            audience_label = 'all opted-in members'
+
         message = request.POST.get('message', '').strip()
         if message:
-            recipients = Member.objects.filter(membership_status='active', accepts_texts=True).exclude(phone='')
+            recipients = base.filter(membership_status='active', accepts_texts=True).exclude(phone='')
             sent = failed = 0
             for member in recipients:
                 if send_sms(message, member.phone):
@@ -1007,17 +1026,19 @@ def text_members(request):
             from core.audit import log_action
             log_action(request.user, 'sms_blast',
                        target=message[:80],
-                       detail=f'Sent: {sent}, Failed: {failed}')
+                       detail=f'Audience: {audience_label}, Sent: {sent}, Failed: {failed}')
             if failed:
-                messages.warning(request, f'Sent to {sent} members. {failed} failed.')
+                messages.warning(request, f'Sent to {sent} ({audience_label}). {failed} failed.')
             else:
-                messages.success(request, f'Text sent to {sent} members who opted in.')
+                messages.success(request, f'Text sent to {sent} ({audience_label}).')
             return redirect('manage_panel:text_members')
 
     opted_in = Member.objects.filter(membership_status='active', accepts_texts=True).exclude(phone='').count()
+    groups = MemberGroup.objects.prefetch_related('members').all()
     return render(request, 'manage_panel/text_members.html', {
         'sms_configured': sms_configured,
         'opted_in': opted_in,
+        'groups': groups,
     })
 
 
@@ -1280,3 +1301,56 @@ def trail_segment_delete(request, pk):
     seg.delete()
     messages.success(request, f'Trail "{name}" deleted.')
     return redirect('manage_panel:trail_segment_list')
+
+
+# ── Member Groups ──────────────────────────────────────────────────────────────
+
+@officer_required
+def member_group_list(request):
+    groups = MemberGroup.objects.prefetch_related('members').all()
+    return render(request, 'manage_panel/member_groups/list.html', {'groups': groups})
+
+
+@officer_required
+def member_group_form(request, pk=None):
+    group = get_object_or_404(MemberGroup, pk=pk) if pk else None
+
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        description = request.POST.get('description', '').strip()
+        member_ids = request.POST.getlist('member_ids')
+
+        if not name:
+            messages.error(request, 'Group name is required.')
+        else:
+            if group is None:
+                group = MemberGroup(name=name)
+            else:
+                group.name = name
+            group.description = description
+            try:
+                group.save()
+            except Exception as exc:
+                messages.error(request, f'Could not save group: {exc}')
+                return redirect('manage_panel:member_group_list')
+            group.members.set(Member.objects.filter(pk__in=member_ids))
+            messages.success(request, f'Group "{group.name}" saved with {group.members.count()} member(s).')
+            return redirect('manage_panel:member_group_list')
+
+    all_members = Member.objects.filter(membership_status='active').order_by('last_name', 'first_name')
+    selected_ids = set(group.members.values_list('pk', flat=True)) if group else set()
+    return render(request, 'manage_panel/member_groups/form.html', {
+        'group': group,
+        'all_members': all_members,
+        'selected_ids': selected_ids,
+    })
+
+
+@officer_required
+@require_POST
+def member_group_delete(request, pk):
+    group = get_object_or_404(MemberGroup, pk=pk)
+    name = group.name
+    group.delete()
+    messages.success(request, f'Group "{name}" deleted.')
+    return redirect('manage_panel:member_group_list')

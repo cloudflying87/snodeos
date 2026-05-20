@@ -113,3 +113,28 @@ class Member(AbstractBaseUser, PermissionsMixin):
 
     def get_short_name(self):
         return self.first_name
+
+
+class MemberGroup(models.Model):
+    """A targeted subset of members officers can message together. Used to send
+    email blasts and texts to a specific crew (e.g. "Groomers", "Sign Crew")
+    without spamming the whole roster."""
+    name        = models.CharField(max_length=80, unique=True)
+    description = models.CharField(max_length=200, blank=True,
+                                   help_text='Short note describing who is in this group')
+    members     = models.ManyToManyField('Member', related_name='groups_membership', blank=True)
+    created_at  = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def member_count(self):
+        return self.members.count()
+
+    @property
+    def active_member_count(self):
+        return self.members.filter(membership_status='active').count()
