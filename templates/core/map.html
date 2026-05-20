@@ -14,6 +14,9 @@
     position: relative !important;
     overflow: hidden !important;
     box-sizing: border-box;
+    /* Stacking context so Leaflet controls can't leak above page chrome. */
+    isolation: isolate;
+    z-index: 0;
   }
   /* Inline Leaflet's positioning CSS — never depend on CDN for layout-critical rules. */
   #map .leaflet-pane, #map .leaflet-tile, #map .leaflet-marker-icon,

@@ -15,6 +15,10 @@
     position: relative !important;
     overflow: hidden !important;
     box-sizing: border-box;
+    /* Create a stacking context so Leaflet's z-indexed controls
+       (zoom +/-, draw toolbar) can't leak out and overlap the topbar/sidebar. */
+    isolation: isolate;
+    z-index: 0;
   }
   /* INLINE the critical subset of Leaflet's positioning CSS — these are the
      rules without which tiles will scatter. We never want to rely on a CDN
