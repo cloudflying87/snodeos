@@ -44,7 +44,7 @@
           <td class="small text-muted">{{ seg.groomed_at|date:"M j, Y g:i A"|default:"—" }}</td>
           <td class="small text-muted">{{ seg.updated_at|date:"M j, Y" }}</td>
           <td class="text-end pe-4">
-            <a href="{% url 'core:trail_segment_gpx' seg.pk %}" class="btn btn-sm btn-outline-secondary me-1" title="Download GPX">
+            <a href="{% url 'core:trail_segment_gpx' seg.pk %}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary me-1" title="Download GPX">
               <i class="bi bi-download" aria-hidden="true"></i>
             </a>
             <a href="{% url 'manage_panel:trail_segment_edit' seg.pk %}" class="btn btn-sm btn-outline-primary me-1" title="Edit">
@@ -101,7 +101,7 @@
       and a <strong>visibility</strong> (Public/Members/Both).
     </p>
     <p class="text-muted small mb-0">
-      Trails appear on the public <a href="{% url 'core:map' %}">trail map</a> and can be downloaded as GPX files for import into the Polaris Off Road app,
+      Trails appear on the public <a href="{% url 'core:map' %}" target="_blank" rel="noopener">trail map</a> and can be downloaded as GPX files for import into the Polaris Off Road app,
       OnX Offroad, Gaia, or any Garmin device.
     </p>
   </div>

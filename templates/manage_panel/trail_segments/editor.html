@@ -194,7 +194,7 @@
       {% if segment %}
       <div class="panel-card">
         <div class="panel-card-body">
-          <a href="{% url 'core:trail_segment_gpx' segment.pk %}" class="btn btn-outline-secondary w-100 mb-2">
+          <a href="{% url 'core:trail_segment_gpx' segment.pk %}" target="_blank" rel="noopener" class="btn btn-outline-secondary w-100 mb-2">
             <i class="bi bi-download me-1" aria-hidden="true"></i>Download as GPX
           </a>
           <p class="text-muted small mb-0">Import this file into Polaris Off Road, OnX, Gaia, or a Garmin device.</p>

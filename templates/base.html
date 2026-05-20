@@ -36,7 +36,7 @@
   <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
   <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicon-32.png' %}">
   <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/apple-touch-icon.png' %}">
-  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=11">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=12">
   {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -62,16 +62,21 @@
           {% endwith %}
           {% if user.is_authenticated %}
             <li class="nav-item ms-lg-2">
-              <a class="nav-link site-nav-link position-relative" href="{% url 'core:notifications' %}" aria-label="Notifications">
-                <i class="bi bi-bell{% if notif_unread_count %}-fill{% endif %}"></i>
+              <a class="nav-link site-nav-link position-relative" href="{% url 'core:notifications' %}">
+                <i class="bi bi-bell{% if notif_unread_count %}-fill{% endif %} me-1 d-lg-inline-block"></i>
+                <span class="d-lg-none d-inline">Notifications</span>
+                <span class="d-none d-lg-inline visually-hidden-focusable">Notifications</span>
                 {% if notif_unread_count %}
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.6rem;">{{ notif_unread_count }}</span>
+                <span class="badge rounded-pill bg-danger ms-1 d-lg-none">{{ notif_unread_count }}</span>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none d-lg-inline-block" style="font-size:0.6rem;">{{ notif_unread_count }}</span>
                 {% endif %}
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link site-nav-link" href="{% url 'core:inbox' %}" aria-label="Inbox">
-                <i class="bi bi-envelope"></i>
+              <a class="nav-link site-nav-link" href="{% url 'core:inbox' %}">
+                <i class="bi bi-envelope me-1"></i>
+                <span class="d-lg-none d-inline">Inbox</span>
+                <span class="d-none d-lg-inline visually-hidden-focusable">Inbox</span>
               </a>
             </li>
             <li class="nav-item ms-lg-2">
