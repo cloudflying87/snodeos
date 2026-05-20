@@ -46,6 +46,20 @@ body {
   position: relative;
   z-index: 100;
 }
+/* Sticky nav on mobile only — at narrow widths the menu collapses to a
+   hamburger and a sticky top bar matches the dashboard's UX. On desktop
+   the nav stays in normal flow so the larger logo image isn't always
+   eating screen real estate. */
+@media (max-width: 991.98px) {
+  .site-header-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    /* Slim the logo a bit so the sticky bar isn't huge */
+  }
+  .site-header-wrap .navbar-brand img { height: 40px; }
+  .site-navbar { padding-top: 0.4rem; padding-bottom: 0.4rem; }
+}
 .site-header-wrap::before {
   content: '';
   position: absolute;
