@@ -900,6 +900,16 @@ def communications(request):
             cfg.save()
             messages.success(request, 'Social / link-preview settings saved.')
 
+        elif action == 'save_map':
+            try:
+                cfg.map_default_lat  = float(request.POST.get('map_default_lat', cfg.map_default_lat))
+                cfg.map_default_lng  = float(request.POST.get('map_default_lng', cfg.map_default_lng))
+                cfg.map_default_zoom = int(request.POST.get('map_default_zoom', cfg.map_default_zoom))
+                cfg.save()
+                messages.success(request, 'Map default location saved.')
+            except (ValueError, TypeError):
+                messages.error(request, 'Invalid coordinates — must be decimal numbers.')
+
         elif action == 'test_email':
             recipient = request.POST.get('test_recipient', '').strip() or request.user.email
             try:

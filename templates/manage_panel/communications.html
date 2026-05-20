@@ -421,6 +421,47 @@
   </div>
 </div>
 
+<!-- Map Default Location -->
+<div class="card border-0 shadow-sm mt-4">
+  <div class="card-header bg-white border-bottom py-3">
+    <h5 class="fw-bold mb-0"><i class="bi bi-geo-alt me-2 text-primary" aria-hidden="true"></i>Map Default Location</h5>
+    <p class="text-muted small mb-0 mt-1">Where the public Map and the trail editor center when no trails are visible yet.</p>
+  </div>
+  <div class="card-body p-4">
+    <form method="post" class="row g-3 align-items-end">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="save_map">
+
+      <div class="col-sm-4">
+        <label for="map_default_lat" class="form-label fw-semibold small">Latitude</label>
+        <input id="map_default_lat" type="number" step="0.000001" name="map_default_lat" class="form-control"
+               value="{{ cfg.map_default_lat }}" required>
+      </div>
+      <div class="col-sm-4">
+        <label for="map_default_lng" class="form-label fw-semibold small">Longitude</label>
+        <input id="map_default_lng" type="number" step="0.000001" name="map_default_lng" class="form-control"
+               value="{{ cfg.map_default_lng }}" required>
+      </div>
+      <div class="col-sm-4">
+        <label for="map_default_zoom" class="form-label fw-semibold small">Zoom (1–19)</label>
+        <input id="map_default_zoom" type="number" min="1" max="19" name="map_default_zoom" class="form-control"
+               value="{{ cfg.map_default_zoom }}" required>
+      </div>
+
+      <div class="col-12">
+        <div class="form-text mb-2">
+          Find coordinates by right-clicking your area on
+          <a href="https://www.google.com/maps" target="_blank" rel="noopener">Google Maps</a> — the first number is latitude, the second is longitude.
+          Zoom <strong>11</strong> shows a county-sized area; <strong>14</strong> shows a town; <strong>17</strong> shows a single street.
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i class="bi bi-save me-1" aria-hidden="true"></i>Save Map Defaults
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Social / Link Preview -->
 <div class="card border-0 shadow-sm mt-4">
   <div class="card-header bg-white border-bottom py-3">

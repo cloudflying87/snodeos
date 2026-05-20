@@ -353,6 +353,14 @@ class SiteSettings(models.Model):
     social_image     = models.ImageField(upload_to='social/', blank=True, null=True,
         help_text='Square or 1200×630 image used when the site is shared on Facebook, Twitter, iMessage, Slack, etc.')
 
+    # Map defaults
+    map_default_lat  = models.DecimalField(max_digits=9, decimal_places=6, default=46.358000,
+        help_text='Latitude the map centers on before user data loads. Default: Brainerd, MN.')
+    map_default_lng  = models.DecimalField(max_digits=9, decimal_places=6, default=-94.201000,
+        help_text='Longitude the map centers on. Default: Brainerd, MN.')
+    map_default_zoom = models.PositiveSmallIntegerField(default=11,
+        help_text='Default zoom level (1 = world, 19 = street). 11 is good for a county-sized area.')
+
     # Communications — SMS
     brevo_api_key      = models.CharField(max_length=200, blank=True)
     twilio_account_sid = models.CharField(max_length=50, blank=True)

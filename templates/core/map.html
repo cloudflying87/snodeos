@@ -22,6 +22,12 @@
   .leaflet-popup-content img { max-width: 220px; height: auto; border-radius: 4px; display: block; margin-bottom: 6px; }
   .leaflet-popup-content h6 { margin: 4px 0 2px; font-size: 0.95rem; font-weight: 700; }
   .leaflet-popup-content .meta { color: #6c757d; font-size: 0.75rem; }
+  /* Bigger touch targets on mobile for Leaflet's controls */
+  @media (max-width: 991.98px) {
+    .leaflet-touch .leaflet-bar a {
+      width: 44px !important; height: 44px !important; line-height: 44px !important;
+    }
+  }
   @media (max-width: 575.98px) {
     .legend { font-size: 0.75rem; padding: 8px 10px; top: 8px; right: 8px; max-width: 60vw; }
     #map { height: calc(100vh - 180px); }
@@ -55,6 +61,10 @@
           <label><input type="checkbox" id="show-trails"  checked> Trails</label>
           <label><input type="checkbox" id="show-photos"  checked> Photos</label>
         </div>
+
+        <button type="button" id="btnLocateMe" class="btn btn-sm btn-outline-primary mt-2 w-100">
+          <i class="bi bi-geo-alt-fill me-1" aria-hidden="true"></i>Center on me
+        </button>
       </div>
     </div>
 
@@ -71,9 +81,9 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
-// Brainerd Lakes — reasonable default center; map will fit-bounds if data is loaded
-const DEFAULT_CENTER = [46.358, -94.201];
-const DEFAULT_ZOOM   = 11;
+// Configurable center from SiteSettings → defaults to Brainerd MN
+const DEFAULT_CENTER = [{{ site_settings.map_default_lat }}, {{ site_settings.map_default_lng }}];
+const DEFAULT_ZOOM   = {{ site_settings.map_default_zoom }};
 
 const map = L.map('map').setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 
@@ -151,5 +161,24 @@ fetch('{% url "core:map_data" %}')
   .catch(err => {
     console.error('Failed to load map data', err);
   });
+
+// Center on user's current location
+document.getElementById('btnLocateMe').addEventListener('click', () => {
+  if (!navigator.geolocation) {
+    alert('Your browser does not support geolocation.');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const { latitude, longitude } = pos.coords;
+      map.setView([latitude, longitude], 15);
+      L.circleMarker([latitude, longitude], {
+        radius: 8, color: '#0d6efd', fillColor: '#0d6efd', fillOpacity: 0.6, weight: 2,
+      }).addTo(map).bindPopup('You are here').openPopup();
+    },
+    err => alert('Could not get your location: ' + err.message),
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+});
 </script>
 {% endblock %}

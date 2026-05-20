@@ -13,8 +13,17 @@
     color:#344055; margin-bottom:12px;
   }
   .editor-help kbd { background:#e2eaf2; border-radius:3px; padding:1px 5px; font-size:0.78rem; }
+  .editor-toolbar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  .editor-toolbar .btn { font-size:0.85rem; }
+  /* Bigger touch targets on mobile for Leaflet.draw and Leaflet's own controls */
   @media (max-width: 991.98px) {
-    #editor-map { height: 50vh; min-height: 320px; }
+    #editor-map { height: 60vh; min-height: 320px; }
+    .leaflet-touch .leaflet-bar a,
+    .leaflet-touch .leaflet-draw-toolbar a {
+      width: 44px !important; height: 44px !important; line-height: 44px !important;
+      background-size: 280px 30px !important;
+    }
+    .leaflet-draw-toolbar a { background-position-y: 7px !important; }
   }
 </style>
 {% endblock %}
@@ -50,6 +59,18 @@
             Double-click to finish. <strong>To edit:</strong> click the edit icon to drag existing points or insert new ones.
             <strong>To delete a trail:</strong> use the trash icon. Don't forget to click <kbd>Save</kbd> at the bottom of the page.
           </div>
+
+          <div class="editor-toolbar">
+            <button type="button" id="btnLocateMe" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-geo-alt-fill me-1" aria-hidden="true"></i>Use my location
+            </button>
+            <label class="btn btn-sm btn-outline-primary mb-0">
+              <i class="bi bi-upload me-1" aria-hidden="true"></i>Import GPX or KML
+              <input type="file" id="importFile" accept=".gpx,.kml,application/gpx+xml,application/vnd.google-earth.kml+xml" hidden>
+            </label>
+            <span id="importStatus" class="small text-muted align-self-center"></span>
+          </div>
+
           <div id="editor-map" role="region" aria-label="Trail drawing map"></div>
         </div>
       </div>
@@ -143,7 +164,10 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 <script>
-const map = L.map('editor-map').setView([46.358, -94.201], 11);
+const map = L.map('editor-map').setView(
+  [{{ site_settings.map_default_lat }}, {{ site_settings.map_default_lng }}],
+  {{ site_settings.map_default_zoom }}
+);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; OpenStreetMap',
@@ -217,5 +241,87 @@ colorHex.addEventListener('input', () => {
   refreshLineColor();
 });
 statusSel.addEventListener('change', refreshLineColor);
+
+// ── Use my location (geolocation) ───────────────────────────────────────────
+document.getElementById('btnLocateMe').addEventListener('click', () => {
+  if (!navigator.geolocation) {
+    alert('Your browser does not support geolocation.');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const { latitude, longitude } = pos.coords;
+      map.setView([latitude, longitude], 16);
+      L.circleMarker([latitude, longitude], {
+        radius: 8, color: '#0d6efd', fillColor: '#0d6efd', fillOpacity: 0.6, weight: 2,
+      }).addTo(map).bindPopup('You are here').openPopup();
+    },
+    err => {
+      alert('Could not get your location: ' + err.message +
+            '\nMake sure your browser has location permission.');
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+});
+
+// ── GPX / KML import ────────────────────────────────────────────────────────
+function parseGPX(xmlText) {
+  const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+  const pts = [];
+  doc.querySelectorAll('trkpt, rtept, wpt').forEach(node => {
+    const lat = parseFloat(node.getAttribute('lat'));
+    const lon = parseFloat(node.getAttribute('lon'));
+    if (!Number.isNaN(lat) && !Number.isNaN(lon)) pts.push([lat, lon]);
+  });
+  return pts;
+}
+
+function parseKML(xmlText) {
+  const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+  const pts = [];
+  doc.querySelectorAll('coordinates').forEach(node => {
+    // KML <coordinates> contains whitespace-separated tuples of "lng,lat[,alt]"
+    const raw = (node.textContent || '').trim();
+    raw.split(/\s+/).forEach(tuple => {
+      const parts = tuple.split(',');
+      if (parts.length < 2) return;
+      const lon = parseFloat(parts[0]), lat = parseFloat(parts[1]);
+      if (!Number.isNaN(lat) && !Number.isNaN(lon)) pts.push([lat, lon]);
+    });
+  });
+  return pts;
+}
+
+document.getElementById('importFile').addEventListener('change', e => {
+  const status = document.getElementById('importStatus');
+  const file = e.target.files[0];
+  if (!file) return;
+  status.textContent = 'Reading ' + file.name + '...';
+  status.className = 'small text-muted align-self-center';
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const text = ev.target.result;
+    const isKml = /\.kml$/i.test(file.name) || /<kml[\s>]/i.test(text);
+    const pts = isKml ? parseKML(text) : parseGPX(text);
+    if (!pts.length) {
+      status.textContent = 'Could not find any track points in that file.';
+      status.className = 'small text-danger align-self-center';
+      return;
+    }
+    if (currentLine) drawnItems.removeLayer(currentLine);
+    currentLine = L.polyline(pts, { color: getCurrentColor(), weight: 4 });
+    drawnItems.addLayer(currentLine);
+    map.fitBounds(pts, { padding: [40, 40], maxZoom: 16 });
+    status.textContent = `Imported ${pts.length} points. Edit if needed, then click Save.`;
+    status.className = 'small text-success align-self-center';
+    // Reset so re-selecting the same file re-fires the change event
+    e.target.value = '';
+  };
+  reader.onerror = () => {
+    status.textContent = 'Failed to read file.';
+    status.className = 'small text-danger align-self-center';
+  };
+  reader.readAsText(file);
+});
 </script>
 {% endblock %}
