@@ -13,31 +13,50 @@
   <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
       <h2 class="h5 fw-bold mb-0">Conversations</h2>
-      <a href="{% url 'core:inbox_compose' %}" class="btn btn-primary btn-sm">
-        <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>New Message
-      </a>
+      <div class="d-flex gap-2">
+        <form method="post" action="{% url 'core:inbox_mark_all_read' %}" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-check2-all me-1" aria-hidden="true"></i>Mark all read
+          </button>
+        </form>
+        <a href="{% url 'core:inbox_compose' %}" class="btn btn-primary btn-sm">
+          <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>New
+        </a>
+      </div>
     </div>
 
     <div class="card border-0 shadow-sm">
       <div class="list-group list-group-flush">
         {% for c in conversations %}
         {% with latest=c.latest_message %}
-        <a href="{% url 'core:conversation_detail' c.pk %}" class="list-group-item list-group-item-action py-3">
-          <div class="d-flex justify-content-between align-items-start gap-2">
-            <div class="flex-grow-1 min-w-0">
-              <div class="fw-semibold">{{ c.subject }}</div>
-              <div class="text-muted small text-truncate">
-                {% if latest %}<strong>{{ latest.sender.get_short_name|default:"—" }}:</strong> {{ latest.body|truncatewords:18 }}{% endif %}
+        <div class="list-group-item py-3 d-flex gap-2 align-items-start {% if c.unread_count %}fw-semibold{% endif %}" style="{% if c.unread_count %}background:#f6f9fe;{% endif %}">
+          <a href="{% url 'core:conversation_detail' c.pk %}" class="flex-grow-1 min-w-0 text-decoration-none text-reset">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <div class="flex-grow-1 min-w-0">
+                <div>
+                  {{ c.subject }}
+                  {% if c.unread_count %}<span class="badge bg-danger ms-1">{{ c.unread_count }} new</span>{% endif %}
+                </div>
+                <div class="text-muted small text-truncate fw-normal">
+                  {% if latest %}<strong>{{ latest.sender.get_short_name|default:"—" }}:</strong> {{ latest.body|truncatewords:18 }}{% endif %}
+                </div>
+                <div class="text-muted fw-normal" style="font-size:0.72rem;">
+                  {% for p in c.participants.all %}{% if not forloop.first %}, {% endif %}{{ p.get_short_name }}{% endfor %}
+                </div>
               </div>
-              <div class="text-muted" style="font-size:0.72rem;">
-                {% for p in c.participants.all %}{% if not forloop.first %}, {% endif %}{{ p.get_short_name }}{% endfor %}
-              </div>
+              <small class="text-muted flex-shrink-0">{{ c.last_activity|date:"M j" }}</small>
             </div>
-            <div class="text-end flex-shrink-0">
-              <small class="text-muted">{{ c.last_activity|date:"M j" }}</small>
-            </div>
-          </div>
-        </a>
+          </a>
+          {% if c.unread_count %}
+          <form method="post" action="{% url 'core:conversation_mark_read' c.pk %}" class="flex-shrink-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Mark this thread as read" aria-label="Mark read">
+              <i class="bi bi-check2" aria-hidden="true"></i>
+            </button>
+          </form>
+          {% endif %}
+        </div>
         {% endwith %}
         {% empty %}
         <div class="text-center py-5">

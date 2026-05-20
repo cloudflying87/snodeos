@@ -1686,48 +1686,78 @@ def photo_queue(request):
     })
 
 
-@officer_required
-@require_POST
-def photo_review(request, pk):
-    from core.models import MemberShare, AnnouncementImage, TrailCondition, TrailConditionImage
-    from django.utils import timezone as _tz
-    share = get_object_or_404(MemberShare, pk=pk)
-    decision = request.POST.get('decision')
-    note = (request.POST.get('note') or '').strip()[:300]
-    share.reviewed_by = request.user
-    share.reviewed_at = _tz.now()
-    share.review_note = note
-
+def _apply_photo_decision(share, decision, note, actor):
+    """Approve or reject a single MemberShare. Returns the action verb for messaging."""
+    from core.models import TrailCondition, TrailConditionImage
     from core.audit import log_action
+    from django.utils import timezone as _tz
+    share.reviewed_by = actor
+    share.reviewed_at = _tz.now()
+    share.review_note = note or ''
     submitter_label = share.member.get_full_name() if share.member else '(deleted member)'
 
     if decision == 'approve':
-        # Approval path: create a TrailCondition (default kind for member shares
-        # on the trail) and attach the photo as a TrailConditionImage. This puts
-        # the photo on the public map and the conditions list.
         title = share.caption[:120] if share.caption else f'Photo from {share.member.get_short_name() if share.member else "member"}'
         cond = TrailCondition.objects.create(
             title=title, status='open', body=share.caption or '',
             visibility='public', lat=share.lat, lng=share.lng,
         )
-        # Move the uploaded file to a TrailConditionImage row (re-open the file)
-        share.image.open('rb')
         tci = TrailConditionImage(condition=cond, caption=share.caption[:200], lat=share.lat, lng=share.lng)
-        tci.image.save(share.image.name.split('/')[-1], share.image, save=True)
-        share.image.close()
+        tci.image.name = share.image.name
+        tci.save()
         share.status = 'approved'
         share.save()
-        log_action(request.user, 'photo_approve',
+        log_action(actor, 'photo_approve',
                    target=f'{submitter_label}: {title}',
                    detail=f'Published as TrailCondition #{cond.pk}')
-        messages.success(request, f'Approved — published as "{title}".')
-    elif decision == 'reject':
+        return 'approved'
+    if decision == 'reject':
         share.status = 'rejected'
         share.save()
-        log_action(request.user, 'photo_reject',
-                   target=f'{submitter_label}',
+        log_action(actor, 'photo_reject',
+                   target=submitter_label,
                    detail=note or '(no note)')
+        return 'rejected'
+    return None
+
+
+@officer_required
+@require_POST
+def photo_review(request, pk):
+    from core.models import MemberShare
+    share = get_object_or_404(MemberShare, pk=pk)
+    decision = request.POST.get('decision')
+    note = (request.POST.get('note') or '').strip()[:300]
+    outcome = _apply_photo_decision(share, decision, note, request.user)
+    if outcome == 'approved':
+        messages.success(request, 'Approved and published to the map.')
+    elif outcome == 'rejected':
         messages.info(request, 'Rejected.')
+    return redirect('manage_panel:photo_queue')
+
+
+@officer_required
+@require_POST
+def photo_review_bulk(request):
+    """Apply the same decision to a batch of pending shares."""
+    from core.models import MemberShare
+    decision = request.POST.get('decision')
+    if decision not in ('approve', 'reject'):
+        return redirect('manage_panel:photo_queue')
+    pks = [int(p) for p in request.POST.getlist('share_ids') if p.isdigit()]
+    if not pks:
+        messages.warning(request, 'No photos selected.')
+        return redirect('manage_panel:photo_queue')
+    note = (request.POST.get('note') or '').strip()[:300]
+    approved = rejected = 0
+    for share in MemberShare.objects.filter(pk__in=pks, status='pending'):
+        outcome = _apply_photo_decision(share, decision, note, request.user)
+        if outcome == 'approved': approved += 1
+        elif outcome == 'rejected': rejected += 1
+    if approved:
+        messages.success(request, f'Approved {approved} photo{"s" if approved != 1 else ""}.')
+    if rejected:
+        messages.info(request, f'Rejected {rejected} photo{"s" if rejected != 1 else ""}.')
     return redirect('manage_panel:photo_queue')
 
 
@@ -1736,7 +1766,10 @@ def photo_review(request, pk):
 def photo_delete(request, pk):
     from core.models import MemberShare
     share = get_object_or_404(MemberShare, pk=pk)
-    if share.image:
+    # If the share was approved, the file is shared with a TrailConditionImage —
+    # only delete the row, leave the file. For pending/rejected shares, the file
+    # has no other reference, so delete it to reclaim storage.
+    if share.image and share.status != 'approved':
         share.image.delete(save=False)
     share.delete()
     messages.success(request, 'Removed.')

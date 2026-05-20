@@ -649,6 +649,21 @@ class Event(models.Model):
             return self.location_trail.name
         return self.location_text or ''
 
+    @property
+    def series_position(self):
+        """For events expanded from a recurrence, return (index, total) — e.g.
+        (2, 6) means "Part 2 of 6". Returns None for one-offs."""
+        if not self.recurrence_group_id:
+            return None
+        siblings = list(Event.objects.filter(recurrence_group=self.recurrence_group_id).order_by('starts_at').values_list('pk', flat=True))
+        if len(siblings) <= 1:
+            return None
+        try:
+            idx = siblings.index(self.pk) + 1
+        except ValueError:
+            return None
+        return (idx, len(siblings))
+
     def equipment_conflicts(self):
         """Return other events that share equipment and overlap in time."""
         if not self.equipment_id:

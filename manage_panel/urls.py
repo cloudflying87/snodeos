@@ -55,6 +55,7 @@ urlpatterns = [
 
     path('photo-queue/', views.photo_queue, name='photo_queue'),
     path('photo-queue/<int:pk>/review/', views.photo_review, name='photo_review'),
+    path('photo-queue/bulk-review/', views.photo_review_bulk, name='photo_review_bulk'),
     path('photo-queue/<int:pk>/delete/', views.photo_delete, name='photo_delete'),
 
     path('trail-work/', views.trail_work_list, name='trail_work_list'),

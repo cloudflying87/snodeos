@@ -23,7 +23,9 @@ urlpatterns = [
     # Messaging
     path('inbox/', views.inbox, name='inbox'),
     path('inbox/new/', views.inbox_compose, name='inbox_compose'),
+    path('inbox/mark-all-read/', views.inbox_mark_all_read, name='inbox_mark_all_read'),
     path('inbox/<int:pk>/', views.conversation_detail, name='conversation_detail'),
+    path('inbox/<int:pk>/mark-read/', views.conversation_mark_read, name='conversation_mark_read'),
 
     # Notifications
     path('notifications/', views.notifications_view, name='notifications'),

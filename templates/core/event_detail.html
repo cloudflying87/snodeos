@@ -20,6 +20,9 @@
           <div class="mb-3">
             <span class="badge bg-secondary-subtle text-secondary me-1">{{ event.get_status_display }}</span>
             {% if event.is_full %}<span class="badge bg-warning text-dark">Full</span>{% endif %}
+            {% with sp=event.series_position %}{% if sp %}
+            <span class="badge bg-info-subtle text-info-emphasis"><i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>Part {{ sp.0 }} of {{ sp.1 }}</span>
+            {% endif %}{% endwith %}
           </div>
 
           {% if event.location_label %}

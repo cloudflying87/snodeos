@@ -329,11 +329,40 @@ def event_withdraw(request, pk):
 
 @login_required
 def inbox(request):
-    """All conversations the current user participates in."""
-    convs = (request.user.conversations
-             .prefetch_related('messages', 'participants')
-             .order_by('-last_activity'))
+    """All conversations the current user participates in. Annotates each
+    with unread-count so the list page can show a badge."""
+    convs = list(request.user.conversations
+                 .prefetch_related('messages', 'participants')
+                 .order_by('-last_activity'))
+    for c in convs:
+        c.unread_count = c.messages.exclude(read_by=request.user).exclude(sender=request.user).count()
     return render(request, 'core/inbox.html', {'conversations': convs})
+
+
+@login_required
+def conversation_mark_read(request, pk):
+    """Mark every message in a conversation read by the current user."""
+    if request.method != 'POST':
+        return redirect('core:inbox')
+    from .models import Conversation
+    conv = get_object_or_404(Conversation, pk=pk, participants=request.user)
+    for m in conv.messages.exclude(read_by=request.user):
+        m.read_by.add(request.user)
+    return redirect('core:inbox')
+
+
+@login_required
+def inbox_mark_all_read(request):
+    """Mark every unread message across every conversation as read."""
+    if request.method != 'POST':
+        return redirect('core:inbox')
+    from .models import InternalMessage
+    msgs = InternalMessage.objects.filter(
+        conversation__participants=request.user
+    ).exclude(read_by=request.user).exclude(sender=request.user)
+    for m in msgs:
+        m.read_by.add(request.user)
+    return redirect('core:inbox')
 
 
 @login_required

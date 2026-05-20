@@ -26,7 +26,10 @@
           {% for e in upcoming %}
           <tr>
             <td class="ps-4"><span class="d-inline-block rounded" style="width:14px;height:14px;background:{{ e.effective_color }};"></span></td>
-            <td><div class="fw-semibold">{{ e.title }}</div><div class="text-muted small">{{ e.get_kind_display }}</div></td>
+            <td>
+              <div class="fw-semibold">{{ e.title }}{% with sp=e.series_position %}{% if sp %} <span class="badge bg-info-subtle text-info-emphasis" style="font-size:0.65rem;">{{ sp.0 }}/{{ sp.1 }}</span>{% endif %}{% endwith %}</div>
+              <div class="text-muted small">{{ e.get_kind_display }}</div>
+            </td>
             <td class="small">{{ e.starts_at|date:"M j" }}<br><span class="text-muted">{{ e.starts_at|date:"g:i A" }}–{{ e.ends_at|date:"g:i A" }}</span></td>
             <td class="small text-muted">{{ e.location_label|default:"—" }}</td>
             <td class="small text-muted">{{ e.equipment.name|default:"—" }}</td>
