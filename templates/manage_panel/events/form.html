@@ -136,7 +136,7 @@
           <div class="mb-3 p-3 rounded" style="background:#f6f9fe;border:1px solid #e2eaf2;">
             <label class="form-label fw-semibold">Repeat <span class="text-muted fw-normal small">(optional — creates multiple events at once)</span></label>
             <div class="row g-2">
-              <div class="col-sm-7">
+              <div class="col-sm-6">
                 <select name="recurrence" class="form-select" id="recurrence_select">
                   <option value="none">One time only</option>
                   <option value="daily">Daily</option>
@@ -145,11 +145,19 @@
                   <option value="monthly">Monthly</option>
                 </select>
               </div>
-              <div class="col-sm-5">
-                <input type="number" name="recurrence_count" min="1" max="52" class="form-control" placeholder="How many?" id="recurrence_count">
+              <div class="col-sm-3">
+                <input type="number" name="recurrence_count" min="1" max="104" class="form-control" placeholder="How many?" id="recurrence_count">
+              </div>
+              <div class="col-sm-3">
+                <button type="button" id="fill_season_btn" class="btn btn-outline-primary w-100" title="Repeat through end of the current snowmobile season (April 30)">
+                  <i class="bi bi-snow me-1" aria-hidden="true"></i>End of season
+                </button>
               </div>
             </div>
-            <div class="form-text">Each occurrence becomes its own event row so you can edit or cancel them individually.</div>
+            <div class="form-text" id="recurrence_hint">
+              Leave count blank for a sensible default per type (daily=30, weekly=26, biweekly=13, monthly=12).
+              Each occurrence becomes its own event row so you can edit or cancel them individually.
+            </div>
           </div>
           {% endif %}
 
@@ -239,4 +247,43 @@
     {% endif %}
   </div>
 </form>
+
+{% if not event %}
+<script>
+// "End of season" — fill the count to repeat through April 30 of the next
+// snowmobile season relative to the event start date.
+(function () {
+  const btn      = document.getElementById('fill_season_btn');
+  const recurSel = document.getElementById('recurrence_select');
+  const countIn  = document.getElementById('recurrence_count');
+  const startIn  = document.getElementById('starts_at');
+  if (!btn) return;
+
+  function seasonEnd(start) {
+    // If event is in May–Dec, season ends Apr 30 of NEXT year.
+    // If event is in Jan–Apr, season ends Apr 30 of THIS year.
+    const y = start.getMonth() >= 4 ? start.getFullYear() + 1 : start.getFullYear();
+    return new Date(y, 3, 30, 23, 59);  // month is 0-indexed; April = 3
+  }
+
+  btn.addEventListener('click', () => {
+    const rec = recurSel.value;
+    if (rec === 'none') {
+      recurSel.value = 'weekly';
+    }
+    const start = startIn.value ? new Date(startIn.value) : new Date();
+    const end = seasonEnd(start);
+    const diffMs = end - start;
+    const days = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+    let count = 1;
+    if (recurSel.value === 'daily')    count = Math.min(104, days);
+    if (recurSel.value === 'weekly')   count = Math.min(104, Math.ceil(days / 7));
+    if (recurSel.value === 'biweekly') count = Math.min(104, Math.ceil(days / 14));
+    if (recurSel.value === 'monthly')  count = Math.min(104, Math.ceil(days / 30));
+    countIn.value = count;
+    countIn.focus();
+  });
+})();
+</script>
+{% endif %}
 {% endblock %}

@@ -493,9 +493,9 @@ def _ical_response(events, calname):
     for e in events:
         # UID needs to be stable per event
         uid = f'event-{e.pk}@snodeos'
-        desc = (e.description or '').replace('\n', '\\n').replace(',', '\\,').replace(';', '\;')
-        title = (e.title or '').replace(',', '\\,').replace(';', '\;')
-        loc = (e.location_label or '').replace(',', '\\,').replace(';', '\;')
+        desc = (e.description or '').replace('\n', '\\n').replace(',', '\\,').replace(';', '\\;')
+        title = (e.title or '').replace(',', '\\,').replace(';', '\\;')
+        loc = (e.location_label or '').replace(',', '\\,').replace(';', '\\;')
         lines += [
             'BEGIN:VEVENT',
             f'UID:{uid}',

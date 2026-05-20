@@ -27,18 +27,68 @@
 
 <section class="py-4">
   <div class="container">
-    <div class="legend-pills mb-3">
-      <span class="pill"><span class="swatch" style="background:#0d6efd;"></span>Grooming</span>
-      <span class="pill"><span class="swatch" style="background:#fd7e14;"></span>Trail Work</span>
-      <span class="pill"><span class="swatch" style="background:#6f42c1;"></span>Meeting</span>
-      <span class="pill"><span class="swatch" style="background:#198754;"></span>Equipment</span>
-      <span class="pill"><span class="swatch" style="background:#d63384;"></span>Club Event</span>
-      <span class="pill"><span class="swatch" style="background:#6c757d;"></span>Other</span>
+
+    {# Subscribe controls #}
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+      <div class="legend-pills flex-grow-1">
+        <span class="pill"><span class="swatch" style="background:#0d6efd;"></span>Grooming</span>
+        <span class="pill"><span class="swatch" style="background:#fd7e14;"></span>Trail Work</span>
+        <span class="pill"><span class="swatch" style="background:#6f42c1;"></span>Meeting</span>
+        <span class="pill"><span class="swatch" style="background:#198754;"></span>Equipment</span>
+        <span class="pill"><span class="swatch" style="background:#d63384;"></span>Club Event</span>
+        <span class="pill"><span class="swatch" style="background:#6c757d;"></span>Other</span>
+      </div>
+      <div class="dropdown">
+        <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="bi bi-calendar-plus me-1" aria-hidden="true"></i>Subscribe
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          {% if user.is_authenticated %}
+          <li><h6 class="dropdown-header">Members feed (all events)</h6></li>
+          <li>
+            <a class="dropdown-item" href="webcal://{{ request.get_host }}{% url 'core:members_calendar_ics' %}">
+              <i class="bi bi-apple me-2" aria-hidden="true"></i>Apple Calendar / iPhone
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="https://calendar.google.com/calendar/r?cid=https%3A%2F%2F{{ request.get_host }}{% url 'core:members_calendar_ics' %}" target="_blank" rel="noopener">
+              <i class="bi bi-google me-2" aria-hidden="true"></i>Google Calendar
+            </a>
+          </li>
+          <li>
+            <button type="button" class="dropdown-item" id="copy-members-url">
+              <i class="bi bi-clipboard me-2" aria-hidden="true"></i>Copy URL (other apps)
+            </button>
+          </li>
+          <li><hr class="dropdown-divider"></li>
+          {% endif %}
+          <li><h6 class="dropdown-header">Public feed</h6></li>
+          <li>
+            <a class="dropdown-item" href="webcal://{{ request.get_host }}{% url 'core:calendar_ics' %}">
+              <i class="bi bi-apple me-2" aria-hidden="true"></i>Apple Calendar / iPhone
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="https://calendar.google.com/calendar/r?cid=https%3A%2F%2F{{ request.get_host }}{% url 'core:calendar_ics' %}" target="_blank" rel="noopener">
+              <i class="bi bi-google me-2" aria-hidden="true"></i>Google Calendar
+            </a>
+          </li>
+          <li>
+            <button type="button" class="dropdown-item" id="copy-public-url">
+              <i class="bi bi-clipboard me-2" aria-hidden="true"></i>Copy URL (other apps)
+            </button>
+          </li>
+        </ul>
+      </div>
     </div>
+
     <div id="fc"></div>
-    {% if not user.is_authenticated %}
-    <p class="text-muted small mt-3 mb-0"><a href="{% url 'accounts:login' %}">Log in</a> to see members-only events and sign up.</p>
-    {% endif %}
+    <p class="text-muted small mt-3 mb-0">
+      <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+      Subscriptions refresh on each calendar app's own schedule
+      (Apple/Outlook ~1 hour, Google ~12 hours). For instant updates, watch the email/SMS blasts.
+      {% if not user.is_authenticated %}<a href="{% url 'accounts:login' %}">Log in</a> to see members-only events and sign up.{% endif %}
+    </p>
   </div>
 </section>
 {% endblock %}
@@ -64,6 +114,23 @@ document.addEventListener('DOMContentLoaded', () => {
     },
   });
   calendar.render();
+
+  function wireCopy(btnId, url) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      navigator.clipboard.writeText(url).then(() => {
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check2 me-2"></i>Copied!';
+        setTimeout(() => { btn.innerHTML = original; }, 1500);
+      }).catch(() => alert('Could not copy. URL: ' + url));
+    });
+  }
+  wireCopy('copy-public-url',  'https://{{ request.get_host }}{% url "core:calendar_ics" %}');
+  {% if user.is_authenticated %}
+  wireCopy('copy-members-url', 'https://{{ request.get_host }}{% url "core:members_calendar_ics" %}');
+  {% endif %}
 });
 </script>
 {% endblock %}

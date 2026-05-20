@@ -1492,12 +1492,19 @@ def event_form(request, pk=None):
 
             # Recurrence — only expand on CREATE, not edit
             recurrence = request.POST.get('recurrence', 'none')
-            recurrence_count = request.POST.get('recurrence_count', '').strip()
+            recurrence_count_raw = request.POST.get('recurrence_count', '').strip()
+            # Sensible per-kind defaults when count is blank
+            DEFAULT_COUNTS = {'daily': 30, 'weekly': 26, 'biweekly': 13, 'monthly': 12}
             try:
-                recurrence_count = int(recurrence_count) if recurrence_count else 1
+                if recurrence_count_raw:
+                    recurrence_count = int(recurrence_count_raw)
+                elif recurrence != 'none':
+                    recurrence_count = DEFAULT_COUNTS.get(recurrence, 1)
+                else:
+                    recurrence_count = 1
             except ValueError:
-                recurrence_count = 1
-            recurrence_count = max(1, min(52, recurrence_count))   # safety cap
+                recurrence_count = DEFAULT_COUNTS.get(recurrence, 1) if recurrence != 'none' else 1
+            recurrence_count = max(1, min(104, recurrence_count))   # 2-year safety cap
 
             is_new = event.pk is None
             event.recurrence = recurrence
