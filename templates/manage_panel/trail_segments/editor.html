@@ -3,9 +3,8 @@
 {% block active_trail_segments %}active{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css">
 <style>
   /* Map height is also set by JS for deterministic mobile sizing — these are the fallbacks. */
   #editor-map {
@@ -14,7 +13,15 @@
     border-radius: 8px;
     display: block;
     position: relative;
+    overflow: hidden;
   }
+  /* Defensive: if Leaflet's own CSS fails to load (CDN hiccup, blocked, etc.)
+     these rules keep tiles from scattering across the page. */
+  #editor-map .leaflet-container { position: relative; overflow: hidden; width: 100%; height: 100%; }
+  #editor-map .leaflet-tile, #editor-map .leaflet-marker-icon, #editor-map .leaflet-marker-shadow {
+    position: absolute; left: 0; top: 0;
+  }
+  #editor-map .leaflet-pane { position: absolute; left: 0; top: 0; }
   @media (min-width: 768px) {
     #editor-map { height: 60vh; min-height: 480px; max-height: 75vh; }
   }
@@ -172,9 +179,8 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 <script>
 // Set a deterministic pixel height on mobile to avoid iOS Safari vh quirks
 // that can cause runaway scrolling or zero-height maps.

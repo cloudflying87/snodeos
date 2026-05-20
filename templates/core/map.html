@@ -2,8 +2,7 @@
 {% block title %}Trail Map — Brainerd Snodeos{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <style>
   .map-wrap { position: relative; }
   /* Map height is also set in JS for deterministic mobile sizing. */
@@ -13,7 +12,14 @@
     border-radius: 8px;
     display: block;
     position: relative;
+    overflow: hidden;
   }
+  /* Defensive: if Leaflet's CSS fails to load, these keep tiles contained. */
+  #map .leaflet-container { position: relative; overflow: hidden; width: 100%; height: 100%; }
+  #map .leaflet-tile, #map .leaflet-marker-icon, #map .leaflet-marker-shadow {
+    position: absolute; left: 0; top: 0;
+  }
+  #map .leaflet-pane { position: absolute; left: 0; top: 0; }
   @media (min-width: 768px) {
     #map { height: 66vh; min-height: 480px; max-height: 78vh; }
   }
@@ -160,8 +166,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const DEFAULT_CENTER = [{{ site_settings.map_default_lat }}, {{ site_settings.map_default_lng }}];
 const DEFAULT_ZOOM   = {{ site_settings.map_default_zoom }};
