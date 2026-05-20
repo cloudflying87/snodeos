@@ -8,20 +8,44 @@
 <style>
   /* Map height is also set by JS for deterministic mobile sizing — these are the fallbacks. */
   #editor-map {
-    width: 100%;
+    width: 100% !important;
     height: 400px;
     border-radius: 8px;
-    display: block;
-    position: relative;
-    overflow: hidden;
+    display: block !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-sizing: border-box;
   }
-  /* Defensive: if Leaflet's own CSS fails to load (CDN hiccup, blocked, etc.)
-     these rules keep tiles from scattering across the page. */
-  #editor-map .leaflet-container { position: relative; overflow: hidden; width: 100%; height: 100%; }
-  #editor-map .leaflet-tile, #editor-map .leaflet-marker-icon, #editor-map .leaflet-marker-shadow {
-    position: absolute; left: 0; top: 0;
+  /* INLINE the critical subset of Leaflet's positioning CSS — these are the
+     rules without which tiles will scatter. We never want to rely on a CDN
+     for *layout-critical* rules. !important wins over any cascade weirdness. */
+  #editor-map .leaflet-pane,
+  #editor-map .leaflet-tile,
+  #editor-map .leaflet-marker-icon,
+  #editor-map .leaflet-marker-shadow,
+  #editor-map .leaflet-tile-container,
+  #editor-map .leaflet-pane > svg,
+  #editor-map .leaflet-pane > canvas,
+  #editor-map .leaflet-zoom-box,
+  #editor-map .leaflet-image-layer,
+  #editor-map .leaflet-layer {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
   }
-  #editor-map .leaflet-pane { position: absolute; left: 0; top: 0; }
+  #editor-map .leaflet-container { overflow: hidden !important; }
+  #editor-map .leaflet-tile { user-select: none; -webkit-user-select: none; }
+  #editor-map .leaflet-control { position: relative !important; z-index: 800; pointer-events: auto; }
+  #editor-map .leaflet-top, #editor-map .leaflet-bottom { position: absolute !important; z-index: 1000; pointer-events: none; }
+  #editor-map .leaflet-top { top: 0; } #editor-map .leaflet-bottom { bottom: 0; }
+  #editor-map .leaflet-left { left: 0; } #editor-map .leaflet-right { right: 0; }
+  #editor-map .leaflet-pane         { z-index: 400; }
+  #editor-map .leaflet-tile-pane    { z-index: 200; }
+  #editor-map .leaflet-overlay-pane { z-index: 400; }
+  #editor-map .leaflet-shadow-pane  { z-index: 500; }
+  #editor-map .leaflet-marker-pane  { z-index: 600; }
+  #editor-map .leaflet-tooltip-pane { z-index: 650; }
+  #editor-map .leaflet-popup-pane   { z-index: 700; }
   @media (min-width: 768px) {
     #editor-map { height: 60vh; min-height: 480px; max-height: 75vh; }
   }
