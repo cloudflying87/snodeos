@@ -1,0 +1,109 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}Trail Segments{% endblock %}
+{% block active_trail_segments %}active{% endblock %}
+
+{% block content %}
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">Trail Segments</h1>
+    <p class="panel-breadcrumb mb-0">
+      <a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> / Trail Segments
+    </p>
+  </div>
+  <a href="{% url 'manage_panel:trail_segment_add' %}" class="btn btn-primary">
+    <i class="bi bi-plus me-1" aria-hidden="true"></i>Draw New Trail
+  </a>
+</div>
+
+<div class="panel-card">
+{% if segments %}
+
+  <div class="d-none d-md-block">
+    <table class="panel-table align-middle">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Name</th>
+          <th>Status</th>
+          <th>Visibility</th>
+          <th>Last Groomed</th>
+          <th>Updated</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for seg in segments %}
+        <tr>
+          <td class="ps-4"><span class="d-inline-block rounded" style="width:14px;height:14px;background:{{ seg.effective_color }};"></span></td>
+          <td>
+            <div class="fw-semibold">{{ seg.name }}</div>
+            {% if seg.description %}<div class="text-muted small">{{ seg.description|truncatechars:60 }}</div>{% endif %}
+          </td>
+          <td><span class="badge bg-secondary-subtle text-secondary">{{ seg.get_status_display }}</span></td>
+          <td class="small text-muted">{{ seg.get_visibility_display }}</td>
+          <td class="small text-muted">{{ seg.groomed_at|date:"M j, Y g:i A"|default:"—" }}</td>
+          <td class="small text-muted">{{ seg.updated_at|date:"M j, Y" }}</td>
+          <td class="text-end pe-4">
+            <a href="{% url 'core:trail_segment_gpx' seg.pk %}" class="btn btn-sm btn-outline-secondary me-1" title="Download GPX">
+              <i class="bi bi-download" aria-hidden="true"></i>
+            </a>
+            <a href="{% url 'manage_panel:trail_segment_edit' seg.pk %}" class="btn btn-sm btn-outline-primary me-1" title="Edit">
+              <i class="bi bi-pencil" aria-hidden="true"></i>
+            </a>
+            <button class="btn btn-sm btn-outline-danger"
+                    data-delete-url="{% url 'manage_panel:trail_segment_delete' seg.pk %}"
+                    data-delete-label="{{ seg.name }}" aria-label="Delete">
+              <i class="bi bi-trash" aria-hidden="true"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="d-md-none mob-card-list">
+    {% for seg in segments %}
+    <div class="mob-swipe-wrapper">
+      <a href="{% url 'manage_panel:trail_segment_edit' seg.pk %}" class="mob-swipe-row">
+        <span class="d-inline-block rounded flex-shrink-0" style="width:14px;height:14px;background:{{ seg.effective_color }};"></span>
+        <div class="mob-info">
+          <div class="mob-title">{{ seg.name }}</div>
+          <div class="mob-sub">{{ seg.get_status_display }} &middot; {{ seg.get_visibility_display }}</div>
+        </div>
+        <i class="bi bi-chevron-right text-muted" style="flex-shrink:0;font-size:0.8rem;" aria-hidden="true"></i>
+      </a>
+      <div class="mob-swipe-delete">
+        <button class="btn"
+                data-delete-url="{% url 'manage_panel:trail_segment_delete' seg.pk %}"
+                data-delete-label="{{ seg.name }}" aria-label="Delete">
+          <i class="bi bi-trash fs-5" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+{% else %}
+  <div class="panel-card-body text-center py-5">
+    <i class="bi bi-map display-4 text-muted mb-3 d-block" aria-hidden="true"></i>
+    <p class="text-muted mb-3">No trails drawn yet.</p>
+    <a href="{% url 'manage_panel:trail_segment_add' %}" class="btn btn-primary">Draw First Trail</a>
+  </div>
+{% endif %}
+</div>
+
+<div class="card border-0 shadow-sm mt-4">
+  <div class="card-body p-4">
+    <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-2 text-primary" aria-hidden="true"></i>How this works</h6>
+    <p class="text-muted small mb-2">
+      Draw the trail by clicking points on the map. Each trail has a <strong>status</strong> (Open/Closed/Caution/Groomed/Planned) that colors it
+      and a <strong>visibility</strong> (Public/Members/Both).
+    </p>
+    <p class="text-muted small mb-0">
+      Trails appear on the public <a href="{% url 'core:map' %}">trail map</a> and can be downloaded as GPX files for import into the Polaris Off Road app,
+      OnX Offroad, Gaia, or any Garmin device.
+    </p>
+  </div>
+</div>
+{% endblock %}

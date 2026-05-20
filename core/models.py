@@ -81,6 +81,8 @@ class TrailWorkImage(models.Model):
     log = models.ForeignKey(TrailWorkLog, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='trail_work/')
     caption = models.CharField(max_length=200, blank=True)
+    lat   = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
+    lng   = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -88,6 +90,10 @@ class TrailWorkImage(models.Model):
 
     def __str__(self):
         return f'Image for {self.log}'
+
+    @property
+    def has_location(self):
+        return self.lat is not None and self.lng is not None
 
 
 class Announcement(models.Model):
@@ -122,6 +128,8 @@ class AnnouncementImage(models.Model):
     announcement = models.ForeignKey(Announcement, on_delete=models.CASCADE, related_name='images')
     image        = models.ImageField(upload_to='announcements/')
     caption      = models.CharField(max_length=200, blank=True)
+    lat          = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
+    lng          = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
     uploaded_at  = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -129,6 +137,10 @@ class AnnouncementImage(models.Model):
 
     def __str__(self):
         return f'Image for {self.announcement}'
+
+    @property
+    def has_location(self):
+        return self.lat is not None and self.lng is not None
 
     @property
     def absolute_url(self):
@@ -188,6 +200,8 @@ class TrailConditionImage(models.Model):
     condition   = models.ForeignKey(TrailCondition, on_delete=models.CASCADE, related_name='images')
     image       = models.ImageField(upload_to='trail_conditions/')
     caption     = models.CharField(max_length=200, blank=True)
+    lat         = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
+    lng         = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -197,12 +211,79 @@ class TrailConditionImage(models.Model):
         return f'Image for {self.condition}'
 
     @property
+    def has_location(self):
+        return self.lat is not None and self.lng is not None
+
+    @property
     def absolute_url(self):
         if not self.image:
             return ''
         from django.conf import settings as _settings
         site_url = getattr(_settings, 'SITE_URL', '').rstrip('/')
         return f"{site_url}{self.image.url}"
+
+
+class TrailSegment(models.Model):
+    """A drawn trail line. Officers create these in the trail editor; the public
+    Trail Conditions page and the /map/ page render them colored by status."""
+    STATUS_CHOICES = [
+        ('open',    'Open'),
+        ('closed',  'Closed'),
+        ('caution', 'Use Caution'),
+        ('groomed', 'Recently Groomed'),
+        ('planned', 'Planned / Future'),
+    ]
+    VISIBILITY_CHOICES = [
+        ('public',  'Public — shown on the public map'),
+        ('members', 'Members Only — only logged-in members see it'),
+        ('both',    'Both'),
+    ]
+    DIFFICULTY_CHOICES = [
+        ('',         '— Not set —'),
+        ('easy',     'Easy'),
+        ('moderate', 'Moderate'),
+        ('hard',     'Difficult'),
+    ]
+
+    name        = models.CharField(max_length=120)
+    description = models.TextField(blank=True)
+    status      = models.CharField(max_length=10, choices=STATUS_CHOICES, default='open', db_index=True)
+    difficulty  = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, blank=True, default='')
+    visibility  = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='both')
+    color       = models.CharField(max_length=7, blank=True,
+                                   help_text='Optional hex color override (e.g. #FF6600). Leave blank to color by status.')
+    geometry    = models.JSONField(default=list,
+                                   help_text='List of [lat, lng] pairs defining the trail polyline')
+    groomed_at  = models.DateTimeField(null=True, blank=True)
+    created_at  = models.DateTimeField(auto_now_add=True)
+    updated_at  = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return f'{self.name} ({self.get_status_display()})'
+
+    @property
+    def is_public(self):
+        return self.visibility in ('public', 'both')
+
+    @property
+    def is_member_visible(self):
+        return self.visibility in ('members', 'both')
+
+    @property
+    def effective_color(self):
+        """Hex color to render this trail at — explicit override or status-derived."""
+        if self.color:
+            return self.color
+        return {
+            'open':    '#198754',   # green
+            'closed':  '#dc3545',   # red
+            'caution': '#fd7e14',   # orange
+            'groomed': '#0d6efd',   # blue
+            'planned': '#6c757d',   # grey
+        }.get(self.status, '#1363A2')
 
 
 class EmailTemplate(models.Model):

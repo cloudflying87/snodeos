@@ -5,9 +5,10 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.conf import settings
-from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, AnnouncementImage, TrailCondition, TrailConditionImage, TrailWorkLog, TrailWorkImage, ContactMessage, SiteSettings, EmailTemplate, AuditLog, EmailLog, InboundSMS
+from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, AnnouncementImage, TrailCondition, TrailConditionImage, TrailWorkLog, TrailWorkImage, ContactMessage, SiteSettings, EmailTemplate, AuditLog, EmailLog, InboundSMS, TrailSegment
 from accounts.models import Member, RegistrationField
 from core.email import send_test_email
+from core.geo import create_image_with_gps
 from accounts.models import Member
 from .forms import (
     ClubStatsForm, OfficerForm, SponsorForm,
@@ -248,7 +249,7 @@ def announcement_add(request):
         if form.is_valid():
             ann = form.save()
             for img in request.FILES.getlist('images'):
-                AnnouncementImage.objects.create(announcement=ann, image=img)
+                create_image_with_gps(AnnouncementImage, img, announcement=ann)
             _zapier_post(ann)
 
             send_email = 'send_email' in request.POST
@@ -310,7 +311,7 @@ def announcement_edit(request, pk):
         if form.is_valid():
             form.save()
             for img in request.FILES.getlist('images'):
-                AnnouncementImage.objects.create(announcement=announcement, image=img)
+                create_image_with_gps(AnnouncementImage, img, announcement=announcement)
             messages.success(request, 'Announcement updated.')
             return redirect('manage_panel:announcement_list')
     else:
@@ -387,7 +388,7 @@ def trail_condition_add(request):
         if form.is_valid():
             condition = form.save()
             for img in request.FILES.getlist('images'):
-                TrailConditionImage.objects.create(condition=condition, image=img)
+                create_image_with_gps(TrailConditionImage, img, condition=condition)
             _zapier_post_trail(condition)
 
             send_email = 'send_email' in request.POST
@@ -453,7 +454,7 @@ def trail_condition_edit(request, pk):
         if form.is_valid():
             form.save()
             for img in request.FILES.getlist('images'):
-                TrailConditionImage.objects.create(condition=condition, image=img)
+                create_image_with_gps(TrailConditionImage, img, condition=condition)
             messages.success(request, 'Trail condition updated.')
             return redirect('manage_panel:trail_condition_list')
     else:
@@ -510,7 +511,7 @@ def trail_work_add(request):
         if form.is_valid():
             log = form.save()
             for img in request.FILES.getlist('images'):
-                TrailWorkImage.objects.create(log=log, image=img)
+                create_image_with_gps(TrailWorkImage, img, log=log)
             messages.success(request, 'Trail work log added.')
             return redirect('manage_panel:trail_work_list')
     else:
@@ -526,7 +527,7 @@ def trail_work_edit(request, pk):
         if form.is_valid():
             form.save()
             for img in request.FILES.getlist('images'):
-                TrailWorkImage.objects.create(log=log, image=img)
+                create_image_with_gps(TrailWorkImage, img, log=log)
             messages.success(request, 'Trail work log updated.')
             return redirect('manage_panel:trail_work_list')
     else:
@@ -1205,3 +1206,67 @@ def email_log(request):
         'status_filter': status_filter,
         'counts': counts,
     })
+
+
+# ── Trail Segments (map editor) ────────────────────────────────────────────────
+
+@officer_required
+def trail_segment_list(request):
+    segments = TrailSegment.objects.all()
+    return render(request, 'manage_panel/trail_segments/list.html', {'segments': segments})
+
+
+@officer_required
+def trail_segment_editor(request, pk=None):
+    """One template, two modes: pk=None creates a new segment; pk loads an
+    existing one for editing. The Leaflet map is the same either way."""
+    segment = get_object_or_404(TrailSegment, pk=pk) if pk else None
+
+    if request.method == 'POST':
+        import json as _json
+        geometry_raw = request.POST.get('geometry', '[]')
+        try:
+            geometry = _json.loads(geometry_raw)
+            if not isinstance(geometry, list):
+                geometry = []
+        except _json.JSONDecodeError:
+            geometry = []
+
+        name = request.POST.get('name', '').strip()
+        if not name:
+            messages.error(request, 'Trail name is required.')
+        elif not geometry:
+            messages.error(request, 'Draw at least one trail line on the map.')
+        else:
+            if segment is None:
+                segment = TrailSegment()
+            segment.name        = name
+            segment.description = request.POST.get('description', '').strip()
+            segment.status      = request.POST.get('status', 'open')
+            segment.difficulty  = request.POST.get('difficulty', '')
+            segment.visibility  = request.POST.get('visibility', 'both')
+            segment.color       = request.POST.get('color', '').strip()
+            segment.geometry    = geometry
+            if request.POST.get('mark_groomed_now'):
+                from django.utils import timezone as _tz
+                segment.groomed_at = _tz.now()
+            segment.save()
+            messages.success(request, f'Trail "{segment.name}" saved.')
+            return redirect('manage_panel:trail_segment_list')
+
+    return render(request, 'manage_panel/trail_segments/editor.html', {
+        'segment': segment,
+        'status_choices':     TrailSegment.STATUS_CHOICES,
+        'visibility_choices': TrailSegment.VISIBILITY_CHOICES,
+        'difficulty_choices': TrailSegment.DIFFICULTY_CHOICES,
+    })
+
+
+@officer_required
+@require_POST
+def trail_segment_delete(request, pk):
+    seg = get_object_or_404(TrailSegment, pk=pk)
+    name = seg.name
+    seg.delete()
+    messages.success(request, f'Trail "{name}" deleted.')
+    return redirect('manage_panel:trail_segment_list')

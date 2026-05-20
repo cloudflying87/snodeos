@@ -1,0 +1,221 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}{% if segment %}Edit Trail{% else %}New Trail{% endif %}{% endblock %}
+{% block active_trail_segments %}active{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css">
+<style>
+  #editor-map { height: calc(100vh - 220px); min-height: 480px; border-radius: 8px; }
+  .editor-help {
+    background:#f6f9fe; border-radius:8px; padding:10px 14px; font-size:0.82rem; line-height:1.55;
+    color:#344055; margin-bottom:12px;
+  }
+  .editor-help kbd { background:#e2eaf2; border-radius:3px; padding:1px 5px; font-size:0.78rem; }
+  @media (max-width: 991.98px) {
+    #editor-map { height: 50vh; min-height: 320px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">{% if segment %}Edit Trail{% else %}Draw New Trail{% endif %}</h1>
+    <p class="panel-breadcrumb mb-0">
+      <a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> /
+      <a href="{% url 'manage_panel:trail_segment_list' %}">Trail Segments</a> /
+      {% if segment %}{{ segment.name }}{% else %}New{% endif %}
+    </p>
+  </div>
+  <a href="{% url 'manage_panel:trail_segment_list' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Back
+  </a>
+</div>
+
+<form method="post" id="trailForm">
+  {% csrf_token %}
+  <input type="hidden" name="geometry" id="geometryField" value='{% if segment %}{{ segment.geometry|safe }}{% else %}[]{% endif %}'>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="panel-card">
+        <div class="panel-card-header">
+          <h2 class="panel-card-title"><i class="bi bi-map me-2 text-primary" aria-hidden="true"></i>Map</h2>
+        </div>
+        <div class="panel-card-body">
+          <div class="editor-help">
+            <strong>To draw:</strong> click the line-tool icon (top-left of the map), then click points along the trail.
+            Double-click to finish. <strong>To edit:</strong> click the edit icon to drag existing points or insert new ones.
+            <strong>To delete a trail:</strong> use the trash icon. Don't forget to click <kbd>Save</kbd> at the bottom of the page.
+          </div>
+          <div id="editor-map" role="region" aria-label="Trail drawing map"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="panel-card mb-3">
+        <div class="panel-card-header">
+          <h2 class="panel-card-title">Trail Details</h2>
+        </div>
+        <div class="panel-card-body">
+          <div class="mb-3">
+            <label for="name" class="form-label fw-semibold">Trail Name</label>
+            <input id="name" type="text" name="name" class="form-control" required
+                   value="{{ segment.name|default:'' }}" placeholder="e.g. North Loop">
+          </div>
+
+          <div class="mb-3">
+            <label for="description" class="form-label fw-semibold">Description <span class="text-muted fw-normal small">(optional)</span></label>
+            <textarea id="description" name="description" class="form-control" rows="2">{{ segment.description|default:'' }}</textarea>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-sm-6">
+              <label for="status" class="form-label fw-semibold">Status</label>
+              <select id="status" name="status" class="form-select">
+                {% for val, label in status_choices %}
+                <option value="{{ val }}" {% if segment.status == val %}selected{% elif not segment and val == 'open' %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-sm-6">
+              <label for="difficulty" class="form-label fw-semibold">Difficulty</label>
+              <select id="difficulty" name="difficulty" class="form-select">
+                {% for val, label in difficulty_choices %}
+                <option value="{{ val }}" {% if segment.difficulty == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="visibility" class="form-label fw-semibold">Visibility</label>
+            <select id="visibility" name="visibility" class="form-select">
+              {% for val, label in visibility_choices %}
+              <option value="{{ val }}" {% if segment.visibility == val %}selected{% elif not segment and val == 'both' %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            <div class="form-text">Members-only trails only show up for logged-in members.</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="color" class="form-label fw-semibold">Color override <span class="text-muted fw-normal small">(optional)</span></label>
+            <div class="input-group input-group-sm">
+              <input type="color" id="color" name="color" class="form-control form-control-color" style="max-width:48px;"
+                     value="{{ segment.color|default:'#1363A2' }}">
+              <input type="text" id="colorHex" class="form-control font-monospace" value="{{ segment.color|default:'' }}" placeholder="leave blank for status color">
+            </div>
+            <div class="form-text">Leave blank to color by status (recommended).</div>
+          </div>
+
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="mark_groomed_now" name="mark_groomed_now">
+            <label class="form-check-label fw-semibold" for="mark_groomed_now">Mark as groomed now</label>
+            {% if segment.groomed_at %}<div class="form-text">Currently: groomed {{ segment.groomed_at|date:"M j, Y g:i A" }}</div>{% endif %}
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-save me-1" aria-hidden="true"></i>Save Trail
+          </button>
+        </div>
+      </div>
+
+      {% if segment %}
+      <div class="panel-card">
+        <div class="panel-card-body">
+          <a href="{% url 'core:trail_segment_gpx' segment.pk %}" class="btn btn-outline-secondary w-100 mb-2">
+            <i class="bi bi-download me-1" aria-hidden="true"></i>Download as GPX
+          </a>
+          <p class="text-muted small mb-0">Import this file into Polaris Off Road, OnX, Gaia, or a Garmin device.</p>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<script>
+const map = L.map('editor-map').setView([46.358, -94.201], 11);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; OpenStreetMap',
+}).addTo(map);
+
+const drawnItems = new L.FeatureGroup();
+map.addLayer(drawnItems);
+
+// Load existing geometry (if editing)
+const geomField = document.getElementById('geometryField');
+let existing = [];
+try { existing = JSON.parse(geomField.value); } catch (e) { existing = []; }
+
+let currentLine = null;
+function setLineFromCoords(coords) {
+  if (currentLine) drawnItems.removeLayer(currentLine);
+  currentLine = L.polyline(coords, { color: getCurrentColor(), weight: 4 });
+  drawnItems.addLayer(currentLine);
+  if (coords.length) map.fitBounds(coords, { padding: [40, 40], maxZoom: 14 });
+}
+if (existing.length) setLineFromCoords(existing);
+
+function getCurrentColor() {
+  const override = document.getElementById('colorHex').value.trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(override)) return override;
+  const status = document.getElementById('status').value;
+  return {
+    open: '#198754', closed: '#dc3545', caution: '#fd7e14',
+    groomed: '#0d6efd', planned: '#6c757d',
+  }[status] || '#1363A2';
+}
+
+const drawControl = new L.Control.Draw({
+  position: 'topleft',
+  draw: {
+    polyline: { shapeOptions: { color: getCurrentColor(), weight: 4 } },
+    polygon: false, rectangle: false, circle: false, marker: false, circlemarker: false,
+  },
+  edit: { featureGroup: drawnItems, remove: true },
+});
+map.addControl(drawControl);
+
+map.on(L.Draw.Event.CREATED, e => {
+  if (currentLine) drawnItems.removeLayer(currentLine);  // only one line per segment
+  currentLine = e.layer;
+  drawnItems.addLayer(currentLine);
+});
+map.on(L.Draw.Event.DELETED, () => { currentLine = null; });
+
+function syncGeometryToField() {
+  if (!currentLine) { geomField.value = '[]'; return; }
+  const coords = currentLine.getLatLngs().map(ll => [
+    Number(ll.lat.toFixed(6)),
+    Number(ll.lng.toFixed(6)),
+  ]);
+  geomField.value = JSON.stringify(coords);
+}
+
+document.getElementById('trailForm').addEventListener('submit', syncGeometryToField);
+
+// Color sync — keep color picker, hex text, and live line color aligned
+const colorPicker = document.getElementById('color');
+const colorHex    = document.getElementById('colorHex');
+const statusSel   = document.getElementById('status');
+function refreshLineColor() {
+  if (currentLine) currentLine.setStyle({ color: getCurrentColor() });
+}
+colorPicker.addEventListener('input', () => { colorHex.value = colorPicker.value; refreshLineColor(); });
+colorHex.addEventListener('input', () => {
+  if (/^#[0-9a-fA-F]{6}$/.test(colorHex.value)) colorPicker.value = colorHex.value;
+  refreshLineColor();
+});
+statusSel.addEventListener('change', refreshLineColor);
+</script>
+{% endblock %}

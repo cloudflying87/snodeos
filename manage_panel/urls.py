@@ -36,6 +36,11 @@ urlpatterns = [
     path('trail-conditions/<int:pk>/pin/', views.trail_condition_pin, name='trail_condition_pin'),
     path('trail-conditions/image/<int:pk>/delete/', views.trail_condition_image_delete, name='trail_condition_image_delete'),
 
+    path('trail-segments/', views.trail_segment_list, name='trail_segment_list'),
+    path('trail-segments/new/', views.trail_segment_editor, name='trail_segment_add'),
+    path('trail-segments/<int:pk>/edit/', views.trail_segment_editor, name='trail_segment_edit'),
+    path('trail-segments/<int:pk>/delete/', views.trail_segment_delete, name='trail_segment_delete'),
+
     path('trail-work/', views.trail_work_list, name='trail_work_list'),
     path('trail-work/add/', views.trail_work_add, name='trail_work_add'),
     path('trail-work/<int:pk>/edit/', views.trail_work_edit, name='trail_work_edit'),

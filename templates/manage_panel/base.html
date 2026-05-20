@@ -73,6 +73,9 @@
         <a href="{% url 'manage_panel:trail_work_list' %}" class="panel-nav-link {% block active_trail %}{% endblock %}">
           <i class="bi bi-tools"></i> Trail Work
         </a>
+        <a href="{% url 'manage_panel:trail_segment_list' %}" class="panel-nav-link {% block active_trail_segments %}{% endblock %}">
+          <i class="bi bi-map"></i> Trail Map
+        </a>
         <a href="{% url 'manage_panel:email_blast' %}" class="panel-nav-link {% block active_blast %}{% endblock %}">
           <i class="bi bi-envelope-fill"></i> Email Members
         </a>

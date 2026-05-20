@@ -424,7 +424,16 @@ Log in as your superuser. Go to **Manage Panel** (top-right menu).
 4. **Registration Form** — pick which optional fields to show.
 5. **Email Templates → New Template** — make at least one branded template, send a test to yourself.
 
-### 12.3 Optional: Social link preview
+### 12.3 Trail map
+1. **Manage Panel → Trail Map → Draw New Trail**.
+2. Click points along a trail; double-click to finish.
+3. Set the name, status (Open/Closed/Caution/Groomed/Planned), and visibility (Public/Members/Both).
+4. Save. The trail now shows on the public **Map** page (`/map/`), colored by status.
+5. Each trail has a **Download GPX** button — members import that file into the Polaris Off Road / Ride Command app, OnX, Gaia, or Garmin to navigate it.
+
+**Photo geotags:** when you upload photos to announcements, trail conditions, or trail work logs, the GPS coordinates baked into the photo by your phone's camera are extracted automatically. Those photos appear as pins on the public Map page. Members' phones must have **Location → Camera = On** for this to work.
+
+### 12.4 Optional: Social link preview
 Settings → Communications → **Social / Link Preview** section. Upload a 1200×630 image of your club logo — this shows up when someone shares the site on Facebook/iMessage.
 
 ---
