@@ -1232,9 +1232,16 @@ def email_template_test(request, pk):
 
 @site_admin_required
 def audit_log(request):
-    """View recent admin actions. Site-admin only since it can reveal officer activity."""
-    logs = AuditLog.objects.select_related('actor').all()[:200]
-    return render(request, 'manage_panel/audit_log.html', {'logs': logs})
+    """View admin actions. Site-admin only since it can reveal officer activity."""
+    from django.core.paginator import Paginator
+    qs = AuditLog.objects.select_related('actor').all()
+    paginator = Paginator(qs, 50)
+    page = paginator.get_page(request.GET.get('page'))
+    return render(request, 'manage_panel/audit_log.html', {
+        'logs': page.object_list,
+        'page': page,
+        'total': paginator.count,
+    })
 
 
 @officer_required
@@ -1797,6 +1804,8 @@ def features(request):
                 ('Contact form', 'Routed to officer alert email with auto-reply, rate-limited 5/hr per IP'),
                 ('Online membership application', 'Configurable optional fields with crispy-forms layout'),
                 ('Mobile-friendly nav', 'Sticky on phones with text-labeled bell + inbox'),
+                ('Installable as a PWA', 'Add to Home Screen on iPhone launches the site in standalone (no URL bar). Android Chrome can install it too. Manifest + icon set + theme color shipped.'),
+                ('Comments on announcements + trail conditions', 'Members can comment; officers can hide or delete; hidden comments still visible to officers'),
                 ('Social link preview', 'OG / Twitter cards; uploadable preview image; default 1200×630 generated from icon.jpg'),
             ],
         },

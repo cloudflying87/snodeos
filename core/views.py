@@ -610,3 +610,52 @@ def share_photo(request):
         messages.success(request, 'Thanks! Your photo is in the review queue. You\'ll see it on the map once an officer approves it.')
         return redirect('members:dashboard')
     return render(request, 'core/share_photo.html', {})
+
+
+# ── Comments on announcements + trail conditions ─────────────────────────────
+
+@login_required
+def comment_create(request, kind, pk):
+    """Post a comment on an Announcement (kind='ann') or TrailCondition (kind='tc')."""
+    from .models import Comment
+    if request.method != 'POST':
+        return redirect('core:home')
+    body = (request.POST.get('body') or '').strip()
+    if not body:
+        messages.error(request, 'Comment cannot be empty.')
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+    if kind == 'ann':
+        parent = get_object_or_404(Announcement, pk=pk)
+        if not parent.is_member_visible and not parent.is_public:
+            return redirect('core:home')
+        Comment.objects.create(announcement=parent, author=request.user, body=body[:5000])
+        return redirect('core:announcement_detail', pk=pk)
+    if kind == 'tc':
+        parent = get_object_or_404(TrailCondition, pk=pk)
+        if not parent.is_public and not request.user.is_authenticated:
+            return redirect('core:home')
+        Comment.objects.create(trail_condition=parent, author=request.user, body=body[:5000])
+        return redirect('core:trail_condition_detail', pk=pk)
+    return redirect('core:home')
+
+
+@login_required
+def comment_moderate(request, pk):
+    """Officer-only — hide / unhide / delete a comment."""
+    from .models import Comment
+    if request.method != 'POST':
+        return redirect('core:home')
+    if not (request.user.is_officer or request.user.is_site_admin or request.user.is_staff):
+        return redirect('core:home')
+    c = get_object_or_404(Comment, pk=pk)
+    back = c.parent_url or '/'
+    action = request.POST.get('action')
+    if action == 'hide':
+        c.is_hidden = True
+        c.save(update_fields=['is_hidden'])
+    elif action == 'unhide':
+        c.is_hidden = False
+        c.save(update_fields=['is_hidden'])
+    elif action == 'delete':
+        c.delete()
+    return redirect(back)

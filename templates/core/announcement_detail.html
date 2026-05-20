@@ -33,6 +33,10 @@
             {% endfor %}
           </div>
           {% endif %}
+
+          {% with comments=ann.comments.all kind='ann' pk=ann.pk %}
+            {% include 'core/_comments.html' %}
+          {% endwith %}
         </div>
         <div class="text-center mt-4">
           <a href="{% url 'core:home' %}#announcements" class="btn btn-outline-secondary me-2">

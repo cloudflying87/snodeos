@@ -828,3 +828,37 @@ class MemberShare(models.Model):
     @property
     def has_location(self):
         return self.lat is not None and self.lng is not None
+
+
+class Comment(models.Model):
+    """A member or officer comment on an Announcement or TrailCondition.
+    Exactly one of `announcement` or `trail_condition` is set per row."""
+    announcement   = models.ForeignKey('Announcement', null=True, blank=True,
+                                       on_delete=models.CASCADE, related_name='comments')
+    trail_condition = models.ForeignKey('TrailCondition', null=True, blank=True,
+                                        on_delete=models.CASCADE, related_name='comments')
+    author         = models.ForeignKey('accounts.Member', null=True,
+                                       on_delete=models.SET_NULL, related_name='comments')
+    body           = models.TextField()
+    is_hidden      = models.BooleanField(default=False,
+                                         help_text='Officers can hide a comment without deleting it')
+    created_at     = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f'{self.author_id}: {self.body[:40]}'
+
+    @property
+    def parent(self):
+        return self.announcement or self.trail_condition
+
+    @property
+    def parent_url(self):
+        from django.urls import reverse as _r
+        if self.announcement_id:
+            return _r('core:announcement_detail', args=[self.announcement_id])
+        if self.trail_condition_id:
+            return _r('core:trail_condition_detail', args=[self.trail_condition_id])
+        return ''

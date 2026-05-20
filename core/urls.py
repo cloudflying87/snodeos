@@ -38,4 +38,8 @@ urlpatterns = [
 
     # Member photo submissions
     path('share-photo/', views.share_photo, name='share_photo'),
+
+    # Comments
+    path('comments/new/<str:kind>/<int:pk>/', views.comment_create, name='comment_create'),
+    path('comments/<int:pk>/moderate/', views.comment_moderate, name='comment_moderate'),
 ]

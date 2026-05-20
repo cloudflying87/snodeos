@@ -44,6 +44,10 @@
             {% endfor %}
           </div>
           {% endif %}
+
+          {% with comments=condition.comments.all kind='tc' pk=condition.pk %}
+            {% include 'core/_comments.html' %}
+          {% endwith %}
         </div>
         <div class="text-center mt-4">
           <a href="{% url 'core:trail_conditions' %}" class="btn btn-outline-secondary me-2">
