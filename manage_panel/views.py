@@ -1774,3 +1774,124 @@ def photo_delete(request, pk):
     share.delete()
     messages.success(request, 'Removed.')
     return redirect('manage_panel:photo_queue')
+
+
+# ── Feature Inventory ─────────────────────────────────────────────────────────
+
+@officer_required
+def features(request):
+    """A structured list of everything the site can do. Lives under Help so
+    officers can scan capabilities at a glance and so the doc never drifts
+    from the running build."""
+    sections = [
+        {
+            'title': 'Public Website',
+            'icon':  'globe',
+            'items': [
+                ('Home page', 'Hero, club stats, sponsors, recent announcements with photos'),
+                ('About Us', 'Officers with photos, directors, club history'),
+                ('Trail Map', 'Interactive Leaflet map with trail segments and geotagged photos; click empty space (officer) to create a condition or event at that spot'),
+                ('Trail Conditions section', 'Status pills (Open / Closed / Caution / Groomed); appears as a sidebar on /map/'),
+                ('Calendar', 'FullCalendar month/week/list views; subscribe via webcal:// or copy iCal URL for Google/Apple Calendar'),
+                ('Event detail + self-signup', 'Members sign up for open events directly; sees who else is on the roster'),
+                ('Contact form', 'Routed to officer alert email with auto-reply, rate-limited 5/hr per IP'),
+                ('Online membership application', 'Configurable optional fields with crispy-forms layout'),
+                ('Mobile-friendly nav', 'Sticky on phones with text-labeled bell + inbox'),
+                ('Social link preview', 'OG / Twitter cards; uploadable preview image; default 1200×630 generated from icon.jpg'),
+            ],
+        },
+        {
+            'title': 'Member Area',
+            'icon':  'person-circle',
+            'items': [
+                ('Member dashboard', 'Compact profile bar, Recent Activity feed, My Commitments / Open Tasks cards, My Groups, unread inbox badge'),
+                ('Profile editing', 'Members can update their own info; admins can edit any member'),
+                ('Availability declaration', 'Recurring (e.g. Saturdays 9–1) + specific date ranges; feeds officer "Suggested Volunteers" ranking'),
+                ('Event self-signup / withdraw', '1-click sign up; notifications go to event creator'),
+                ('Photo submission', 'Mobile-camera upload with EXIF GPS auto-extracted; officer review queue'),
+                ('Internal inbox', 'Send to one or more members; threaded replies; mark read individually or all-at-once'),
+                ('Notifications hub', 'Bell icon with unread count; new message, event assignment, photo-review alerts; mark all read'),
+                ('Password reset by email', 'Standard Django flow with branded templates'),
+            ],
+        },
+        {
+            'title': 'Content',
+            'icon':  'megaphone',
+            'items': [
+                ('Announcements', 'Public / members / both visibility; pinned posts; multi-image upload with EXIF geotag; auto Zapier → Facebook for public; "also email / text / inbox" checkboxes on post'),
+                ('Trail Conditions', 'Status + body + trail FK + lat/lng; multi-image upload; "also notify" checkboxes; pins on the map directly'),
+                ('Trail Work Logs', 'Date, volunteers, hours, optional trail FK; multi-photo gallery (members-only view)'),
+                ('Trail Segments / Map editor', 'Draw polylines on Leaflet; import GPX or KML; export GPX for Polaris Off Road / OnX / Gaia / Garmin; status colors auto-applied'),
+                ('Events', 'Grooming / Work / Meeting / Equipment / Club / Other; recurrence with "End of season" auto-fill; equipment-clash detection; target group; suggested-volunteer ranking by availability + group + conflicts'),
+                ('Equipment', 'Track the groomer, drag, ATV, etc.; photo; active/inactive; conflict warning in event editor'),
+            ],
+        },
+        {
+            'title': 'Communications',
+            'icon':  'broadcast',
+            'items': [
+                ('Email Templates', 'CRUD with live preview, branded header color, footer text, optional header banner image; "Send Test" button per template'),
+                ('Per-type template assignment', 'Different template for contact replies, member emails, announcements, trail conditions'),
+                ('Email Blast (HTML editor)', 'Quill rich editor; target all members OR a specific MemberGroup; reuses any saved template'),
+                ('Text Members (SMS)', 'Brevo or Twilio; opt-in respected; per-group targeting'),
+                ('SMS Inbox', 'Twilio webhook receives replies; signature-validated; member auto-matched by phone; officer notification'),
+                ('Email Log', 'Per-recipient delivery success/fail with error message and provider; filter Failed/Successful/All'),
+                ('Audit Log', 'Approvals, blasts, photo reviews, settings changes, group messaging'),
+                ('Provider abstraction', 'Resend → Brevo SMTP → Django backend fallback; configured via UI, not .env'),
+            ],
+        },
+        {
+            'title': 'People',
+            'icon':  'people-fill',
+            'items': [
+                ('Member roster + search + filter', 'By status, search by name/email'),
+                ('Pending application queue', 'Approve / deactivate with notification email and audit log'),
+                ('Member Groups', 'Officer-defined crews (e.g. Sign Crew, Groomers); pickable in Email Blast, Text Members, Event target, Inbox compose'),
+                ('Dues tracking', 'Bulk mark paid/unpaid; reminder emails to unpaid members'),
+                ('Permissions', 'Toggle officer / site-admin / staff per member; site-admin gates settings pages'),
+                ('Registration form builder', 'Enable/disable/relabel optional fields without code changes'),
+                ('CSV member import', 'Bulk add members from a spreadsheet'),
+            ],
+        },
+        {
+            'title': 'Settings',
+            'icon':  'gear',
+            'items': [
+                ('Communications setup', 'Brevo / Resend / Twilio credentials in the panel UI, no .env editing'),
+                ('Email branding', 'From-name, header color, accent color, footer text, optional banner image'),
+                ('Map default location', 'Lat / lng / zoom for the public and editor maps'),
+                ('Social / link preview', 'Site description + uploadable share image'),
+                ('Facebook integration', 'Page Plugin embed OR Zapier auto-post on announcements'),
+                ('Officer titles', 'Custom job titles for officers'),
+                ('Site Setup Guide', 'Day-one walkthrough with status pills and a test-email button'),
+            ],
+        },
+        {
+            'title': 'Integrations',
+            'icon':  'plug',
+            'items': [
+                ('Cloudflare Tunnel', 'Public HTTPS without opening firewall ports'),
+                ('Brevo SMTP + SMS', 'Single-account email + texting'),
+                ('Resend (email)', 'Alternative to Brevo for transactional email'),
+                ('Twilio (two-way SMS)', 'Owned phone number; inbox via webhook'),
+                ('Polaris Off Road / Ride Command', 'Trail segments downloadable as standard GPX 1.1'),
+                ('OnX Offroad / Gaia / Garmin', 'Same GPX files work in any of these'),
+                ('Google Calendar / Apple Calendar', 'iCal subscription feeds; public or members-only'),
+                ('Zapier', 'Webhook auto-post announcements to Facebook'),
+            ],
+        },
+        {
+            'title': 'Security & Reliability',
+            'icon':  'shield-check',
+            'items': [
+                ('HTTPS hardening (production)', 'HSTS 30 days, secure cookies, SSL redirect, frame-deny, nosniff, referrer-policy'),
+                ('Pre-migration DB snapshot', 'pg_dump runs automatically in build.sh; last 10 retained in ./backups/'),
+                ('Twilio signature validation', 'Inbound SMS webhook rejects unsigned requests'),
+                ('Rate limiting', 'Contact form 5/hr per IP; email blast 5/hr per officer; SMS blast 3/hr per officer'),
+                ('Audit log', 'Every significant officer action recorded'),
+                ('Email delivery log', 'Per-recipient success/failure tracking'),
+                ('DEBUG=False by default', 'Production-safe defaults; explicit opt-in for dev'),
+            ],
+        },
+    ]
+    return render(request, 'manage_panel/features.html', {'sections': sections})

@@ -1,0 +1,62 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}Feature Inventory{% endblock %}
+{% block active_features %}active{% endblock %}
+
+{% block content %}
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">Feature Inventory</h1>
+    <p class="panel-breadcrumb mb-0">
+      <a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> / Features
+    </p>
+  </div>
+  <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-printer me-1" aria-hidden="true"></i>Print
+  </button>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body p-4">
+    <p class="text-muted mb-0">
+      Everything the site can do, organized by area. Updated alongside each shipped feature so this never goes stale.
+    </p>
+  </div>
+</div>
+
+<div class="row g-3">
+{% for section in sections %}
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white border-bottom py-3 d-flex align-items-center gap-2">
+        <i class="bi bi-{{ section.icon }} text-primary fs-5" aria-hidden="true"></i>
+        <h2 class="h6 fw-bold mb-0">{{ section.title }}</h2>
+        <span class="badge bg-secondary-subtle text-secondary ms-auto">{{ section.items|length }}</span>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for name, desc in section.items %}
+        <li class="list-group-item px-3 py-2">
+          <div class="fw-semibold small">{{ name }}</div>
+          <div class="text-muted" style="font-size:0.82rem;line-height:1.45;">{{ desc }}</div>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+{% endfor %}
+</div>
+
+<div class="card border-0 shadow-sm mt-4">
+  <div class="card-body p-4">
+    <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-2 text-primary" aria-hidden="true"></i>Honest list of things deferred / nice-to-have</h6>
+    <ul class="small text-muted mb-0 ps-3">
+      <li>No automatic season rollover — recurring events have to be re-created each fall.</li>
+      <li>No PWA install / offline mode for the public site.</li>
+      <li>No member self-deletion (officer must deactivate, useful for GDPR-style requests).</li>
+      <li>Backup restore is a manual <code>psql</code> command, not a UI.</li>
+      <li>No comments on announcements / trail conditions.</li>
+      <li>Audit log capped at 200 entries on display; older entries still in DB.</li>
+    </ul>
+  </div>
+</div>
+
+{% endblock %}
