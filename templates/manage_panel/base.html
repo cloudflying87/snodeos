@@ -10,6 +10,7 @@
   {% load static %}
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <link rel="stylesheet" href="{% static 'css/panel.css' %}?v=2">
+  {% block extra_head %}{% endblock %}
 </head>
 <body class="panel-body">
 
