@@ -1,0 +1,125 @@
+{% extends 'manage_panel/base.html' %}
+{% block title %}SMS Inbox{% endblock %}
+{% block active_sms_inbox %}active{% endblock %}
+
+{% block content %}
+<div class="panel-page-header">
+  <div>
+    <h1 class="panel-page-title">SMS Inbox</h1>
+    <p class="panel-breadcrumb mb-0">
+      <a href="{% url 'manage_panel:dashboard' %}">Dashboard</a> / SMS Inbox
+      {% if unread_count %}<span class="badge bg-danger ms-2">{{ unread_count }} unread</span>{% endif %}
+    </p>
+  </div>
+  <div class="btn-group btn-group-sm" role="group" aria-label="Filter">
+    <a href="?show=unread" class="btn btn-outline-secondary {% if show == 'unread' %}active{% endif %}">Unread ({{ unread_count }})</a>
+    <a href="?show=all"    class="btn btn-outline-secondary {% if show == 'all' %}active{% endif %}">All ({{ total_count }})</a>
+  </div>
+</div>
+
+<div class="panel-card">
+{% if messages_list %}
+
+  <div class="d-none d-md-block">
+    <table class="panel-table align-middle">
+      <thead>
+        <tr>
+          <th></th>
+          <th>From</th>
+          <th>Message</th>
+          <th>Received</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in messages_list %}
+        <tr {% if not m.is_read %}style="background:#f6f9fe;font-weight:500;"{% endif %}>
+          <td class="ps-4">
+            {% if not m.is_read %}
+              <span class="d-inline-block rounded-circle bg-primary" style="width:9px;height:9px;" title="Unread" aria-label="Unread"></span>
+            {% endif %}
+          </td>
+          <td>
+            {% if m.member %}
+              <a href="{% url 'members:member_detail' m.member.pk %}" class="fw-semibold">{{ m.member.get_full_name }}</a>
+              <div class="text-muted small">{{ m.from_number }}</div>
+            {% else %}
+              <span class="fw-semibold">{{ m.from_number }}</span>
+              <div class="text-muted small fst-italic">Not a member</div>
+            {% endif %}
+          </td>
+          <td>
+            <div style="white-space:pre-wrap;line-height:1.5;">{{ m.body }}</div>
+          </td>
+          <td class="text-muted small text-nowrap">
+            {{ m.received_at|date:"M j, Y" }}<br><span style="font-size:0.75rem;">{{ m.received_at|date:"g:i A" }}</span>
+          </td>
+          <td class="text-end pe-4">
+            <form method="post" action="{% url 'manage_panel:sms_mark_read' m.pk %}" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-secondary" title="Toggle read/unread">
+                <i class="bi bi-{% if m.is_read %}envelope{% else %}envelope-open{% endif %}" aria-hidden="true"></i>
+              </button>
+            </form>
+            <button class="btn btn-sm btn-outline-danger"
+                    data-delete-url="{% url 'manage_panel:sms_delete' m.pk %}"
+                    data-delete-label="text from {{ m.from_number }}"
+                    aria-label="Delete">
+              <i class="bi bi-trash" aria-hidden="true"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="d-md-none">
+    {% for m in messages_list %}
+    <div class="px-3 py-3 border-bottom" {% if not m.is_read %}style="background:#f6f9fe;"{% endif %}>
+      <div class="d-flex align-items-center justify-content-between mb-1 gap-2">
+        <div class="min-w-0">
+          {% if m.member %}
+            <a href="{% url 'members:member_detail' m.member.pk %}" class="fw-semibold text-decoration-none">{{ m.member.get_full_name }}</a>
+            <div class="text-muted small">{{ m.from_number }}</div>
+          {% else %}
+            <div class="fw-semibold">{{ m.from_number }}</div>
+            <div class="text-muted small fst-italic">Not a member</div>
+          {% endif %}
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+          {% if not m.is_read %}<span class="badge bg-primary">New</span>{% endif %}
+          <small class="text-muted">{{ m.received_at|date:"M j" }}</small>
+        </div>
+      </div>
+      <div class="my-2" style="white-space:pre-wrap;line-height:1.5;">{{ m.body }}</div>
+      <div class="d-flex gap-2 mt-2">
+        <form method="post" action="{% url 'manage_panel:sms_mark_read' m.pk %}" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-{% if m.is_read %}envelope{% else %}envelope-open{% endif %} me-1" aria-hidden="true"></i>
+            {% if m.is_read %}Mark unread{% else %}Mark read{% endif %}
+          </button>
+        </form>
+        <button class="btn btn-sm btn-outline-danger"
+                data-delete-url="{% url 'manage_panel:sms_delete' m.pk %}"
+                data-delete-label="text from {{ m.from_number }}">
+          <i class="bi bi-trash me-1" aria-hidden="true"></i>Delete
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+{% else %}
+  <div class="panel-card-body text-center py-5">
+    <i class="bi bi-chat-square-text display-4 text-muted mb-3 d-block" aria-hidden="true"></i>
+    <p class="text-muted mb-1">
+      {% if show == 'unread' %}No unread texts.{% else %}No texts yet.{% endif %}
+    </p>
+    <p class="text-muted small mb-0">Replies to texts you've sent will appear here. Members can also start conversations by texting your Twilio number.</p>
+  </div>
+{% endif %}
+</div>
+
+{% endblock %}

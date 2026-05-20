@@ -1,0 +1,19 @@
+{% extends 'emails/base_email.html' %}
+{% block body %}
+<h2>New Text Message</h2>
+<p style="font-size:0.82rem;color:#9ab0c8;margin-bottom:20px;">
+  From {{ sender_label }}{% if msg.member %} &middot; ({{ msg.from_number }}){% endif %}
+  &middot; {{ msg.received_at|date:"F j, Y g:i A" }}
+</p>
+
+<div style="background:#f6f9fe;border-left:3px solid #1363A2;padding:16px 18px;border-radius:4px;margin:0 0 24px;">
+  <p style="margin:0;font-size:1.05rem;line-height:1.55;white-space:pre-wrap;">{{ msg.body }}</p>
+</div>
+
+{% if inbox_url %}
+<hr class="divider">
+<div class="btn-wrap">
+  <a href="{{ inbox_url }}" class="btn">Open SMS Inbox →</a>
+</div>
+{% endif %}
+{% endblock %}

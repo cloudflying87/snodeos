@@ -337,6 +337,38 @@ class ContactMessage(models.Model):
         return f'{self.name} — {self.subject}'
 
 
+class InboundSMS(models.Model):
+    """Incoming text messages received via the Twilio webhook."""
+    from_number       = models.CharField(max_length=20, db_index=True)
+    body              = models.TextField()
+    twilio_message_sid = models.CharField(max_length=64, blank=True, unique=True,
+                                          help_text='Twilio MessageSid; prevents duplicate webhook calls from inserting twice')
+    received_at       = models.DateTimeField(auto_now_add=True, db_index=True)
+    is_read           = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-received_at']
+
+    def __str__(self):
+        return f'{self.from_number} ({self.received_at:%Y-%m-%d %H:%M})'
+
+    @property
+    def member(self):
+        """Best-effort match the sender's phone to an existing Member."""
+        from accounts.models import Member
+        normalized = ''.join(ch for ch in self.from_number if ch.isdigit())
+        if len(normalized) == 11 and normalized.startswith('1'):
+            normalized = normalized[1:]
+        if len(normalized) != 10:
+            return None
+        # Match on last 10 digits to ignore formatting differences
+        for m in Member.objects.exclude(phone=''):
+            m_digits = ''.join(ch for ch in m.phone if ch.isdigit())
+            if m_digits.endswith(normalized):
+                return m
+        return None
+
+
 class EmailLog(models.Model):
     """Per-recipient log of outgoing emails so officers can investigate delivery failures."""
     STATUS_CHOICES = [

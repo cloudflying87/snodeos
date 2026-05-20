@@ -1,0 +1,11 @@
+New Text Message
+==================
+
+From: {{ sender_label }}{% if msg.member %} ({{ msg.from_number }}){% endif %}
+Time: {{ msg.received_at|date:"F j, Y g:i A" }}
+
+{{ msg.body }}
+
+{% if inbox_url %}
+Open the inbox: {{ inbox_url }}
+{% endif %}

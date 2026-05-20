@@ -330,6 +330,18 @@ On the Twilio dashboard, find:
 
 You'll paste both into the site's Communications page later.
 
+### 10.3 Wire up two-way texting (optional but recommended)
+By default, replies to your texts go nowhere — they sit in Twilio's logs and the sender gets no response. To capture them in the panel:
+
+1. In Twilio, go to **Phone Numbers → Manage → Active Numbers → click your number**.
+2. Scroll to **Messaging Configuration**.
+3. Set **"A message comes in"**:
+   - Webhook: `https://yourclub.com/webhooks/twilio/sms/`
+   - HTTP method: `HTTP POST`
+4. **Save**.
+
+That's it. Anyone who texts your Twilio number now shows up in **Manage Panel → SMS Inbox**, and the officer notification email gets a heads-up. Twilio signs every webhook so the endpoint rejects spoofed calls.
+
 ---
 
 # Part 11 — First deploy
@@ -568,6 +580,7 @@ Print this. Tick boxes as you go. Each box is ~5–20 min.
 ## Twilio
 - [ ] Phone number purchased
 - [ ] Account SID + Auth Token saved
+- [ ] (Optional) Webhook URL configured at `https://yourclub.com/webhooks/twilio/sms/` for two-way replies
 
 ## Deploy
 - [ ] Repo cloned onto VPS

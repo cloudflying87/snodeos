@@ -67,4 +67,7 @@ urlpatterns = [
     path('email-log/', views.email_log, name='email_log'),
     path('text-members/', views.text_members, name='text_members'),
     path('sms-settings/', views.sms_settings, name='sms_settings'),
+    path('sms-inbox/', views.sms_inbox, name='sms_inbox'),
+    path('sms-inbox/<int:pk>/read/', views.sms_mark_read, name='sms_mark_read'),
+    path('sms-inbox/<int:pk>/delete/', views.sms_delete, name='sms_delete'),
 ]

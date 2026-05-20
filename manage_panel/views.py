@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.conf import settings
-from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, AnnouncementImage, TrailCondition, TrailConditionImage, TrailWorkLog, TrailWorkImage, ContactMessage, SiteSettings, EmailTemplate, AuditLog, EmailLog
+from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement, AnnouncementImage, TrailCondition, TrailConditionImage, TrailWorkLog, TrailWorkImage, ContactMessage, SiteSettings, EmailTemplate, AuditLog, EmailLog, InboundSMS
 from accounts.models import Member, RegistrationField
 from core.email import send_test_email
 from accounts.models import Member
@@ -1150,6 +1150,42 @@ def audit_log(request):
     """View recent admin actions. Site-admin only since it can reveal officer activity."""
     logs = AuditLog.objects.select_related('actor').all()[:200]
     return render(request, 'manage_panel/audit_log.html', {'logs': logs})
+
+
+@officer_required
+def sms_inbox(request):
+    """Officer-facing inbox of incoming text messages from Twilio."""
+    show = request.GET.get('show', 'unread')   # unread | all
+    qs = InboundSMS.objects.all()
+    if show == 'unread':
+        qs = qs.filter(is_read=False)
+    messages_list = list(qs[:200])
+    unread_count = InboundSMS.objects.filter(is_read=False).count()
+    total_count  = InboundSMS.objects.count()
+    return render(request, 'manage_panel/sms_inbox.html', {
+        'messages_list': messages_list,
+        'show': show,
+        'unread_count': unread_count,
+        'total_count': total_count,
+    })
+
+
+@officer_required
+@require_POST
+def sms_mark_read(request, pk):
+    msg = get_object_or_404(InboundSMS, pk=pk)
+    msg.is_read = not msg.is_read
+    msg.save()
+    return redirect('manage_panel:sms_inbox')
+
+
+@officer_required
+@require_POST
+def sms_delete(request, pk):
+    msg = get_object_or_404(InboundSMS, pk=pk)
+    msg.delete()
+    messages.success(request, 'Text deleted.')
+    return redirect('manage_panel:sms_inbox')
 
 
 @site_admin_required
