@@ -77,7 +77,7 @@
             </label>
           </div>
 
-          <div class="form-check {% if not sms_configured %}opacity-50{% endif %}">
+          <div class="form-check mb-3 {% if not sms_configured %}opacity-50{% endif %}">
             <input class="form-check-input" type="checkbox" id="notifyText" name="send_text"
                    {% if not sms_configured %}disabled{% endif %}>
             <label class="form-check-label fw-semibold" for="notifyText">
@@ -88,6 +88,15 @@
               {% else %}
                 <span class="badge bg-secondary ms-1" style="font-size:0.7rem;">SMS not configured</span>
               {% endif %}
+            </label>
+          </div>
+
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="notifyMessage" name="send_message">
+            <label class="form-check-label fw-semibold" for="notifyMessage">
+              <i class="bi bi-chat-square-text-fill text-info me-2" aria-hidden="true"></i>
+              Post to members' in-site inbox
+              <span class="text-muted fw-normal">({{ active_count }} member{{ active_count|pluralize }})</span>
             </label>
           </div>
 

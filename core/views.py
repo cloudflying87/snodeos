@@ -406,6 +406,12 @@ def inbox_compose(request):
         msg = InternalMessage.objects.create(conversation=conv, sender=request.user, body=body)
         msg.read_by.add(request.user)
         _notify_message_recipients(conv, msg, exclude_user=request.user)
+        # Audit-log officer broadcasts (group sends only; 1:1 messages aren't logged)
+        if group_id.isdigit():
+            from .audit import log_action
+            log_action(request.user, 'message_sent',
+                       target=subject[:200],
+                       detail=f'To group "{grp.name}" — {len(recipients)} member(s)')
         messages.success(request, f'Message sent to {len(recipients)} member{"" if len(recipients)==1 else "s"}.')
         return redirect('core:conversation_detail', pk=conv.pk)
 
@@ -545,15 +551,33 @@ def share_photo(request):
             caption=(request.POST.get('caption') or '').strip()[:300],
             lat=lat, lng=lng,
         )
-        # Notify officers (active officers) via Notification
+        # Notify officers (active officers) via Notification + email
         from accounts.models import Member as _M
         from .notify import notify
+        from .email import send_email as _send_email, _tmpl_override
+        from django.conf import settings as _settings
         officers = _M.objects.filter(membership_status='active').filter(
             models.Q(is_officer=True) | models.Q(is_site_admin=True) | models.Q(is_staff=True)
         ).distinct()
+        site_url = getattr(_settings, 'SITE_URL', '').rstrip('/')
         review_url = '/manage/photo-queue/'
+        full_review_url = f'{site_url}{review_url}'
         for o in officers:
             notify(o, 'photo_submission', f'{request.user.get_short_name()} shared a photo', review_url)
+            try:
+                _send_email(
+                    subject=f'New photo to review: from {request.user.get_short_name()}',
+                    to=o.email,
+                    template='photo_submission',
+                    context={
+                        'submitter':  request.user,
+                        'share':      share,
+                        'review_url': full_review_url,
+                        **_tmpl_override('template_member'),
+                    },
+                )
+            except Exception:
+                pass
         messages.success(request, 'Thanks! Your photo is in the review queue. You\'ll see it on the map once an officer approves it.')
         return redirect('members:dashboard')
     return render(request, 'core/share_photo.html', {})

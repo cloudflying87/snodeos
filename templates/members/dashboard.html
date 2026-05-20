@@ -92,7 +92,11 @@
     <div class="dash-quick mb-4">
       <a href="{% url 'core:map' %}"><i class="bi bi-map" aria-hidden="true"></i>Trail Map</a>
       <a href="{% url 'core:calendar' %}"><i class="bi bi-calendar-week" aria-hidden="true"></i>Calendar</a>
-      <a href="{% url 'core:inbox' %}"><i class="bi bi-envelope" aria-hidden="true"></i>Inbox</a>
+      <a href="{% url 'core:inbox' %}" style="position:relative;">
+        <i class="bi bi-envelope{% if unread_inbox %}-fill{% endif %}" aria-hidden="true"></i>
+        Inbox
+        {% if unread_inbox %}<span class="badge bg-danger" style="position:absolute;top:4px;right:8px;font-size:0.65rem;">{{ unread_inbox }}</span>{% endif %}
+      </a>
       <a href="{% url 'core:share_photo' %}"><i class="bi bi-camera" aria-hidden="true"></i>Share Photo</a>
       <a href="{% url 'members:my_availability' %}"><i class="bi bi-clock-history" aria-hidden="true"></i>Availability</a>
       <a href="{% url 'members:profile_edit' %}"><i class="bi bi-person-gear" aria-hidden="true"></i>Profile</a>

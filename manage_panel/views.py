@@ -9,6 +9,23 @@ from core.models import ClubStats, Officer, OfficerTitle, Sponsor, Announcement,
 from accounts.models import Member, RegistrationField, MemberGroup
 from core.email import send_test_email
 from core.geo import create_image_with_gps
+
+
+def _broadcast_inbox_message(actor, subject, body, recipients):
+    """Post a single Conversation to every recipient. Used when an officer
+    ticks "Also post to members' inbox" on an announcement or trail-condition
+    form. Returns the count actually queued."""
+    from core.models import Conversation, InternalMessage
+    from core.views import _notify_message_recipients
+    members = list(recipients)
+    if not members:
+        return 0
+    conv = Conversation.objects.create(subject=subject[:200])
+    conv.participants.add(actor, *members)
+    msg = InternalMessage.objects.create(conversation=conv, sender=actor, body=body)
+    msg.read_by.add(actor)
+    _notify_message_recipients(conv, msg, exclude_user=actor)
+    return len(members)
 from accounts.models import Member
 from .forms import (
     ClubStatsForm, OfficerForm, SponsorForm,
@@ -254,7 +271,8 @@ def announcement_add(request):
 
             send_email = 'send_email' in request.POST
             send_text  = 'send_text'  in request.POST
-            email_sent = text_sent = 0
+            send_message = 'send_message' in request.POST
+            email_sent = text_sent = inbox_sent = 0
 
             from core.email import send_email as _send_email, send_sms, _tmpl_override
             ann_url = f"{getattr(settings, 'SITE_URL', '').rstrip('/')}/announcements/{ann.pk}/"
@@ -280,14 +298,26 @@ def announcement_add(request):
                     if send_sms(sms_body, m.phone):
                         text_sent += 1
 
-            if email_sent or text_sent:
+            if send_message:
+                snippet = ann.body if len(ann.body) < 800 else ann.body[:800] + '…'
+                if ann_url:
+                    snippet += f'\n\nFull post: {ann_url}'
+                inbox_sent = _broadcast_inbox_message(
+                    actor=request.user,
+                    subject=f'Announcement: {ann.title}',
+                    body=snippet,
+                    recipients=Member.objects.filter(membership_status='active').exclude(pk=request.user.pk),
+                )
+
+            if email_sent or text_sent or inbox_sent:
                 from core.audit import log_action
                 log_action(request.user, 'announcement_send',
                            target=ann.title,
-                           detail=f'Emails: {email_sent}, Texts: {text_sent}')
+                           detail=f'Emails: {email_sent}, Texts: {text_sent}, Inbox: {inbox_sent}')
             parts = ['Announcement posted.']
             if email_sent:  parts.append(f'Emailed {email_sent} members.')
             if text_sent:   parts.append(f'Texted {text_sent} members.')
+            if inbox_sent:  parts.append(f'Messaged {inbox_sent} inboxes.')
             messages.success(request, ' '.join(parts))
             return redirect('manage_panel:announcement_list')
     else:
@@ -400,7 +430,8 @@ def trail_condition_add(request):
 
             send_email = 'send_email' in request.POST
             send_text  = 'send_text'  in request.POST
-            email_sent = text_sent = 0
+            send_message = 'send_message' in request.POST
+            email_sent = text_sent = inbox_sent = 0
 
             from core.email import send_email as _send_email, send_sms, _tmpl_override
             cond_url = f"{getattr(settings, 'SITE_URL', '').rstrip('/')}/trail-conditions/{condition.pk}/"
@@ -430,14 +461,29 @@ def trail_condition_add(request):
                     if send_sms(sms_body, m.phone):
                         text_sent += 1
 
-            if email_sent or text_sent:
+            if send_message:
+                snippet = f'Status: {condition.get_status_display()}'
+                if condition.body:
+                    body_snippet = condition.body if len(condition.body) < 800 else condition.body[:800] + '…'
+                    snippet += f'\n\n{body_snippet}'
+                if cond_url:
+                    snippet += f'\n\nFull post: {cond_url}'
+                inbox_sent = _broadcast_inbox_message(
+                    actor=request.user,
+                    subject=f'Trail Update: {condition.title}',
+                    body=snippet,
+                    recipients=Member.objects.filter(membership_status='active').exclude(pk=request.user.pk),
+                )
+
+            if email_sent or text_sent or inbox_sent:
                 from core.audit import log_action
                 log_action(request.user, 'trail_condition_send',
                            target=condition.title,
-                           detail=f'Status: {condition.get_status_display()}, Emails: {email_sent}, Texts: {text_sent}')
+                           detail=f'Status: {condition.get_status_display()}, Emails: {email_sent}, Texts: {text_sent}, Inbox: {inbox_sent}')
             parts = ['Trail condition posted.']
             if email_sent:  parts.append(f'Emailed {email_sent} members.')
             if text_sent:   parts.append(f'Texted {text_sent} members.')
+            if inbox_sent:  parts.append(f'Messaged {inbox_sent} inboxes.')
             messages.success(request, ' '.join(parts))
             return redirect('manage_panel:trail_condition_list')
     else:
@@ -1652,6 +1698,9 @@ def photo_review(request, pk):
     share.reviewed_at = _tz.now()
     share.review_note = note
 
+    from core.audit import log_action
+    submitter_label = share.member.get_full_name() if share.member else '(deleted member)'
+
     if decision == 'approve':
         # Approval path: create a TrailCondition (default kind for member shares
         # on the trail) and attach the photo as a TrailConditionImage. This puts
@@ -1668,10 +1717,16 @@ def photo_review(request, pk):
         share.image.close()
         share.status = 'approved'
         share.save()
+        log_action(request.user, 'photo_approve',
+                   target=f'{submitter_label}: {title}',
+                   detail=f'Published as TrailCondition #{cond.pk}')
         messages.success(request, f'Approved — published as "{title}".')
     elif decision == 'reject':
         share.status = 'rejected'
         share.save()
+        log_action(request.user, 'photo_reject',
+                   target=f'{submitter_label}',
+                   detail=note or '(no note)')
         messages.info(request, 'Rejected.')
     return redirect('manage_panel:photo_queue')
 

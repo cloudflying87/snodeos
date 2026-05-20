@@ -1,0 +1,11 @@
+New photo to review
+===================
+
+{{ submitter.get_full_name }} just shared a photo from the trail.
+
+{% if share.caption %}{{ share.caption }}{% endif %}
+
+{% if share.has_location %}Location: {{ share.lat }}, {{ share.lng }}{% else %}No location data on the photo.{% endif %}
+Submitted: {{ share.submitted_at|date:"F j, Y g:i A" }}
+
+{% if review_url %}Review & approve: {{ review_url }}{% endif %}

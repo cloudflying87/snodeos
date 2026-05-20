@@ -500,8 +500,11 @@ class AuditLog(models.Model):
         ('member_delete',      'Deleted member'),
         ('email_blast',        'Sent email blast'),
         ('sms_blast',          'Sent text blast'),
+        ('message_sent',       'Sent inbox message'),
         ('announcement_send',  'Sent announcement notification'),
         ('trail_condition_send', 'Sent trail condition notification'),
+        ('photo_approve',      'Approved member photo'),
+        ('photo_reject',       'Rejected member photo'),
         ('settings_change',    'Changed settings'),
     ]
     actor       = models.ForeignKey('accounts.Member', null=True, blank=True,

@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q
 from accounts.models import Member, MemberAvailability
-from core.models import Announcement, TrailCondition, TrailWorkLog, Event
+from core.models import Announcement, TrailCondition, TrailWorkLog, Event, Conversation, InternalMessage
 from core.email import notify_application_approved
 from .forms import MemberEditForm, MemberFilterForm, ProfileEditForm
 
@@ -76,12 +76,22 @@ def dashboard(request):
         open_qs = open_qs.filter(_Q(target_group__isnull=True) | _Q(target_group_id__in=group_ids))
     open_events = open_qs.exclude(assignees=member).order_by('starts_at')[:6]
 
+    # Unread inbox messages — messages in member's conversations they haven't read
+    unread_inbox = (
+        InternalMessage.objects
+        .filter(conversation__participants=member)
+        .exclude(read_by=member)
+        .exclude(sender=member)
+        .count()
+    )
+
     context = {
         'member': member,
         'feed': feed,
         'my_groups': my_groups,
         'my_events': my_events,
         'open_events': open_events,
+        'unread_inbox': unread_inbox,
     }
     return render(request, 'members/dashboard.html', context)
 
