@@ -106,11 +106,20 @@ class AnnouncementForm(forms.ModelForm):
 class TrailConditionForm(forms.ModelForm):
     class Meta:
         model = TrailCondition
-        fields = ['title', 'status', 'body', 'visibility', 'is_pinned']
-        widgets = {'body': forms.Textarea(attrs={'rows': 5})}
+        fields = ['title', 'status', 'body', 'visibility', 'is_pinned', 'lat', 'lng']
+        widgets = {
+            'body': forms.Textarea(attrs={'rows': 5}),
+            'lat':  forms.NumberInput(attrs={'step': '0.000001', 'placeholder': 'optional'}),
+            'lng':  forms.NumberInput(attrs={'step': '0.000001', 'placeholder': 'optional'}),
+        }
 
     def __init__(self, *args, **kwargs):
+        # Optional ?lat=&lng= URL query params pre-fill the form
+        initial = kwargs.pop('initial', {}) or {}
         super().__init__(*args, **kwargs)
+        if initial:
+            for k, v in initial.items():
+                self.fields[k].initial = v
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.layout = Layout(
@@ -121,6 +130,10 @@ class TrailConditionForm(forms.ModelForm):
             'body',
             'visibility',
             Field('is_pinned'),
+            Row(
+                Column('lat', css_class='col-6'),
+                Column('lng', css_class='col-6'),
+            ),
         )
 
 

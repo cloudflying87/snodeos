@@ -170,6 +170,9 @@ class TrailCondition(models.Model):
     body       = models.TextField(blank=True)
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='both')
     is_pinned  = models.BooleanField(default=False)
+    lat        = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True,
+                                     help_text='Optional location pin (auto-filled when created by clicking the map)')
+    lng        = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -185,6 +188,10 @@ class TrailCondition(models.Model):
     @property
     def is_member_visible(self):
         return self.visibility in ('members', 'both')
+
+    @property
+    def has_location(self):
+        return self.lat is not None and self.lng is not None
 
     @property
     def status_badge_class(self):

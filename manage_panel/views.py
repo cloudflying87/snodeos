@@ -383,6 +383,13 @@ def _zapier_post_trail(condition):
 
 @officer_required
 def trail_condition_add(request):
+    # ?lat=&lng= query params pre-fill (set by "click map → create here" flow)
+    initial = {}
+    try:
+        if request.GET.get('lat'): initial['lat'] = float(request.GET['lat'])
+        if request.GET.get('lng'): initial['lng'] = float(request.GET['lng'])
+    except (ValueError, TypeError):
+        initial = {}
     if request.method == 'POST':
         form = TrailConditionForm(request.POST, request.FILES)
         if form.is_valid():
@@ -434,7 +441,7 @@ def trail_condition_add(request):
             messages.success(request, ' '.join(parts))
             return redirect('manage_panel:trail_condition_list')
     else:
-        form = TrailConditionForm()
+        form = TrailConditionForm(initial=initial)
 
     cfg = SiteSettings.get()
     return render(request, 'manage_panel/trail_conditions/form.html', {
@@ -1435,6 +1442,15 @@ def event_form(request, pk=None):
     from accounts.models import MemberGroup
     event = get_object_or_404(Event, pk=pk) if pk else None
 
+    # ?lat=&lng= prefill from "click map → create here" flow (new events only)
+    prefill_lat = prefill_lng = None
+    if event is None and request.method == 'GET':
+        try:
+            if request.GET.get('lat'): prefill_lat = float(request.GET['lat'])
+            if request.GET.get('lng'): prefill_lng = float(request.GET['lng'])
+        except (ValueError, TypeError):
+            prefill_lat = prefill_lng = None
+
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()
         starts_at = _parse_dt(request.POST.get('starts_at'))
@@ -1494,6 +1510,8 @@ def event_form(request, pk=None):
         'kind_choices': Event.KIND_CHOICES,
         'status_choices': Event.STATUS_CHOICES,
         'visibility_choices': Event.VISIBILITY_CHOICES,
+        'prefill_lat': prefill_lat,
+        'prefill_lng': prefill_lng,
     })
 
 

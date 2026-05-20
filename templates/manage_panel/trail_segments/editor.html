@@ -7,7 +7,7 @@
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css">
 <style>
-  #editor-map { height: calc(100vh - 220px); min-height: 480px; border-radius: 8px; }
+  #editor-map { width: 100%; height: calc(100vh - 220px); min-height: 480px; border-radius: 8px; display: block; }
   .editor-help {
     background:#f6f9fe; border-radius:8px; padding:10px 14px; font-size:0.82rem; line-height:1.55;
     color:#344055; margin-bottom:12px;
@@ -168,6 +168,10 @@ const map = L.map('editor-map').setView(
   [{{ site_settings.map_default_lat }}, {{ site_settings.map_default_lng }}],
   {{ site_settings.map_default_zoom }}
 );
+// Force a re-measure after the layout settles (mobile cards / sticky panels
+// can have a brief zero-width window when Leaflet initializes).
+setTimeout(() => map.invalidateSize(), 50);
+window.addEventListener('resize', () => map.invalidateSize());
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; OpenStreetMap',

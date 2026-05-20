@@ -169,6 +169,22 @@ def map_data(request):
                    reverse('core:trail_condition_detail', args=[c.pk]),
                    c.title, c.visibility)
 
+    # Trail conditions placed directly via map-click (no photo, has lat/lng on the model)
+    tc_qs = TrailCondition.objects.filter(lat__isnull=False, lng__isnull=False)
+    if not is_member:
+        tc_qs = tc_qs.filter(visibility__in=['public', 'both'])
+    for c in tc_qs:
+        photos.append({
+            'lat':           float(c.lat),
+            'lng':           float(c.lng),
+            'image_url':     '',
+            'caption':       c.body[:160] if c.body else '',
+            'kind':          'trail_condition',
+            'parent_label':  c.title,
+            'parent_url':    reverse('core:trail_condition_detail', args=[c.pk]),
+            'uploaded_at':   c.created_at.isoformat(),
+        })
+
     # Trail work is members-only by site convention
     if is_member:
         for img in TrailWorkImage.objects.select_related('log').filter(lat__isnull=False):
